@@ -240,7 +240,25 @@ The backend remains private inside the Docker network.
 
 ---
 
+## Screenshots
+
+### Dashboard overview
+
+![BPSTracker dashboard overview](docs/images/dashboard-overview.png)
+
+### History with simulation mode
+
+![BPSTracker history with simulation mode](docs/images/history-simulation.png)
+
+### Setup overview
+
+![BPSTracker setup overview](docs/images/setup-overview.jpeg)
+
+
 ## Screens and UI
+
+The screenshots show the dashboard, the color-coded history view and the setup page with simulation mode and optional integrations.
+
 
 The screenshot above shows the desktop dashboard with live energy cards, air sensor values, device status and latest measurements.
 
