@@ -54,6 +54,7 @@ class KindleValues:
     last_air_success_at: datetime | None = None
     last_measurement_at: datetime | None = None
     timezone_name: str = DEFAULT_TIMEZONE
+    language: str = 'de'
 
 
 class KindleDisplayService:
@@ -232,6 +233,13 @@ def _ui_timezone(db: Session) -> str:
     return timezone_name
 
 
+def _ui_language(db: Session) -> str:
+    row = db.get(AppSetting, UI_SETTINGS_KEY)
+    value = row.value if row and isinstance(row.value, dict) else {}
+    language = str(value.get('language') or 'de').strip().lower()
+    return language if language in {'de', 'en'} else 'de'
+
+
 def _zoneinfo(timezone_name: str) -> ZoneInfo:
     try:
         return ZoneInfo(timezone_name)
@@ -294,6 +302,7 @@ def _finance_settings(db: Session) -> tuple[float, str]:
 
 def collect_kindle_values(db: Session) -> KindleValues:
     timezone_name = _ui_timezone(db)
+    language = _ui_language(db)
     kwh_price, currency_code = _finance_settings(db)
 
     if _simulation_enabled(db):
@@ -315,6 +324,7 @@ def collect_kindle_values(db: Session) -> KindleValues:
             last_air_success_at=air.last_success_at,
             last_measurement_at=sim.timestamp,
             timezone_name=timezone_name,
+            language=language,
         )
 
     cache = _air_cache(db)
@@ -336,6 +346,7 @@ def collect_kindle_values(db: Session) -> KindleValues:
         last_air_success_at=parse_dt(cache.get('last_success_at')),
         last_measurement_at=last_measurement_at,
         timezone_name=timezone_name,
+        language=language,
     )
 
 
@@ -658,6 +669,22 @@ def _draw_home_import_card(img: Image.Image, draw: ImageDraw.ImageDraw, box: tup
     _draw_text_center(draw, dcx, dcy + 18, 'Solar', fonts['donut_label'])
 
 
+def _kindle_date_text(dt: datetime, language: str) -> str:
+    if language == 'en':
+        return dt.strftime('%m/%d/%Y')
+    return dt.strftime('%d.%m.%Y')
+
+
+def _kindle_time_text(dt: datetime, language: str, *, with_seconds: bool = False) -> str:
+    if language == 'en':
+        return dt.strftime('%I:%M:%S %p' if with_seconds else '%I:%M %p').lstrip('0')
+    return dt.strftime('%H:%M:%S' if with_seconds else '%H:%M')
+
+
+def _kindle_updated_label(language: str) -> str:
+    return 'Updated' if language == 'en' else 'Aktualisiert'
+
+
 def render_kindle_png(values: KindleValues, output_path: Path) -> None:
     img = Image.new('L', (KINDLE_WIDTH, KINDLE_HEIGHT), 255)
     draw = ImageDraw.Draw(img)
@@ -681,7 +708,7 @@ def render_kindle_png(values: KindleValues, output_path: Path) -> None:
     now_local = datetime.now(tz)
     display_time = now_local + timedelta(minutes=1)
 
-    _draw_text_center(draw, KINDLE_WIDTH // 2, 18, display_time.strftime('%d.%m.%Y'), fonts['date'])
+    _draw_text_center(draw, KINDLE_WIDTH // 2, 18, _kindle_date_text(display_time, values.language), fonts['date'])
 
     _draw_home_import_card(img, draw, (10, 46, KINDLE_WIDTH - 10, 228), values, fonts)
 
@@ -711,8 +738,8 @@ def render_kindle_png(values: KindleValues, output_path: Path) -> None:
         'wind', fonts, short_label='2.5',
     )
 
-    _draw_text_center(draw, KINDLE_WIDTH // 2, 650, display_time.strftime('%H:%M'), fonts['time'])
-    _draw_text_center(draw, KINDLE_WIDTH // 2, 776, f'Aktualisiert: {now_local.strftime("%H:%M:%S")}', fonts['footer'])
+    _draw_text_center(draw, KINDLE_WIDTH // 2, 650, _kindle_time_text(display_time, values.language), fonts['time'])
+    _draw_text_center(draw, KINDLE_WIDTH // 2, 776, f'{_kindle_updated_label(values.language)}: {_kindle_time_text(now_local, values.language, with_seconds=True)}', fonts['footer'])
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     img.save(output_path, format='PNG', optimize=True)
