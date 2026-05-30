@@ -674,7 +674,6 @@ function isAdmin(user: User | null): boolean {
   return user?.role === 'admin';
 }
 
-export default 
 function SimulationBanner() {
   const { t } = useI18n();
   const [enabled, setEnabled] = useState(false);
@@ -698,7 +697,7 @@ function SimulationBanner() {
   return <div className="simulation-banner">{t('matrixBanner')}</div>;
 }
 
-function App() {
+export default function App() {
   const [language, setLanguageState] = useState<Language>(readStoredLanguage);
   const [theme, setTheme] = useState<Theme>(readStoredTheme);
   const [user, setUser] = useState<User | null>(null);

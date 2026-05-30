@@ -1249,3 +1249,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 ## Disclaimer
 
 BPSTracker is a private monitoring tool for local energy visualization. It is not a certified metering system and should not be used for billing, legal metering, or safety-critical decisions.
+
+
+<!-- Fix simulation banner rendering by keeping App as the default React export. -->
