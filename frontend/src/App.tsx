@@ -3,7 +3,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Activity, Euro, Globe2, History, LogOut, Menu, Moon, Plus, RefreshCcw, Settings, ShieldCheck, Sun, Droplets, Thermometer, Trash2, UserCog, Wind, Zap } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api, setToken, getToken } from './api';
-import type { AirSensorCurrent, AirSensorSettings, CurrencyCode, CurrentValuesApiSettings, Device, DeviceType, FinanceSettings, KindleDisplaySettings, Language, Measurement, RetentionSettings, Summary, UiSettings, User } from './types';
+import type { AirSensorCurrent, AirSensorSettings, BackupInfo, CurrencyCode, CurrentValuesApiSettings, Device, DeviceType, FinanceSettings, KindleDisplaySettings, Language, Measurement, RetentionSettings, Summary, UiSettings, User } from './types';
 
 type Tab = 'dashboard' | 'history' | 'setup' | 'account';
 type TranslationKey = keyof typeof translations.de;
@@ -153,6 +153,22 @@ const translations = {
     saveRetention: 'Aufbewahrung speichern',
     retentionSaved: 'Datenaufbewahrung wurde gespeichert.',
     retentionCurrent: 'Aktuelle Rohdaten-Aufbewahrung: {days} Tage',
+    backupSettings: 'Backup',
+    backupHint: 'Erstellt ein verschlüsseltes Backup mit Datenbank-Dump, Konfiguration und Backend-Daten. Das Passwort wird nur für dieses Backup verwendet und nicht gespeichert.',
+    backupPassword: 'Backup-Passwort',
+    backupConfirmPassword: 'Passwort wiederholen',
+    createEncryptedBackup: 'Verschlüsseltes Backup erstellen',
+    backupPasswordWarning: 'Ohne dieses Passwort kann das Backup nicht wiederhergestellt werden.',
+    backupCreated: 'Backup wurde erstellt.',
+    existingBackups: 'Vorhandene Backups',
+    download: 'Download',
+    deleteBackup: 'Löschen',
+    backupDeleteConfirm: 'Dieses Backup wirklich löschen?',
+    backupPasswordMismatch: 'Die Passwörter stimmen nicht überein.',
+    backupPasswordTooShort: 'Das Backup-Passwort muss mindestens 12 Zeichen lang sein.',
+    noBackups: 'Keine Backups vorhanden.',
+    backupSize: 'Größe',
+    created: 'Erstellt',
     currentValuesApiSettings: 'JSON-API',
     currentValuesApiHint: 'Stellt aktuelle BPSTracker-Werte als JSON unter /api/current-values bereit. Deaktiviere diese Option, wenn du die Schnittstelle nicht nutzt.',
     enableCurrentValuesApi: 'JSON-API aktivieren',
@@ -364,6 +380,22 @@ const translations = {
     saveRetention: 'Save retention',
     retentionSaved: 'Data retention has been saved.',
     retentionCurrent: 'Current raw data retention: {days} days',
+    backupSettings: 'Backup',
+    backupHint: 'Creates an encrypted backup with database dump, configuration and backend data. The password is used only for this backup and is not stored.',
+    backupPassword: 'Backup password',
+    backupConfirmPassword: 'Repeat password',
+    createEncryptedBackup: 'Create encrypted backup',
+    backupPasswordWarning: 'Without this password the backup cannot be restored.',
+    backupCreated: 'Backup has been created.',
+    existingBackups: 'Existing backups',
+    download: 'Download',
+    deleteBackup: 'Delete',
+    backupDeleteConfirm: 'Really delete this backup?',
+    backupPasswordMismatch: 'The passwords do not match.',
+    backupPasswordTooShort: 'The backup password must be at least 12 characters long.',
+    noBackups: 'No backups available.',
+    backupSize: 'Size',
+    created: 'Created',
     currentValuesApiSettings: 'JSON API',
     currentValuesApiHint: 'Provides current BPSTracker values as JSON at /api/current-values. Disable this option if you do not use the endpoint.',
     enableCurrentValuesApi: 'Enable JSON API',
@@ -547,6 +579,18 @@ function fmtW(value?: number | null, language: Language = 'de'): string {
 function fmtKwh(value?: number | null, language: Language = 'de'): string {
   if (value === null || value === undefined) return translations[language].none;
   return `${value.toLocaleString(localeFor(language), { maximumFractionDigits: 2 })} kWh`;
+}
+
+function fmtBytes(value?: number | null, language: Language = 'de'): string {
+  if (value === null || value === undefined) return translations[language].none;
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let size = value;
+  let index = 0;
+  while (size >= 1024 && index < units.length - 1) {
+    size /= 1024;
+    index += 1;
+  }
+  return `${size.toLocaleString(localeFor(language), { maximumFractionDigits: index === 0 ? 0 : 1 })} ${units[index]}`;
 }
 
 function fmtDate(value?: string | null, language: Language = 'de'): string {
@@ -1160,6 +1204,7 @@ function SetupView({ onCurrentUserChange }: { onCurrentUserChange: (user: User) 
       <CurrentValuesApiSettingsPanel />
       <UserCredentialsPanel onCurrentUserChange={onCurrentUserChange} />
       <FinanceSettingsPanel />
+      <BackupSettingsPanel />
       <RetentionSettingsPanel />
       <AirSensorSettingsPanel />
       <DeviceSetupPanel />
@@ -1346,6 +1391,107 @@ function FinanceSettingsPanel() {
       </div>
       <p className="hint">{t('currencyHint')}</p>
       <button onClick={() => void save()}>{t('saveFinance')}</button>
+    </section>
+  );
+}
+
+
+function BackupSettingsPanel() {
+  const { language, t } = useI18n();
+  const [backups, setBackups] = useState<BackupInfo[]>([]);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function load() {
+    setBackups(await api.backups());
+  }
+
+  useEffect(() => { void load(); }, []);
+
+  async function createBackup() {
+    setMessage(null);
+    setError(null);
+    if (password.length < 12) {
+      setError(t('backupPasswordTooShort'));
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError(t('backupPasswordMismatch'));
+      return;
+    }
+    setBusy(true);
+    try {
+      const created = await api.createBackup(password, confirmPassword);
+      setPassword('');
+      setConfirmPassword('');
+      setMessage(t('backupCreated'));
+      await load();
+      await downloadBackup(created.filename);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function downloadBackup(filename: string) {
+    const blob = await api.downloadBackup(filename);
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  async function deleteBackup(filename: string) {
+    if (!window.confirm(t('backupDeleteConfirm'))) return;
+    setError(null);
+    setMessage(null);
+    await api.deleteBackup(filename);
+    await load();
+  }
+
+  return (
+    <section className="panel">
+      <div className="panel-head"><h2><ShieldCheck size={20} /> {t('backupSettings')}</h2></div>
+      <p className="hint">{t('backupHint')}</p>
+      <p className="hint strong-hint">{t('backupPasswordWarning')}</p>
+      {message && <div className="info">{message}</div>}
+      {error && <div className="error">{error}</div>}
+      <div className="form-grid finance-form">
+        <label>{t('backupPassword')}<input type="password" value={password} onChange={e => setPassword(e.target.value)} autoComplete="new-password" /></label>
+        <label>{t('backupConfirmPassword')}<input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} autoComplete="new-password" /></label>
+      </div>
+      <button disabled={busy} onClick={() => void createBackup()}>{busy ? t('wait') : t('createEncryptedBackup')}</button>
+
+      <h3>{t('existingBackups')}</h3>
+      {backups.length === 0 ? <p className="hint">{t('noBackups')}</p> : (
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr><th>{t('created')}</th><th>{t('backupSize')}</th><th>{t('actions')}</th></tr>
+            </thead>
+            <tbody>
+              {backups.map(backup => (
+                <tr key={backup.filename}>
+                  <td><code>{backup.filename}</code><br /><span className="muted">{fmtDate(backup.created_at, language)}</span></td>
+                  <td>{fmtBytes(backup.size_bytes, language)}</td>
+                  <td className="actions-cell">
+                    <button type="button" className="secondary" onClick={() => void downloadBackup(backup.filename)}>{t('download')}</button>
+                    <button type="button" className="danger" onClick={() => void deleteBackup(backup.filename)}>{t('deleteBackup')}</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
   );
 }

@@ -28,6 +28,7 @@ https://github.com/syschelle/bpstracker
 - [JSON API](#json-api)
 - [Air quality sensor](#air-quality-sensor)
 - [Data retention](#data-retention)
+- [Encrypted backups](#encrypted-backups)
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Deployment](#deployment)
@@ -756,7 +757,147 @@ The backend itself should not be published to the host network.
 
 ---
 
+---
+
+## Encrypted backups
+
+BPSTracker can create encrypted backups directly from the **Setup** area.
+
+The backup feature is intended to protect the most important application data without exposing secrets in plain text. The backup password is entered **per backup** and is **not stored** anywhere.
+
+The password is not saved in:
+
+- the database
+- `.env`
+- application settings
+- the backup metadata
+- the browser after the form is cleared
+
+The backend only uses the password in memory while creating the encrypted backup.
+
+### What is included
+
+A backup contains:
+
+```text
+backup/
+├── manifest.json
+├── database.sql
+├── environment.env
+└── backend_data/
+```
+
+The most important part is the PostgreSQL dump:
+
+```text
+database.sql
+```
+
+It contains the BPSTracker database state, including:
+
+- application settings
+- configured devices
+- users and password hashes
+- 2FA configuration
+- historical measurements
+- daily aggregates
+- financial settings
+- optional interface settings
+
+The `environment.env` file contains an environment snapshot that can help with restore or migration.
+
+The `backend_data/` directory may contain backend-side data such as cached generated files. The backup directory itself is excluded from nested backups.
+
+### Backup filename
+
+Encrypted backup files use this naming scheme:
+
+```text
+bpstracker-backup-YYYYMMDD-HHMMSS.tar.gz.bpsenc
+```
+
+Example:
+
+```text
+bpstracker-backup-20260530-143012.tar.gz.bpsenc
+```
+
+### Encryption
+
+Backups are encrypted before download.
+
+The current format uses:
+
+```text
+AES-256-GCM
+PBKDF2-HMAC-SHA256
+per-backup random salt
+per-backup random nonce
+```
+
+The unencrypted intermediate archive is deleted immediately after encryption.
+
+### Creating a backup
+
+Open the web interface as an admin user and go to:
+
+```text
+Setup -> Backup
+```
+
+Then:
+
+1. Enter a backup password.
+2. Repeat the password.
+3. Click **Create encrypted backup**.
+4. Download the generated `.tar.gz.bpsenc` file.
+5. Store the file and password safely.
+
+The password must be at least 12 characters long.
+
+### Existing backups
+
+The Setup page lists existing encrypted backups stored on the server.
+
+For each backup you can:
+
+- download it again
+- delete it from the server
+
+Only admin users can create, download or delete backups.
+
+### Important warning
+
+The backup password cannot be recovered.
+
+If the password is lost, the backup cannot be decrypted.
+
+This is intentional and protects the backup if the file is copied or leaked.
+
+### Restore
+
+Automatic restore from the web UI is intentionally not implemented yet.
+
+Restoring a backup replaces the running application's own database and should be done manually and carefully.
+
+A manual restore flow is expected to look like this:
+
+1. Stop BPSTracker.
+2. Decrypt the `.tar.gz.bpsenc` backup using the backup password.
+3. Extract the resulting archive.
+4. Restore `database.sql` into PostgreSQL.
+5. Restore configuration/data files as needed.
+6. Start BPSTracker again.
+
+A dedicated restore guide should be added before using backups for production disaster recovery.
+
+---
+
+
 ## Backup and restore
+
+For encrypted backups created from the web interface, see [Encrypted backups](#encrypted-backups). These backups are password-protected and should be preferred over unencrypted manual archive backups.
+
 
 The most important data is stored in the Docker volumes and persistent data directory below:
 

@@ -210,3 +210,21 @@ class HistoryPoint(BaseModel):
     total_power_w: float | None = None
     solar_power_w: float | None = None
     grid_power_w: float | None = None
+
+
+
+class BackupCreateRequest(BaseModel):
+    password: str = Field(min_length=12, max_length=1024)
+    confirm_password: str = Field(min_length=12, max_length=1024)
+
+
+class BackupInfo(BaseModel):
+    filename: str
+    size_bytes: int
+    created_at: datetime
+
+
+class BackupCreateResponse(BaseModel):
+    filename: str
+    size_bytes: int
+    download_url: str

@@ -1,4 +1,4 @@
-import type { AirSensorCurrent, AirSensorSettings, CurrentValuesApiSettings, Device, FinanceSettings, KindleDisplaySettings, Measurement, RetentionSettings, Summary, UiSettings, User } from './types';
+import type { AirSensorCurrent, AirSensorSettings, BackupCreateResponse, BackupInfo, CurrentValuesApiSettings, Device, FinanceSettings, KindleDisplaySettings, Measurement, RetentionSettings, Summary, UiSettings, User } from './types';
 
 type RuntimeConfig = {
   API_BASE_URL?: string;
@@ -123,5 +123,9 @@ export const api = {
     return request<Measurement[]>(`/api/measurements/history?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}&limit=5000`);
   },
   exportCsv: () => download('/api/measurements/export.csv'),
+  backups: () => request<BackupInfo[]>('/api/backups'),
+  createBackup: (password: string, confirm_password: string) => request<BackupCreateResponse>('/api/backups/create', { method: 'POST', body: JSON.stringify({ password, confirm_password }) }),
+  downloadBackup: (filename: string) => download(`/api/backups/download/${encodeURIComponent(filename)}`),
+  deleteBackup: (filename: string) => request<{ ok: boolean }>(`/api/backups/${encodeURIComponent(filename)}`, { method: 'DELETE' }),
   kindlePreviewUrl: () => `${API_BASE}/api/kindle/display.png`
 };

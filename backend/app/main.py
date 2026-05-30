@@ -13,7 +13,7 @@ from .database import Base, SessionLocal, engine
 from .models import User, UserRole
 from .poller import Poller
 from .kindle_display import kindle_display_service
-from .routers import auth, current_values, devices, kindle, measurements, settings as settings_router, users
+from .routers import auth, backups, current_values, devices, kindle, measurements, settings as settings_router, users
 from .security import delete_recovery_codes, password_hash
 
 poller = Poller()
@@ -292,6 +292,7 @@ app.include_router(devices.router)
 app.include_router(measurements.router)
 app.include_router(settings_router.router)
 app.include_router(kindle.router)
+app.include_router(backups.router)
 app.include_router(current_values.router)
 
 

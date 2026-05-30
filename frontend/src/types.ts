@@ -122,3 +122,16 @@ export interface AirSensorCurrent {
   last_success_at?: string | null;
   last_error?: string | null;
 }
+
+
+export interface BackupInfo {
+  filename: string;
+  size_bytes: number;
+  created_at: string;
+}
+
+export interface BackupCreateResponse {
+  filename: string;
+  size_bytes: number;
+  download_url: string;
+}

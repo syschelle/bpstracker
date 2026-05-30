@@ -735,3 +735,24 @@ html[data-theme='dark'] .kindle-preview img {
 .github-repository-panel .button {
   width: fit-content;
 }
+
+
+.strong-hint {
+  font-weight: 800;
+}
+
+.actions-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+button.danger {
+  background: #dc2626;
+  color: #fff;
+}
+
+html[data-theme='dark'] button.danger {
+  background: #991b1b;
+  color: #fff;
+}
