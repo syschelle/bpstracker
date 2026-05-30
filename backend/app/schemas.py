@@ -143,6 +143,12 @@ class CurrentValuesApiSettings(BaseModel):
     enabled: bool = False
 
 
+class SimulationSettings(BaseModel):
+    enabled: bool = False
+    pv_peak_w: float = Field(default=800.0, ge=100, le=5000)
+    household_profile: str = 'two_person_household'
+
+
 
 
 class AirSensorSettings(BaseModel):

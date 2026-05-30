@@ -18,8 +18,9 @@ from ..energy_retention import (
     ensure_completed_daily_summaries,
     get_stored_total_kwh,
 )
-from ..routers.settings import get_finance_settings_from_db, get_retention_settings_from_db
+from ..routers.settings import get_finance_settings_from_db, get_retention_settings_from_db, get_simulation_settings_from_db, get_ui_settings_from_db
 from ..schemas import HistoryPoint, MeasurementRead, SummaryResponse
+from ..simulation import simulated_history, simulated_latest, simulated_summary
 from ..security import get_current_user
 
 router = APIRouter(prefix='/api/measurements', tags=['measurements'])
@@ -75,7 +76,12 @@ def _raw_history_rows(
 
 
 @router.get('/latest', response_model=list[MeasurementRead])
-def latest_measurements(_: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[Measurement]:
+def latest_measurements(_: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[Measurement | MeasurementRead]:
+    simulation = get_simulation_settings_from_db(db)
+    if simulation.enabled:
+        ui = get_ui_settings_from_db(db)
+        return simulated_latest(ui.timezone)
+
     subq = (
         db.query(Measurement.device_id, Measurement.source_type, Measurement.channel, Measurement.phase, func.max(Measurement.timestamp).label('max_ts'))
         .group_by(Measurement.device_id, Measurement.source_type, Measurement.channel, Measurement.phase)
@@ -118,6 +124,11 @@ def history(
     end = end or datetime.now(timezone.utc)
     start = start or (end - timedelta(hours=24))
     bucket_seconds = _bucket_seconds(start, end)
+    simulation = get_simulation_settings_from_db(db)
+    if simulation.enabled:
+        ui = get_ui_settings_from_db(db)
+        return simulated_history(start, end, ui.timezone, bucket_seconds)
+
     rows = _raw_history_rows(db, start, end, device_id=device_id, source_type=source_type, limit=limit)
 
     buckets: dict[datetime, dict] = defaultdict(lambda: {
@@ -172,6 +183,20 @@ def history(
 
 @router.get('/summary', response_model=SummaryResponse)
 def summary(_: User = Depends(get_current_user), db: Session = Depends(get_db)) -> SummaryResponse:
+    simulation = get_simulation_settings_from_db(db)
+    if simulation.enabled:
+        finance = get_finance_settings_from_db(db)
+        ui = get_ui_settings_from_db(db)
+        retention = get_retention_settings_from_db(db)
+        simulated = simulated_summary(
+            ui.timezone,
+            kwh_price=finance.kwh_price_eur,
+            investment=finance.investment_cost_eur,
+            currency_code=finance.currency_code,
+        )
+        simulated.raw_retention_days = retention.raw_retention_days
+        return simulated
+
     latest = latest_measurements(_, db)
     device_count = db.query(Device).count()
     online_count = db.query(DeviceStatus).filter(DeviceStatus.online.is_(True)).count()

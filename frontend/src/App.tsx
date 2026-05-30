@@ -3,7 +3,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Activity, Euro, Globe2, History, LogOut, Menu, Moon, Plus, RefreshCcw, Settings, ShieldCheck, Sun, Droplets, Thermometer, Trash2, UserCog, Wind, Zap } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api, setToken, getToken } from './api';
-import type { AirSensorCurrent, AirSensorSettings, BackupInfo, CurrencyCode, CurrentValuesApiSettings, Device, DeviceType, FinanceSettings, KindleDisplaySettings, Language, Measurement, RetentionSettings, Summary, UiSettings, User } from './types';
+import type { AirSensorCurrent, AirSensorSettings, BackupInfo, CurrencyCode, CurrentValuesApiSettings, Device, DeviceType, FinanceSettings, KindleDisplaySettings, Language, Measurement, RetentionSettings, SimulationSettings, Summary, UiSettings, User } from './types';
 
 type Tab = 'dashboard' | 'history' | 'setup' | 'account';
 type TranslationKey = keyof typeof translations.de;
@@ -169,6 +169,12 @@ const translations = {
     noBackups: 'Keine Backups vorhanden.',
     backupSize: 'Größe',
     created: 'Erstellt',
+    simulationSettings: 'Simulation',
+    simulationHint: 'Erzeugt realistische Demo-Werte ohne echte Geräte: 800-Watt-Balkon-PV und typischer 2-Personen-Haushalt mit Schwankungen.',
+    enableSimulation: 'Simulation aktivieren',
+    simulationSaved: 'Simulation wurde gespeichert.',
+    saveSimulation: 'Simulation speichern',
+    simulationWarning: 'Bei aktivierter Simulation zeigt Dashboard, Historie und JSON-API simulierte Werte an.',
     currentValuesApiSettings: 'JSON-API',
     currentValuesApiHint: 'Stellt aktuelle BPSTracker-Werte als JSON unter /api/current-values bereit. Deaktiviere diese Option, wenn du die Schnittstelle nicht nutzt.',
     enableCurrentValuesApi: 'JSON-API aktivieren',
@@ -396,6 +402,12 @@ const translations = {
     noBackups: 'No backups available.',
     backupSize: 'Size',
     created: 'Created',
+    simulationSettings: 'Simulation',
+    simulationHint: 'Generates realistic demo values without real devices: 800 W balcony PV and a typical 2-person household with fluctuations.',
+    enableSimulation: 'Enable simulation',
+    simulationSaved: 'Simulation has been saved.',
+    saveSimulation: 'Save simulation',
+    simulationWarning: 'When simulation is enabled, dashboard, history and JSON API show simulated values.',
     currentValuesApiSettings: 'JSON API',
     currentValuesApiHint: 'Provides current BPSTracker values as JSON at /api/current-values. Disable this option if you do not use the endpoint.',
     enableCurrentValuesApi: 'Enable JSON API',
@@ -1201,6 +1213,7 @@ function SetupView({ onCurrentUserChange }: { onCurrentUserChange: (user: User) 
       <TimezoneSettingsPanel />
       <GithubRepositoryPanel />
       <KindleDisplaySettingsPanel />
+      <SimulationSettingsPanel />
       <CurrentValuesApiSettingsPanel />
       <UserCredentialsPanel onCurrentUserChange={onCurrentUserChange} />
       <FinanceSettingsPanel />
@@ -1537,6 +1550,43 @@ function RetentionSettingsPanel() {
 }
 
 
+
+
+function SimulationSettingsPanel() {
+  const { t } = useI18n();
+  const [settings, setSettings] = useState<SimulationSettings>({ enabled: false, pv_peak_w: 800, household_profile: 'two_person_household' });
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function load() {
+    setSettings(await api.simulationSettings());
+  }
+
+  useEffect(() => { void load(); }, []);
+
+  async function save() {
+    setMessage(null);
+    const saved = await api.updateSimulationSettings({
+      enabled: settings.enabled,
+      pv_peak_w: 800,
+      household_profile: 'two_person_household',
+    });
+    setSettings(saved);
+    setMessage(t('simulationSaved'));
+  }
+
+  return (
+    <section className="panel simulation-settings-panel">
+      <div className="panel-head"><h2><Activity size={20} /> {t('simulationSettings')}</h2></div>
+      <p className="hint">{t('simulationHint')}</p>
+      {message && <div className="info">{message}</div>}
+      <div className="form-grid finance-form">
+        <label className="check"><input type="checkbox" checked={settings.enabled} onChange={e => setSettings({ ...settings, enabled: e.target.checked })} /> {t('enableSimulation')}</label>
+      </div>
+      <p className="hint">{t('simulationWarning')}</p>
+      <button onClick={() => void save()}>{t('saveSimulation')}</button>
+    </section>
+  );
+}
 
 function CurrentValuesApiSettingsPanel() {
   const { t } = useI18n();

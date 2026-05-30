@@ -76,6 +76,12 @@ export interface CurrentValuesApiSettings {
   enabled: boolean;
 }
 
+export interface SimulationSettings {
+  enabled: boolean;
+  pv_peak_w: number;
+  household_profile: string;
+}
+
 export interface Summary {
   current_grid_power_w?: number | null;
   current_solar_power_w?: number | null;

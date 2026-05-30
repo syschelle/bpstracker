@@ -1,4 +1,4 @@
-import type { AirSensorCurrent, AirSensorSettings, BackupCreateResponse, BackupInfo, CurrentValuesApiSettings, Device, FinanceSettings, KindleDisplaySettings, Measurement, RetentionSettings, Summary, UiSettings, User } from './types';
+import type { AirSensorCurrent, AirSensorSettings, BackupCreateResponse, BackupInfo, CurrentValuesApiSettings, Device, FinanceSettings, KindleDisplaySettings, Measurement, RetentionSettings, SimulationSettings, Summary, UiSettings, User } from './types';
 
 type RuntimeConfig = {
   API_BASE_URL?: string;
@@ -105,6 +105,8 @@ export const api = {
   updateKindleDisplaySettings: (payload: KindleDisplaySettings) => request<KindleDisplaySettings>('/api/settings/kindle-display', { method: 'PUT', body: JSON.stringify(payload) }),
   currentValuesApiSettings: () => request<CurrentValuesApiSettings>('/api/settings/current-values-api'),
   updateCurrentValuesApiSettings: (payload: CurrentValuesApiSettings) => request<CurrentValuesApiSettings>('/api/settings/current-values-api', { method: 'PUT', body: JSON.stringify(payload) }),
+  simulationSettings: () => request<SimulationSettings>('/api/settings/simulation'),
+  updateSimulationSettings: (payload: SimulationSettings) => request<SimulationSettings>('/api/settings/simulation', { method: 'PUT', body: JSON.stringify(payload) }),
   airSensorSettings: () => request<AirSensorSettings>('/api/settings/air-sensor'),
   updateAirSensorSettings: (payload: AirSensorSettings) => request<AirSensorSettings>('/api/settings/air-sensor', { method: 'PUT', body: JSON.stringify(payload) }),
   airSensorCurrent: () => request<AirSensorCurrent>('/api/settings/air-sensor/current'),

@@ -26,6 +26,7 @@ https://github.com/syschelle/bpstracker
 - [Authentication and user roles](#authentication-and-user-roles)
 - [Kindle display](#kindle-display)
 - [JSON API](#json-api)
+- [Simulation mode](#simulation-mode)
 - [Air quality sensor](#air-quality-sensor)
 - [Data retention](#data-retention)
 - [Encrypted backups](#encrypted-backups)
@@ -465,6 +466,37 @@ The preview calls `/api/current-values` and displays the current JSON response d
 | `total_grid_export_kwh` | total grid export |
 
 ---
+
+## Simulation mode
+
+BPSTracker includes an optional simulation mode for demo or test installations without real devices.
+
+The simulation can be enabled in:
+
+```text
+Setup -> Simulation
+```
+
+When enabled, the dashboard, history chart and JSON API return simulated values instead of real device measurements.
+
+The simulation is based on:
+
+- an 800 W balcony PV system
+- a typical 2-person household
+- realistic daily load curves
+- morning and evening consumption peaks
+- appliance spikes
+- cloud and daylight fluctuations
+- seasonal solar variation
+
+No simulated measurements are written to the database. The values are generated live.
+
+This makes it possible to preview the UI, charts, balances, costs and JSON output before real Shelly devices are configured.
+
+Disable simulation before using BPSTracker for real monitoring.
+
+---
+
 
 ## Air quality sensor
 

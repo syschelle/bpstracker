@@ -16,13 +16,21 @@ from ..energy_retention import (
     get_stored_total_kwh,
 )
 from ..models import AppSetting, Measurement
+from ..simulation import simulated_values_at
 
 router = APIRouter(prefix='/api/current-values', tags=['current-values'])
 
 GRID_POWER_SOURCES = {'shelly_3em_gen1_total', 'shelly_rpc_em_total'}
 UI_SETTINGS_KEY = 'ui'
 CURRENT_VALUES_API_SETTINGS_KEY = 'current_values_api'
+SIMULATION_SETTINGS_KEY = 'simulation'
 DEFAULT_TIMEZONE = 'Europe/Berlin'
+
+
+def _simulation_enabled(db: Session) -> bool:
+    row = db.get(AppSetting, SIMULATION_SETTINGS_KEY)
+    value = row.value if row and isinstance(row.value, dict) else {}
+    return bool(value.get('enabled', False))
 
 
 def _api_enabled(db: Session) -> bool:
@@ -101,6 +109,30 @@ def current_values(db: Session = Depends(get_db)) -> dict:
     if not _api_enabled(db):
         raise HTTPException(status_code=503, detail='Current values API is disabled in setup')
 
+    timezone_name = _ui_timezone(db)
+    now_utc = datetime.now(timezone.utc)
+    if _simulation_enabled(db):
+        values = simulated_values_at(now_utc, timezone_name)
+        return {
+            'timestamp_utc': now_utc.isoformat(),
+            'local_date': now_utc.astimezone(_zoneinfo(timezone_name)).date().isoformat(),
+            'timezone': timezone_name,
+            'simulation_enabled': True,
+            'simulation_profile': '800 W balcony PV, 2-person household',
+            'last_measurement_at': values.timestamp.isoformat(),
+            'current_solar_production_w': values.solar_w,
+            'current_grid_power_w': values.grid_w,
+            'current_grid_import_w': max(0.0, values.grid_w),
+            'current_grid_export_w': abs(min(0.0, values.grid_w)),
+            'current_total_consumption_w': values.consumption_w,
+            'daily_solar_production_kwh': values.solar_today_kwh,
+            'daily_grid_import_kwh': values.import_today_kwh,
+            'daily_grid_export_kwh': values.export_today_kwh,
+            'total_solar_production_kwh': values.solar_total_kwh,
+            'total_grid_import_kwh': values.import_total_kwh,
+            'total_grid_export_kwh': values.export_total_kwh,
+        }
+
     latest = _latest_measurements(db)
 
     current_grid_power_w = None
@@ -128,10 +160,8 @@ def current_values(db: Session = Depends(get_db)) -> dict:
     # grid import is zero and export is reported separately.
     current_total_consumption_w = current_grid_import_w + current_solar_power_w
 
-    timezone_name = _ui_timezone(db)
     today_start_utc, today_end_utc, local_date = _today_bounds_utc(timezone_name)
 
-    now_utc = datetime.now(timezone.utc)
     ensure_completed_daily_summaries(db, now_utc)
 
     today_rows = (

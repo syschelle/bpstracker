@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models import AppSetting, AuditLog, User
-from ..schemas import AirSensorCurrent, AirSensorSettings, CurrentValuesApiSettings, FinanceSettings, KindleDisplaySettings, RetentionSettings, UiSettings
+from ..schemas import AirSensorCurrent, AirSensorSettings, CurrentValuesApiSettings, FinanceSettings, KindleDisplaySettings, RetentionSettings, SimulationSettings, UiSettings
 from ..security import get_current_user, require_admin
 
 router = APIRouter(prefix='/api/settings', tags=['settings'])
@@ -21,6 +21,7 @@ RETENTION_SETTINGS_KEY = 'retention'
 AIR_SENSOR_SETTINGS_KEY = 'air_sensor'
 KINDLE_DISPLAY_SETTINGS_KEY = 'kindle_display'
 CURRENT_VALUES_API_SETTINGS_KEY = 'current_values_api'
+SIMULATION_SETTINGS_KEY = 'simulation'
 AIR_SENSOR_CACHE_KEY = 'air_sensor_cache'
 AIR_SENSOR_SUCCESS_POLL_SECONDS = 180
 AIR_SENSOR_RETRY_SECONDS = 30
@@ -309,6 +310,20 @@ def get_current_values_api_settings_from_db(db: Session) -> CurrentValuesApiSett
     return _normalize_current_values_api_value(row.value if row else None)
 
 
+def _normalize_simulation_value(value: dict | None) -> SimulationSettings:
+    value = value or {}
+    return SimulationSettings(
+        enabled=bool(value.get('enabled', False)),
+        pv_peak_w=float(value.get('pv_peak_w', 800.0) or 800.0),
+        household_profile=str(value.get('household_profile') or 'two_person_household'),
+    )
+
+
+def get_simulation_settings_from_db(db: Session) -> SimulationSettings:
+    row = db.get(AppSetting, SIMULATION_SETTINGS_KEY)
+    return _normalize_simulation_value(row.value if row else None)
+
+
 @router.get('/ui', response_model=UiSettings)
 def get_ui_settings(_: User = Depends(get_current_user), db: Session = Depends(get_db)) -> UiSettings:
     return get_ui_settings_from_db(db)
@@ -434,6 +449,33 @@ def update_current_values_api_settings(
     db.commit()
     db.refresh(row)
     return _normalize_current_values_api_value(row.value)
+
+
+
+
+@router.get('/simulation', response_model=SimulationSettings)
+def get_simulation_settings(_: User = Depends(require_admin), db: Session = Depends(get_db)) -> SimulationSettings:
+    return get_simulation_settings_from_db(db)
+
+
+@router.put('/simulation', response_model=SimulationSettings)
+def update_simulation_settings(
+    payload: SimulationSettings,
+    actor: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> SimulationSettings:
+    normalized = _normalize_simulation_value(payload.model_dump())
+    row = db.get(AppSetting, SIMULATION_SETTINGS_KEY)
+    value = normalized.model_dump()
+    if row is None:
+        row = AppSetting(key=SIMULATION_SETTINGS_KEY, value=value)
+        db.add(row)
+    else:
+        row.value = value
+    db.add(AuditLog(actor_user_id=actor.id, action='settings.simulation.update', details=value))
+    db.commit()
+    db.refresh(row)
+    return _normalize_simulation_value(row.value)
 
 
 @router.get('/air-sensor', response_model=AirSensorSettings)
