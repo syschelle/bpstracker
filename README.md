@@ -4,7 +4,7 @@
 
 The project is designed to run locally in Docker, for example on a small home server or Raspberry Pi, with the backend protected inside the Docker network and only the frontend exposed to the local network.
 
-<img width="1495" height="957" alt="image" src="https://github.com/user-attachments/assets/51082c3f-2476-4e76-a8b9-50b8d83808be" />
+<img width="1495" height="957" alt="image" src="https://github.com/user-attachments/assets/aed13436-0537-4f45-836e-87eb1d285969" />
 
 ---
 
