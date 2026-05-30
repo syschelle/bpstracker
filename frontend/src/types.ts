@@ -62,6 +62,9 @@ export interface UiSettings {
 export interface FinanceSettings {
   kwh_price_eur: number;
   investment_cost_eur: number;
+  battery_analysis_enabled: boolean;
+  battery_cost_eur: number;
+  battery_capacity_kwh: number;
   currency_code: CurrencyCode;
 }
 
@@ -96,6 +99,20 @@ export interface Summary {
   solar_total_kwh?: number | null;
   kwh_price_eur: number;
   investment_cost_eur: number;
+  battery_analysis_enabled?: boolean | null;
+  battery_cost_eur?: number | null;
+  battery_capacity_kwh?: number | null;
+  battery_roundtrip_efficiency?: number | null;
+  battery_remaining_bps_investment_eur?: number | null;
+  battery_combined_investment_eur?: number | null;
+  battery_combined_payback_days?: number | null;
+  battery_combined_payback_years?: number | null;
+  battery_usable_surplus_today_kwh?: number | null;
+  battery_savings_today_eur?: number | null;
+  battery_savings_total_potential_eur?: number | null;
+  battery_payback_days?: number | null;
+  battery_payback_years?: number | null;
+  battery_worthwhile?: boolean | null;
   currency_code: CurrencyCode;
   consumption_cost_today_eur?: number | null;
   savings_today_eur?: number | null;

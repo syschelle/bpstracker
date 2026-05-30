@@ -26,6 +26,71 @@ from ..security import get_current_user
 router = APIRouter(prefix='/api/measurements', tags=['measurements'])
 
 GRID_POWER_SOURCES = {'shelly_3em_gen1_total', 'shelly_rpc_em_total'}
+BATTERY_ROUNDTRIP_EFFICIENCY = 0.90
+
+
+def battery_analysis(
+    exported_today_kwh: float | None,
+    exported_total_kwh: float | None,
+    *,
+    kwh_price: float,
+    battery_cost: float,
+    battery_capacity_kwh: float,
+    remaining_bps_investment: float | None,
+) -> dict[str, float | bool | None]:
+    """Estimate battery payback while respecting open BPS amortization.
+
+    Feed-in is treated as unpaid. The standalone battery payback shows how long
+    the battery itself would take based on otherwise exported surplus. The
+    combined payback additionally includes the remaining open amortization of
+    the balcony PV system. This avoids presenting a battery as "worthwhile" while
+    the existing installation has not yet paid for itself.
+    """
+    empty = {
+        'battery_remaining_bps_investment_eur': max(0.0, remaining_bps_investment or 0.0),
+        'battery_combined_investment_eur': None,
+        'battery_combined_payback_days': None,
+        'battery_combined_payback_years': None,
+        'battery_usable_surplus_today_kwh': None,
+        'battery_savings_today_eur': None,
+        'battery_savings_total_potential_eur': None,
+        'battery_payback_days': None,
+        'battery_payback_years': None,
+        'battery_worthwhile': None,
+    }
+    if battery_cost <= 0 or battery_capacity_kwh <= 0 or kwh_price <= 0:
+        return empty
+
+    remaining_bps = max(0.0, remaining_bps_investment or 0.0)
+    export_today = max(0.0, exported_today_kwh or 0.0)
+    export_total = max(0.0, exported_total_kwh or 0.0)
+    usable_today = min(export_today, max(0.0, battery_capacity_kwh))
+    daily_battery_savings = usable_today * BATTERY_ROUNDTRIP_EFFICIENCY * kwh_price
+    total_potential = export_total * BATTERY_ROUNDTRIP_EFFICIENCY * kwh_price
+
+    battery_payback_days = battery_cost / daily_battery_savings if daily_battery_savings > 0 else None
+    battery_payback_years = battery_payback_days / 365.25 if battery_payback_days is not None else None
+
+    combined_investment = remaining_bps + battery_cost
+    combined_payback_days = combined_investment / daily_battery_savings if daily_battery_savings > 0 else None
+    combined_payback_years = combined_payback_days / 365.25 if combined_payback_days is not None else None
+
+    # "Worthwhile" now includes the still-open BPS amortization, if any.
+    worthwhile = bool(combined_payback_days is not None and combined_payback_days <= 365.25 * 10)
+
+    return {
+        'battery_remaining_bps_investment_eur': remaining_bps,
+        'battery_combined_investment_eur': combined_investment,
+        'battery_combined_payback_days': combined_payback_days,
+        'battery_combined_payback_years': combined_payback_years,
+        'battery_usable_surplus_today_kwh': usable_today,
+        'battery_savings_today_eur': daily_battery_savings,
+        'battery_savings_total_potential_eur': total_potential,
+        'battery_payback_days': battery_payback_days,
+        'battery_payback_years': battery_payback_years,
+        'battery_worthwhile': worthwhile,
+    }
+
 
 
 def _avg(values: list[float]) -> float | None:
@@ -194,6 +259,20 @@ def summary(_: User = Depends(get_current_user), db: Session = Depends(get_db)) 
             investment=finance.investment_cost_eur,
             currency_code=finance.currency_code,
         )
+        battery = battery_analysis(
+            simulated.exported_today_kwh,
+            simulated.exported_total_kwh,
+            kwh_price=finance.kwh_price_eur,
+            battery_cost=finance.battery_cost_eur if finance.battery_analysis_enabled else 0.0,
+            battery_capacity_kwh=finance.battery_capacity_kwh if finance.battery_analysis_enabled else 0.0,
+            remaining_bps_investment=simulated.remaining_to_breakeven_eur,
+        )
+        for key, value in battery.items():
+            setattr(simulated, key, value)
+        simulated.battery_analysis_enabled = finance.battery_analysis_enabled
+        simulated.battery_cost_eur = finance.battery_cost_eur
+        simulated.battery_capacity_kwh = finance.battery_capacity_kwh
+        simulated.battery_roundtrip_efficiency = BATTERY_ROUNDTRIP_EFFICIENCY
         simulated.raw_retention_days = retention.raw_retention_days
         return simulated
 
@@ -240,6 +319,9 @@ def summary(_: User = Depends(get_current_user), db: Session = Depends(get_db)) 
     retention = get_retention_settings_from_db(db)
     price = finance.kwh_price_eur
     investment = finance.investment_cost_eur
+    battery_enabled = finance.battery_analysis_enabled
+    battery_cost = finance.battery_cost_eur
+    battery_capacity = finance.battery_capacity_kwh
 
     consumption_cost_today = imported_today_kwh * price if imported_today_kwh is not None else None
     savings_today = solar_today_kwh * price if solar_today_kwh is not None else None
@@ -259,6 +341,15 @@ def summary(_: User = Depends(get_current_user), db: Session = Depends(get_db)) 
             estimated_days = 0.0
             estimated_date = now
 
+    battery = battery_analysis(
+        exported_today_kwh,
+        exported_total_kwh,
+        kwh_price=price,
+        battery_cost=battery_cost if battery_enabled else 0.0,
+        battery_capacity_kwh=battery_capacity if battery_enabled else 0.0,
+        remaining_bps_investment=remaining,
+    )
+
     return SummaryResponse(
         current_grid_power_w=current_grid_power,
         current_solar_power_w=current_solar_power,
@@ -271,6 +362,20 @@ def summary(_: User = Depends(get_current_user), db: Session = Depends(get_db)) 
         solar_total_kwh=solar_total_kwh,
         kwh_price_eur=price,
         investment_cost_eur=investment,
+        battery_analysis_enabled=battery_enabled,
+        battery_cost_eur=battery_cost,
+        battery_capacity_kwh=battery_capacity,
+        battery_roundtrip_efficiency=BATTERY_ROUNDTRIP_EFFICIENCY,
+        battery_remaining_bps_investment_eur=battery['battery_remaining_bps_investment_eur'],
+        battery_combined_investment_eur=battery['battery_combined_investment_eur'],
+        battery_combined_payback_days=battery['battery_combined_payback_days'],
+        battery_combined_payback_years=battery['battery_combined_payback_years'],
+        battery_usable_surplus_today_kwh=battery['battery_usable_surplus_today_kwh'],
+        battery_savings_today_eur=battery['battery_savings_today_eur'],
+        battery_savings_total_potential_eur=battery['battery_savings_total_potential_eur'],
+        battery_payback_days=battery['battery_payback_days'],
+        battery_payback_years=battery['battery_payback_years'],
+        battery_worthwhile=battery['battery_worthwhile'],
         currency_code=finance.currency_code,
         consumption_cost_today_eur=consumption_cost_today,
         savings_today_eur=savings_today,

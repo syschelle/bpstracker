@@ -134,7 +134,23 @@ const translations = {
     enabled: 'aktiv',
     disabled: 'aus',
     financeValues: 'Finanzwerte',
-    financeHint: 'Diese Werte werden für Verbrauchskosten, Einsparung und Amortisation im Dashboard verwendet.',
+    financeHint: 'Diese Werte werden für Verbrauchskosten, Einsparung und Amortisation im Dashboard verwendet. Einspeisung wird nicht vergütet.',
+    feedInNotPaidHint: 'Einspeisung wird mit 0 vergütet. Die Akku-Bewertung nutzt den eingespeisten Überschuss als möglichen Speicher-Nutzen.',
+    enableBatteryAnalysis: 'Akku-Amortisationsberechnung aktivieren',
+    batteryAnalysisDisabled: 'Akku-Amortisationsberechnung ist deaktiviert.',
+    batteryCost: 'Akku-Kosten',
+    batteryCapacity: 'Akku-Kapazität',
+    batteryAnalysis: 'Akku-Bewertung',
+    batterySavingsToday: 'Potentielle Akku-Ersparnis heute',
+    batteryUsableSurplusToday: 'Nutzbarer Überschuss heute',
+    batteryPayback: 'Akku-Amortisation ohne offene BKW-Restkosten',
+    batteryCombinedPayback: 'Akku inkl. offener BKW-Amortisation',
+    batteryCombinedInvestment: 'Offene BKW-Restkosten + Akku',
+    batteryOpenBps: 'Offene BKW-Restkosten',
+    batteryWorthwhile: 'Akku lohnt sich rechnerisch',
+    batteryNotWorthwhile: 'Akku lohnt sich rechnerisch noch nicht',
+    batteryMissing: 'Akku-Preis und Kapazität im Setup eintragen.',
+    batteryAssumption: 'Annahme: Einspeisung wird nicht vergütet, Akku-Wirkungsgrad 90 %, maximal ein Lade-/Entladezyklus pro Tag. Wenn das Balkonkraftwerk noch nicht amortisiert ist, werden die offenen Restkosten mit berücksichtigt.',
     financeSaved: 'Finanzwerte wurden gespeichert.',
     currency: 'Währung',
     currencyHint: 'Die Währung gilt für kWh-Preis, Investitionskosten, Einsparung und Amortisation. Es findet keine automatische Umrechnung statt.',
@@ -375,7 +391,23 @@ const translations = {
     enabled: 'enabled',
     disabled: 'off',
     financeValues: 'Financial values',
-    financeHint: 'These values are used for consumption cost, savings, and amortization in the dashboard.',
+    financeHint: 'These values are used for consumption costs, savings and amortization in the dashboard. Grid export is not compensated.',
+    feedInNotPaidHint: 'Grid export is valued at 0. The battery analysis uses exported surplus as potential battery benefit.',
+    enableBatteryAnalysis: 'Enable battery amortization calculation',
+    batteryAnalysisDisabled: 'Battery amortization calculation is disabled.',
+    batteryCost: 'Battery cost',
+    batteryCapacity: 'Battery capacity',
+    batteryAnalysis: 'Battery analysis',
+    batterySavingsToday: 'Potential battery savings today',
+    batteryUsableSurplusToday: 'Usable surplus today',
+    batteryPayback: 'Battery payback without open BPS remainder',
+    batteryCombinedPayback: 'Battery incl. open BPS amortization',
+    batteryCombinedInvestment: 'Open BPS remainder + battery',
+    batteryOpenBps: 'Open BPS remainder',
+    batteryWorthwhile: 'Battery appears worthwhile',
+    batteryNotWorthwhile: 'Battery does not appear worthwhile yet',
+    batteryMissing: 'Enter battery price and capacity in setup.',
+    batteryAssumption: 'Assumption: grid export is unpaid, battery round-trip efficiency 90%, maximum one charge/discharge cycle per day. If the balcony PV system has not paid for itself yet, the open remainder is included.',
     financeSaved: 'Financial values have been saved.',
     currency: 'Currency',
     currencyHint: 'The currency is used for kWh price, investment costs, savings and amortization. No automatic conversion is performed.',
@@ -1152,6 +1184,13 @@ function AmortizationMetric({ summary }: { summary: Summary | null }) {
   const estimatedDate = summary?.estimated_breakeven_date;
   const progressValue = clampPercent(progress ?? 0);
 
+  const batteryEnabled = Boolean(summary?.battery_analysis_enabled);
+  const batteryCost = summary?.battery_cost_eur ?? 0;
+  const batteryCapacity = summary?.battery_capacity_kwh ?? 0;
+  const batteryConfigured = batteryEnabled && batteryCost > 0 && batteryCapacity > 0;
+  const batteryPaybackDays = summary?.battery_payback_days;
+  const batteryWorthwhile = summary?.battery_worthwhile;
+
   return (
     <div className="metric amortization-metric">
       <p>{t('amortization')}</p>
@@ -1170,9 +1209,32 @@ function AmortizationMetric({ summary }: { summary: Summary | null }) {
       ) : (
         <small>{t('enterInvestment')}</small>
       )}
+
+      <div className="battery-analysis">
+        <p>{t('batteryAnalysis')}</p>
+        {!batteryEnabled ? (
+          <small>{t('batteryAnalysisDisabled')}</small>
+        ) : batteryConfigured ? (
+          <>
+            <div className="daily-balance-list">
+              <div><span>{t('batteryUsableSurplusToday')}</span><strong>{fmtKwh(summary?.battery_usable_surplus_today_kwh, language)}</strong></div>
+              <div><span>{t('batterySavingsToday')}</span><strong>{fmtCurrency(summary?.battery_savings_today_eur, language, currency)}</strong></div>
+              <div><span>{t('batteryPayback')}</span><strong>{batteryPaybackDays === null || batteryPaybackDays === undefined ? '∞' : fmtDays(batteryPaybackDays, language, t)}</strong></div>
+              <div><span>{t('batteryOpenBps')}</span><strong>{fmtCurrency(summary?.battery_remaining_bps_investment_eur, language, currency)}</strong></div>
+              <div><span>{t('batteryCombinedInvestment')}</span><strong>{fmtCurrency(summary?.battery_combined_investment_eur, language, currency)}</strong></div>
+              <div><span>{t('batteryCombinedPayback')}</span><strong>{summary?.battery_combined_payback_days === null || summary?.battery_combined_payback_days === undefined ? '∞' : fmtDays(summary.battery_combined_payback_days, language, t)}</strong></div>
+            </div>
+            <small>{batteryWorthwhile ? t('batteryWorthwhile') : t('batteryNotWorthwhile')}</small>
+            <small>{t('batteryAssumption')}</small>
+          </>
+        ) : (
+          <small>{t('batteryMissing')}</small>
+        )}
+      </div>
     </div>
   );
 }
+
 
 function Metric({ title, value, subtitle }: { title: string; value: string; subtitle?: string }) {
   return <div className="metric"><p>{title}</p><strong>{value}</strong>{subtitle && <small>{subtitle}</small>}</div>;
@@ -1447,7 +1509,7 @@ function UserCredentialsPanel({ onCurrentUserChange }: { onCurrentUserChange: (u
 
 function FinanceSettingsPanel() {
   const { t } = useI18n();
-  const [settings, setSettings] = useState<FinanceSettings>({ kwh_price_eur: 0.3, investment_cost_eur: 0, currency_code: 'EUR' });
+  const [settings, setSettings] = useState<FinanceSettings>({ kwh_price_eur: 0.3, investment_cost_eur: 0, battery_analysis_enabled: false, battery_cost_eur: 0, battery_capacity_kwh: 0, currency_code: 'EUR' });
   const [message, setMessage] = useState<string | null>(null);
 
   async function load() {
@@ -1461,6 +1523,9 @@ function FinanceSettingsPanel() {
     const saved = await api.updateFinanceSettings({
       kwh_price_eur: Number(settings.kwh_price_eur) || 0,
       investment_cost_eur: Number(settings.investment_cost_eur) || 0,
+      battery_analysis_enabled: Boolean(settings.battery_analysis_enabled),
+      battery_cost_eur: Number(settings.battery_cost_eur) || 0,
+      battery_capacity_kwh: Number(settings.battery_capacity_kwh) || 0,
       currency_code: normalizeCurrency(settings.currency_code),
     });
     setSettings(saved);
@@ -1482,7 +1547,11 @@ function FinanceSettingsPanel() {
         </label>
         <label>{t('kwhPrice')} ({currencySymbol(settings.currency_code)}/kWh)<input type="number" min={0} step="0.0001" value={settings.kwh_price_eur} onChange={e => setSettings({ ...settings, kwh_price_eur: Number(e.target.value) })} placeholder="0,30" /></label>
         <label>{t('investmentCost')} ({currencySymbol(settings.currency_code)})<input type="number" min={0} step="0.01" value={settings.investment_cost_eur} onChange={e => setSettings({ ...settings, investment_cost_eur: Number(e.target.value) })} placeholder="600" /></label>
+        <label className="check"><input type="checkbox" checked={Boolean(settings.battery_analysis_enabled)} onChange={e => setSettings({ ...settings, battery_analysis_enabled: e.target.checked })} /> {t('enableBatteryAnalysis')}</label>
+        <label>{t('batteryCost')} ({currencySymbol(settings.currency_code)})<input type="number" min={0} step="0.01" value={settings.battery_cost_eur ?? 0} onChange={e => setSettings({ ...settings, battery_cost_eur: Number(e.target.value) })} placeholder="1200" /></label>
+        <label>{t('batteryCapacity')} (kWh)<input type="number" min={0} step="0.1" value={settings.battery_capacity_kwh ?? 0} onChange={e => setSettings({ ...settings, battery_capacity_kwh: Number(e.target.value) })} placeholder="2.0" /></label>
       </div>
+      <p className="hint">{t('feedInNotPaidHint')}</p>
       <p className="hint">{t('currencyHint')}</p>
       <button onClick={() => void save()}>{t('saveFinance')}</button>
     </section>

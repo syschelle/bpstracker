@@ -591,6 +591,34 @@ This prevents a slow or unreachable sensor from blocking the BPSTracker applicat
 
 ---
 
+## Battery investment analysis
+
+BPSTracker treats grid export as unpaid by default. This means exported energy does not generate revenue in the amortization calculation.
+
+The battery amortization calculation can be enabled or disabled in Setup. When it is disabled, battery values can remain stored but the dashboard does not calculate or show the battery amortization result.
+
+The Setup page allows entering optional battery values:
+
+```text
+Battery cost
+Battery capacity in kWh
+```
+
+The dashboard then estimates whether a battery could be worthwhile based on the surplus energy that would otherwise be exported.
+
+The current calculation uses these assumptions:
+
+- grid export is not compensated
+- exported surplus could be stored and later replace grid import
+- battery round-trip efficiency is 90%
+- maximum one usable charge/discharge cycle per day
+- today's usable surplus is capped by the configured battery capacity
+
+The battery payback estimate is therefore an approximation. It is intended as a practical first indicator, not as a detailed battery simulation.
+
+If the balcony PV system has not paid for itself yet, the open remaining amortization amount is included in the combined battery payback view. This prevents the battery from being shown as worthwhile while the base system still has unpaid investment costs.
+
+
 ## Data retention
 
 To prevent the database from growing indefinitely, BPSTracker supports raw data retention.

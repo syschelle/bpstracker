@@ -78,6 +78,8 @@ def _normalize_finance_value(value: dict | None) -> FinanceSettings:
     return FinanceSettings(
         kwh_price_eur=float(value.get('kwh_price_eur', DEFAULT_KWH_PRICE_EUR) or 0.0),
         investment_cost_eur=float(value.get('investment_cost_eur', DEFAULT_INVESTMENT_COST_EUR) or 0.0),
+        battery_cost_eur=float(value.get('battery_cost_eur', 0.0) or 0.0),
+        battery_capacity_kwh=float(value.get('battery_capacity_kwh', 0.0) or 0.0),
         currency_code=currency_code,
     )
 

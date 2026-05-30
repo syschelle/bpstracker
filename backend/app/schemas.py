@@ -122,6 +122,9 @@ class MeasurementRead(BaseModel):
 class FinanceSettings(BaseModel):
     kwh_price_eur: float = Field(default=0.30, ge=0, le=10)
     investment_cost_eur: float = Field(default=0.0, ge=0, le=1_000_000)
+    battery_analysis_enabled: bool = False
+    battery_cost_eur: float = Field(default=0.0, ge=0, le=1_000_000)
+    battery_capacity_kwh: float = Field(default=0.0, ge=0, le=1000)
     currency_code: str = Field(default='EUR', pattern=r'^(EUR|USD|GBP)$')
 
 
@@ -192,6 +195,20 @@ class SummaryResponse(BaseModel):
     solar_total_kwh: float | None = None
     kwh_price_eur: float = 0.0
     investment_cost_eur: float = 0.0
+    battery_analysis_enabled: bool = False
+    battery_cost_eur: float = 0.0
+    battery_capacity_kwh: float = 0.0
+    battery_roundtrip_efficiency: float = 0.90
+    battery_remaining_bps_investment_eur: float | None = None
+    battery_combined_investment_eur: float | None = None
+    battery_combined_payback_days: float | None = None
+    battery_combined_payback_years: float | None = None
+    battery_usable_surplus_today_kwh: float | None = None
+    battery_savings_today_eur: float | None = None
+    battery_savings_total_potential_eur: float | None = None
+    battery_payback_days: float | None = None
+    battery_payback_years: float | None = None
+    battery_worthwhile: bool | None = None
     currency_code: str = 'EUR'
     consumption_cost_today_eur: float | None = None
     savings_today_eur: float | None = None
