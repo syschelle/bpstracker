@@ -1,838 +1,530 @@
 # BPSTracker
 
-**BPSTracker** is a self-hosted monitoring dashboard for a **Balkon-Photovoltaik-System (BPS)** / balcony photovoltaic system. It collects live power and energy data from configured Shelly devices, displays daily and total energy balances, calculates costs and savings, and provides a Kindle-friendly PNG status display for e-ink dashboards.
+BPSTracker ist eine lokale Docker-Webapp zur Überwachung von Solarproduktion, Hausanschluss und Einspeisesteckdose mit Shelly-Geräten.
 
-The project is designed to run locally in Docker, for example on a small home server or Raspberry Pi, with the backend protected inside the Docker network and only the frontend exposed to the local network.
+Der vorgesehene Installationspfad ist:
 
-<img width="1565" height="960" alt="image" src="https://github.com/user-attachments/assets/e341187d-d7f1-4e45-bf63-dcd6a72ec92b" />
-
----
-
-## Table of contents
-
-- [Overview](#overview)
-- [Main features](#main-features)
-- [Architecture](#architecture)
-- [Screens and UI](#screens-and-ui)
-- [Supported data sources](#supported-data-sources)
-- [Authentication and users](#authentication-and-users)
-- [Kindle display API](#kindle-display-api)
-- [Air quality sensor support](#air-quality-sensor-support)
-- [Data retention](#data-retention)
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [Deployment](#deployment)
-- [Updating](#updating)
-- [Configuration](#configuration)
-- [Ports and networking](#ports-and-networking)
-- [Backup and restore](#backup-and-restore)
-- [Troubleshooting](#troubleshooting)
-- [Running on Raspberry Pi](#running-on-raspberry-pi)
-- [Security notes](#security-notes)
-- [Project structure](#project-structure)
-- [License](#license)
-
----
-
-## Overview
-
-BPSTracker is intended for local energy monitoring of a small photovoltaic setup, especially balcony solar installations. The application focuses on a compact, understandable dashboard instead of a complex enterprise energy management system.
-
-It can show:
-
-- current house/grid import power
-- current solar feed-in power
-- daily solar production
-- daily grid import
-- daily grid export
-- total solar production
-- total grid import/export
-- consumption costs
-- solar savings
-- amortization progress
-- device status
-- current measurements
-- optional air sensor values
-- a generated Kindle PNG display
-
-The application uses Docker Compose and stores persistent data below:
-
-```text
+```bash
 /opt/bpstracker
 ```
 
----
-
-## Main features
-
-### Dashboard
-
-The dashboard provides a clear view of the current energy situation:
-
-- **House import / Hausbezug**
-  - current grid import or export
-  - current solar power
-  - solar/grid share visualization
-
-- **Daily energy balance**
-  - solar
-  - grid import
-  - grid export
-
-- **Total energy balance**
-  - total solar energy
-  - total grid import
-  - total grid export
-
-- **Daily cost balance**
-  - consumption costs
-  - solar savings
-
-- **Total cost balance**
-  - accumulated consumption costs
-  - accumulated savings
-
-- **Amortization**
-  - investment costs
-  - breakeven progress
-  - remaining amount
-  - estimated remaining time
-
-### History
-
-The history view displays measured power values over selectable periods.
-
-The chart is aggregated into time buckets so that multi-channel Shelly devices do not create broken or misleading vertical spikes.
-
-Supported ranges include:
-
-- 24 hours
-- 7 days
-- 30 days
-
-### Setup
-
-The setup area allows administrators to configure:
-
-- web interface language
-- timezone
-- currency
-- kWh price
-- investment costs
-- raw data retention period
-- Shelly devices
-- polling intervals
-- optional air quality sensor
-- admin and viewer credentials
-
-### Multilingual UI
-
-The web interface supports:
-
-- German
-- English
-
-The selected language is stored in the application settings.
-
-### Theme support
-
-The frontend supports:
-
-- light theme
-- dark theme
-
-The selected theme is stored locally in the browser.
-
-### Currency support
-
-The dashboard can display financial values in:
-
-- EUR
-- USD
-- GBP
-
-The application does not perform automatic currency conversion. The configured kWh price and investment costs are interpreted in the selected currency.
-
-### Timezone support
-
-The application supports IANA timezones such as:
-
-```text
-Europe/Berlin
-Europe/London
-UTC
-America/New_York
-```
-
-Daylight saving time and winter time are handled automatically by the timezone database.
-
----
-
-## Architecture
-
-BPSTracker consists of three main services:
-
-```text
-Frontend  ->  nginx + static React build
-Backend   ->  FastAPI / Python
-Database  ->  PostgreSQL
-```
-
-The backend is not exposed directly to the outside. The browser accesses the backend only through the frontend/nginx proxy.
-
-Typical access flow:
-
-```text
-Browser / Kindle
-      |
-      | HTTP
-      v
-Frontend container :5173
-      |
-      | internal Docker network
-      v
-Backend container :8000
-      |
-      | internal Docker network
-      v
-PostgreSQL
-```
-
-The backend remains private inside the Docker network.
-
----
-
-## Screens and UI
-
-BPSTracker is optimized for desktop and mobile browsers.
-
-The mobile header is designed to avoid crowding:
-
-- menu button on the left
-- page title and user role in the center
-- theme toggle on the right
-- air sensor values in a separate responsive row
-
-The navigation menu is available through a hamburger button and is hidden when not needed.
-
----
-
-## Supported data sources
-
-BPSTracker currently focuses on Shelly devices.
-
-Supported or intended Shelly device types include:
-
-- Shelly 3EM Gen1
-- Shelly Pro 3EM / NG 3EM
-- Shelly 2PM Gen4
-- generic Shelly NG devices
-
-Each device can be configured in the setup area with:
-
-- name
-- device type
-- IP address or hostname
-- optional username
-- optional password
-- polling interval
-- channel
-- active/inactive state
-
-The backend normalizes measurements and stores them in PostgreSQL.
-
----
-
-## Authentication and users
-
-BPSTracker always requires authentication.
-
-There are exactly two user roles:
-
-### Admin
-
-The admin can:
-
-- open the dashboard
-- open the history view
-- open setup
-- configure devices
-- configure users
-- configure financial settings
-- configure retention
-- configure language/timezone
-- manage 2FA
-
-The admin can enable TOTP-based two-factor authentication.
-
-### Viewer
-
-The viewer can:
-
-- open the dashboard
-- open the history view
-
-The viewer cannot open setup and cannot manage 2FA.
-
-### Password storage
-
-Passwords are stored as secure hashes using Argon2id.
-
-Usernames are stored as usernames and are freely configurable. They are not email addresses.
-
----
-
-## Kindle display API
-
-BPSTracker can generate a Kindle-friendly PNG image for e-ink displays.
-
-The fixed endpoint is:
-
-```text
-http://<ip-address>:5173/api/kindle/display.png
-```
-
-Example:
-
-```text
-http://192.168.178.211:5173/api/kindle/display.png
-```
-
-The URL is intentionally fixed and does not require query parameters.
-
-### Kindle image behavior
-
-The PNG is generated by the backend using Python and Pillow.
-
-Properties:
-
-- format: PNG
-- size: 600 × 800 px
-- grayscale-friendly design
-- generated inside the container
-- no external rendering tools required at runtime
-- generated once per minute
-- not generated exactly at second `00`
-- last valid PNG is kept if rendering fails
-
-The displayed clock is shifted by one minute to better match Kindle cron refresh timing.
-
-### Kindle debug endpoint
-
-A metadata endpoint is available:
-
-```text
-http://<ip-address>:5173/api/kindle/meta
-```
-
-It can be used to verify the active renderer version and generation status.
-
-### Example Kindle cron usage
-
-A Kindle can fetch the image with a command like:
+Alle Projektdateien, die `.env`-Konfiguration sowie die persistenten App-Daten liegen innerhalb dieses Verzeichnisses. Die PostgreSQL-Datenbank wird nicht in einem anonymen Docker-Volume abgelegt, sondern unter:
 
 ```bash
-wget -O /mnt/us/bpstracker.png "http://192.168.178.211:5173/api/kindle/display.png"
+/opt/bpstracker/data/postgres
 ```
 
-Many older Kindle devices have problems with modern HTTPS/TLS, so using plain HTTP inside the local network is recommended.
+## Enthalten
 
----
+- App-Name: `BPSTracker`
+- Docker-Compose-Projekt: `bpstracker`
+- Container:
+  - `bpstracker-postgres`
+  - `bpstracker-backend`
+  - `bpstracker-frontend`
+- Images:
+  - `bpstracker/backend:local`
+  - `bpstracker/frontend:local`
+- Backend: Python 3.12, FastAPI, SQLAlchemy, PostgreSQL
+- Frontend: React, TypeScript, Vite, Recharts
+- Shelly-Unterstützung:
+  - Shelly 3EM Gen1 über Legacy HTTP API (`/status`, `/emeter/{id}`)
+  - Shelly Gen2+/Gen4 über RPC (`/rpc/Shelly.GetStatus`, `Switch.GetStatus`, `EM.GetStatus`, `EMData.GetStatus`)
+  - Shelly 2PM Gen4 über `switch:0`/`switch:1` bzw. `Switch.GetStatus?id=...`
+- Setup-Reiter für IP/Hostname, Shelly-Benutzername, Shelly-Passwort, Gerätetyp und Kanal
+- Setup-Reiter für kWh-Preis und Investitionskosten
+- Periodisches Polling und Speicherung in PostgreSQL
+- Immer aktive Authentifizierung: genau zwei Rollen `admin` und `viewer`
+- Frei wählbare Benutzernamen und Passwörter im Setup-Reiter
+- Viewer sieht Dashboard/Historie, aber kein Setup
+- TOTP-2FA optional nur für den Admin; TOTP-Secret verschlüsselt, Recovery-Codes gehasht
+- Dashboard mit Verbrauchskosten, Solar-Einsparung und Amortisations-/Breakeven-Anzeige
+- Historie und CSV-Export
 
-## Air quality sensor support
+## Deployment immer nach `/opt/bpstracker`
 
-BPSTracker can optionally read values from a Luftdaten / Sensor.Community-style sensor endpoint:
-
-```text
-http://<sensor-ip>/data.json
-```
-
-More information about the supported sensor project can be found here:
-
-```text
-https://sensor.community/en/sensors/dnms/
-```
-
-BPSTracker reads the local sensor endpoint:
-
-```text
-http://<sensor-ip>/data.json
-```
-
-The expected JSON contains a `sensordatavalues` array, for example:
-
-```json
-{
-  "software_version": "NRZ-2024-136-B1",
-  "age": "95",
-  "sensordatavalues": [
-    { "value_type": "SDS_P1", "value": "1.83" },
-    { "value_type": "SDS_P2", "value": "0.40" },
-    { "value_type": "BME280_temperature", "value": "24.17" },
-    { "value_type": "BME280_humidity", "value": "30.21" }
-  ]
-}
-```
-
-BPSTracker uses:
-
-| Sensor value | Displayed as |
-|---|---|
-| `BME280_temperature` | Temperature |
-| `BME280_humidity` | Humidity |
-| `SDS_P1` | PM10 |
-| `SDS_P2` | PM2.5 |
-
-The air sensor values are not stored historically. They are shown only in the UI header and Kindle display.
-
-### Air sensor polling behavior
-
-The sensor is polled conservatively:
-
-- normal successful polling interval: 180 seconds
-- retry interval after failure: 30 seconds
-- short HTTP timeouts
-- last valid values are kept if the sensor is temporarily unavailable
-
-This prevents a slow or unreachable sensor from blocking the BPSTracker application.
-
----
-
-## Data retention
-
-To prevent the database from growing indefinitely, BPSTracker supports raw data retention.
-
-Raw measurements are deleted after the configured number of days.
-
-Daily aggregates are kept permanently and are used for:
-
-- total energy balance
-- total cost balance
-- amortization
-- long-term totals
-
-This keeps the database small while preserving important long-term values.
-
----
-
-## Requirements
-
-### Recommended system
-
-- Linux host
-- Docker
-- Docker Compose plugin
-- persistent storage below `/opt/bpstracker`
-
-Recommended hardware:
-
-- Raspberry Pi 3, 4, or 5
-- small home server
-- mini PC
-- NAS with Docker support
-
-### Minimum system
-
-A Raspberry Pi Zero 2 may work, but it is close to the limit because it has only 512 MB RAM.
-
-For low-memory systems:
-
-- avoid building Docker images on the device
-- use prebuilt images if possible
-- enable swap
-- keep polling intervals reasonable
-- keep raw retention short
-
----
-
-## Installation
-
-Clone the repository:
+BPSTracker ist so vorbereitet, dass das Deploy-Skript **immer** das Zielverzeichnis `/opt/bpstracker` verwendet. Es ist egal, aus welchem temporären Ordner du das entpackte ZIP startest: der Code wird nach `/opt/bpstracker` kopiert und Docker Compose wird anschließend aus genau diesem Verzeichnis gestartet.
 
 ```bash
-git clone https://github.com/<your-user>/bpstracker.git
+unzip BPSTracker-internal-backend.zip
 cd bpstracker
+./deploy.sh
 ```
 
-Create or review the environment file:
+Alternativ:
 
 ```bash
-cp .env.example .env
-nano .env
+./scripts/deploy-opt.sh
 ```
 
-Deploy the application:
+Das Skript macht automatisch:
 
 ```bash
-bash ./deploy.sh
+sudo mkdir -p /opt/bpstracker
+sudo chown -R $USER:$USER /opt/bpstracker
+rsync ... /opt/bpstracker/
+cd /opt/bpstracker
+docker compose -p bpstracker build --progress=plain
+docker compose -p bpstracker down --remove-orphans
+docker compose -p bpstracker up -d --remove-orphans
 ```
 
-The deployment is designed to install and run the application below:
-
-```text
-/opt/bpstracker
-```
-
----
-
-## Deployment
-
-After deployment, open the frontend in your browser:
-
-```text
-http://<server-ip>:5173
-```
-
-Example:
-
-```text
-http://192.168.178.211:5173
-```
-
-The frontend listens on port `5173`.
-
-The backend is only reachable inside the Docker network and should not be exposed directly.
-
----
-
-## Updating
-
-If you installed the project from GitHub:
+Falls `/opt/bpstracker/.env` noch nicht existiert, wird sie aus `.env.example` erstellt. Danach bitte einmal prüfen und Standardpasswörter ändern:
 
 ```bash
 cd /opt/bpstracker
-git pull
-bash ./deploy.sh
+nano .env
+./deploy.sh
 ```
 
-The deployment script should rebuild or restart the required services.
+Danach öffnen:
 
-After updating, reload the browser page.
+- Direkt auf dem Docker-Host: http://localhost:5173
+- Von einem anderen Gerät im Netzwerk: http://<server-ip>:5173
 
-For major frontend changes, a hard reload may be required:
+Das Backend wird **nicht** nach außen veröffentlicht. API-Aufrufe laufen ausschließlich über den Frontend-nginx-Proxy unter `/api/...` und werden intern im Docker-Netz an `bpstracker-backend:8000` weitergeleitet.
+
+## Wichtige `.env`-Werte
+
+Vor dem ersten produktiven Start mindestens ändern:
+
+```bash
+SECRET_KEY=...
+INITIAL_ADMIN_USERNAME=...
+INITIAL_ADMIN_PASSWORD=...
+INITIAL_VIEWER_USERNAME=...
+INITIAL_VIEWER_PASSWORD=...
+POSTGRES_PASSWORD=...
+DATABASE_URL=postgresql+psycopg://bpstracker:<POSTGRES_PASSWORD>@postgres:5432/bpstracker
+```
+
+Falls du den öffentlichen Web-Port ändern möchtest:
+
+```bash
+FRONTEND_PORT=5173
+```
+
+`BACKEND_PORT` und `POSTGRES_PORT` werden bewusst nicht mehr verwendet, weil Backend und PostgreSQL nicht auf Host-Ports veröffentlicht werden sollen. Lasse die API-Erkennung auf Same-Origin:
+
+```bash
+VITE_API_BASE_URL=same-origin
+FRONTEND_ORIGIN=*
+```
+
+Der Browser ruft API-Endpunkte nur relativ über den Frontend-Port auf, z. B. `/api/auth/login`. nginx im Frontend-Container proxyt diese Requests intern an `http://backend:8000`.
+
+## Zugriff aus dem Netzwerk
+
+Wenn du BPSTracker von deinem PC/Tablet über die Server-IP öffnest, darf im Browser weder `localhost:8000` noch `<server-ip>:8000` als API-Ziel erscheinen. Der Backend-Port ist nicht veröffentlicht.
+
+Richtig ist:
 
 ```text
-Ctrl + F5
+http://192.168.1.50:5173
 ```
 
-On mobile browsers, clearing the site cache may sometimes be necessary.
-
----
-
-## Configuration
-
-Most settings are configured in the web interface under **Setup**.
-
-### Language
-
-Supported languages:
-
-- German
-- English
-
-### Timezone
-
-Use a valid IANA timezone, for example:
-
-```text
-Europe/Berlin
-```
-
-This automatically handles daylight saving time and winter time.
-
-### Currency
-
-Supported currencies:
-
-- EUR
-- USD
-- GBP
-
-No automatic currency conversion is performed.
-
-### Financial settings
-
-Configure:
-
-- kWh price
-- investment costs
-
-These values are used to calculate:
-
-- consumption costs
-- solar savings
-- amortization progress
-
-### Devices
-
-Each Shelly device can be configured with:
-
-- host/IP
-- type
-- channel
-- polling interval
-- optional credentials
-
-### Users
-
-The setup area allows changing:
-
-- admin username
-- admin password
-- viewer username
-- viewer password
-
-The viewer has no setup access.
-
----
-
-## Ports and networking
-
-Default external port:
-
-```text
-5173
-```
-
-The browser and Kindle should use:
-
-```text
-http://<server-ip>:5173
-```
-
-Backend API calls are proxied through the frontend container.
-
-Important endpoints:
+API-Aufrufe erscheinen im Browser-Netzwerk-Tab als relative Pfade, zum Beispiel:
 
 ```text
 /api/auth/login
 /api/measurements/summary
-/api/settings/air-sensor/current
-/api/kindle/display.png
-/api/kindle/meta
 ```
 
-The backend itself should not be published to the host network.
+Der Frontend-Container leitet diese intern an den Backend-Container weiter. Nach einem Update bitte den Browser-Cache leeren oder hart neu laden, damit die neue Frontend-Datei aktiv wird.
 
----
 
-## Backup and restore
+## Frontend-Build ohne npm im Docker-Build
 
-The most important data is stored in the Docker volumes and persistent data directory below:
+Diese Version enthält bereits ein gebautes Frontend unter `frontend/dist`. Das Docker-Image für das Frontend basiert nur noch auf nginx und führt **kein** `npm install` und **kein** `npm ci` mehr aus. Dadurch hängt das Deployment nicht mehr an `registry.npmjs.org`, DNS, IPv6 oder npm-Timeouts des Docker-Hosts.
+
+Der Docker-Build des Frontends macht nur noch:
+
+```Dockerfile
+FROM nginx:1.27-alpine
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY dist /usr/share/nginx/html
+```
+
+Die API-Adresse wird zur Container-Laufzeit über `/config.js` gesetzt. Standard ist `same-origin`, also relative API-Aufrufe über den Frontend-Port und interner nginx-Proxy zum Backend.
+
+Falls du später das Frontend selbst änderst, musst du lokal im Ordner `frontend` einmal neu bauen und danach deployen:
+
+```bash
+cd /opt/bpstracker/frontend
+npm ci
+npm run build
+cd /opt/bpstracker
+./deploy.sh
+```
+
+Für den normalen Betrieb und Updates aus diesem ZIP ist kein npm-Zugriff im Docker-Build nötig.
+
+## Betrieb
+
+Im Zielverzeichnis `/opt/bpstracker`:
+
+```bash
+make up-detached
+make logs
+make ps
+make down
+```
+
+Ohne Makefile direkt:
+
+```bash
+docker compose -p bpstracker up -d --build
+docker compose -p bpstracker logs -f --tail=200
+docker compose -p bpstracker ps
+docker compose -p bpstracker down
+```
+
+## Datenhaltung
+
+Persistente Daten liegen fest unter `/opt/bpstracker`:
+
+```bash
+/opt/bpstracker/data/postgres
+/opt/bpstracker/data/backend
+/opt/bpstracker/backups
+```
+
+Auch in `docker-compose.yml` sind diese Pfade als absolute Bind-Mounts eingetragen. Dadurch landen die Daten nicht versehentlich in einem anderen Verzeichnis, selbst wenn Compose einmal von außen aufgerufen wird.
+
+## Netzwerk-Sicherheit
+
+Nur der Frontend-Container veröffentlicht einen Host-Port:
+
+```yaml
+frontend:
+  ports:
+    - "${FRONTEND_PORT:-5173}:80"
+```
+
+Backend und PostgreSQL haben nur `expose`, aber keine `ports`. Das bedeutet: Sie sind für andere Container im Compose-Netz erreichbar, aber nicht direkt vom Host/LAN aus.
+
+Prüfen kannst du das mit:
+
+```bash
+cd /opt/bpstracker
+./scripts/check-exposure.sh
+```
+
+Oder manuell:
+
+```bash
+docker compose -p bpstracker ps
+```
+
+In der Spalte `PORTS` darf nur beim Frontend eine Host-Zuordnung wie `0.0.0.0:5173->80/tcp` stehen. Beim Backend darf **kein** `0.0.0.0:8000->8000/tcp` erscheinen.
+
+Ein Datenbank-Backup erzeugst du mit:
+
+```bash
+make backup-db
+```
+
+## Lokaler Ablauf
+
+1. Beim ersten Start werden die Rollen `admin` und `viewer` erstellt, wenn sie noch nicht existieren.
+2. Login im Frontend ist immer erforderlich.
+3. Als Admin im Setup-Reiter die Benutzernamen und Passwörter für Admin und Viewer frei vergeben.
+4. Optional im Reiter „Admin 2FA“ einen TOTP-Secret erzeugen, aktivieren und die Recovery-Codes sicher ablegen.
+5. Im Setup-Reiter unter „Finanzwerte“ den kWh-Preis und die Investitionskosten eintragen.
+6. Im Setup-Reiter Shelly-Geräte anlegen.
+7. Verbindung testen.
+8. Polling startet automatisch für aktive Geräte.
+9. Dashboard und Historie zeigen gespeicherte Messwerte. Der Viewer hat keinen Zugriff auf Setup oder 2FA.
+
+
+## Benutzer und Berechtigungen
+
+BPSTracker verwendet keine E-Mail-Adressen für den Login. Es gibt genau zwei Rollen:
+
+- `admin`: darf Dashboard, Historie, Setup, Shelly-Konfiguration, Benutzerzugänge und Admin-2FA verwalten.
+- `viewer`: darf Dashboard und Historie sehen, hat aber keinen Zugriff auf Setup und keine 2FA-Verwaltung.
+
+Die initialen Benutzernamen und Passwörter kommen aus `.env`. Danach kannst du sie im Setup-Reiter ändern. Beim Passwortfeld gilt: leer lassen bedeutet „Passwort unverändert lassen“.
+
+Speicherlogik der Zugangsdaten:
+
+- Benutzernamen: Klartext, frei wählbar und eindeutig, damit Login, Anzeige und Änderung im Setup sauber funktionieren.
+- Passwörter: Argon2id-Hash, niemals Klartext. Ältere bcrypt-Hashes aus Testständen bleiben loginfähig und werden beim erfolgreichen Login automatisch auf Argon2id aktualisiert.
+- Admin-2FA-Secret: verschlüsselt in der Datenbank.
+- Admin-Recovery-Codes: nur gehasht gespeichert und jeweils einmal verwendbar.
+
+## Finanzwerte und Amortisation
+
+Im Setup-Reiter kann der Admin eintragen:
+
+- kWh-Preis in Euro
+- Investitionskosten in Euro
+
+Das Dashboard berechnet daraus:
+
+- Verbrauchskosten heute = Netzbezug heute × kWh-Preis
+- Einsparung heute = Solarproduktion an Shelly-2PM-/PM-Kanälen × kWh-Preis
+- Einsparung gesamt = gespeicherte Solarproduktion seit Beginn der Messung × kWh-Preis
+- Breakeven-Fortschritt = Einsparung gesamt / Investitionskosten
+- voraussichtlicher Breakeven auf Basis der aktuellen Tageseinsparung
+
+Hinweis: Die Einsparung ist eine Näherung anhand der an der Einspeisesteckdose gemessenen Solarproduktion. Eine exakte Eigenverbrauchsquote benötigt zusätzliche Bilanzlogik und ausreichend historische Messwerte.
+
+## Shelly-Konfiguration
+
+### Shelly 3EM Gen1
+
+Gerätetyp: `shelly_3em_gen1` oder `auto`  
+Host/IP: z. B. `192.168.178.50`
+
+Das Backend liest `/status` und normalisiert `emeters[*]` sowie `total_power`.
+
+### Shelly 2PM Gen4
+
+Gerätetyp: `shelly_2pm_gen4` oder `auto`  
+Host/IP: z. B. `192.168.178.51`  
+Kanal: `0`, `1` oder leer für beide Kanäle
+
+Das Backend liest per RPC `Shelly.GetStatus` und optional `Switch.GetStatus?id=0/1`.
+
+## Entwicklung
+
+```bash
+make test
+make logs
+make down
+```
+
+Backend-Tests liegen in `backend/tests`.
+
+## GitHub
+
+Dieses Projekt ist Git-fähig. Initial lokal:
+
+```bash
+cd /opt/bpstracker
+git init
+git add .
+git commit -m "Initial BPSTracker"
+git branch -M main
+git remote add origin git@github.com:<user>/<repo>.git
+git push -u origin main
+```
+
+Ein GitHub-Actions-Workflow ist unter `.github/workflows/ci.yml` enthalten.
+
+## Sicherheitshinweise
+
+- Benutzerpasswörter werden mit Argon2id gehasht.
+- Benutzernamen werden bewusst nicht gehasht, sondern eindeutig im Klartext gespeichert.
+- Shelly-Passwörter und Admin-TOTP-Secrets werden verschlüsselt in der Datenbank abgelegt. Der Schlüssel wird aus `SECRET_KEY` abgeleitet.
+- Admin-Recovery-Codes werden nur gehasht gespeichert und sind einmalig nutzbar.
+- `SECRET_KEY` nach produktiver Inbetriebnahme nicht mehr ändern, sonst können verschlüsselte Shelly-Passwörter und TOTP-Secrets nicht mehr entschlüsselt werden.
+- Secrets gehören in `.env`, nicht ins Git-Repository.
+- Für produktive Nutzung HTTPS/Reverse Proxy ergänzen.
+- Dieses MVP nutzt Bearer-JWT im Frontend. Für exponierte Installationen sollten SameSite/HttpOnly-Cookies, HSTS und zusätzliche Rate-Limits ergänzt werden.
+
+### Netzwerk/API-Hinweis
+
+Ab dieser Version ruft das Frontend das Backend standardmäßig über denselben Host und denselben Frontend-Port auf:
 
 ```text
-/opt/bpstracker
+http://<server-ip>:5173/api/...
 ```
 
-Recommended backup items:
+Der Frontend-nginx leitet `/api/` intern an den Backend-Container `backend:8000` weiter. Der Browser muss also **nicht** mehr direkt auf `:8000` zugreifen. Das verhindert Fehler wie `localhost:8000`, `:8000/api/...` oder CORS-Probleme im LAN.
 
-- PostgreSQL data volume
-- `.env`
-- application data directory
-- optional generated Kindle PNG cache
 
-Example backup approach:
+## No-NPM-Docker-Build
 
-```bash
-tar -czf bpstracker-backup.tar.gz /opt/bpstracker
-```
+Diese Version ist für Systeme gedacht, bei denen `npm install` oder `npm ci` im Docker-Build hängen bleibt.
 
-For a database-consistent backup, use PostgreSQL tools such as `pg_dump`.
-
----
-
-## Troubleshooting
-
-### Frontend cannot login and shows `Failed to fetch`
-
-Make sure the browser calls the same origin:
+Der Frontend-Container wird ausschließlich aus einem bereits vorhandenen `frontend/dist` gebaut. Docker verwendet:
 
 ```text
-http://<server-ip>:5173/api/auth/login
+frontend/Dockerfile.static
 ```
 
-It should not call:
+und dieses Image basiert nur auf nginx. Es wird **kein Node-Image** verwendet und im Docker-Build wird **kein npm install** und **kein npm ci** ausgeführt.
 
-```text
-http://localhost:8000/api/auth/login
-```
-
-The backend is intentionally not exposed directly.
-
-### 502 Bad Gateway
-
-A 502 usually means the frontend/nginx proxy cannot reach the backend container.
-
-Check container status:
+Prüfen:
 
 ```bash
-docker compose ps
+cd /opt/bpstracker
+./scripts/verify-no-npm-build.sh
 ```
 
-Check backend logs:
+Wenn Docker trotzdem einen npm-Schritt zeigt, läuft nicht diese Version oder Docker baut aus einem alten Verzeichnis. Dann bitte prüfen:
 
 ```bash
-docker compose logs backend --tail=100
+cd /opt/bpstracker
+grep -R "npm install\|npm ci\|node:" -n frontend/Dockerfile* docker-compose.yml
 ```
 
-### Backend healthcheck fails
+In `frontend/Dockerfile*` und `docker-compose.yml` darf kein npm-/node-Buildschritt stehen.
 
-Check backend logs:
+## 502 Bad Gateway prüfen
+
+Wenn der Browser bei `/api/...` einen `502 Bad Gateway` meldet, läuft nginx im Frontend, erreicht aber das Backend im Docker-Netz nicht. Prüfe dann:
 
 ```bash
-docker compose logs backend --tail=200
+cd /opt/bpstracker
+./scripts/diagnose-502.sh
 ```
 
-Common causes:
+In dieser Version startet das Frontend erst, wenn das Backend den Healthcheck `/health` erfolgreich beantwortet. Außerdem enthält das Backend Best-Effort-Migrationen für ältere BPSTracker-Testdatenbanken, weil ältere Stände noch keine Alembic-Migrationen hatten.
 
-- database not ready
-- migration problem
-- invalid environment variable
-- Python import error
-- missing dependency
 
-### NPM install hangs
+## Mehrsprachigkeit
 
-The project is intended to ship with a built frontend `dist` for low-power devices.
+BPSTracker steht in Deutsch und Englisch zur Verfügung. Deutsch ist die Standardsprache.
 
-On small systems such as a Raspberry Pi Zero 2, avoid running npm builds locally.
+Die Sprache wird vom Admin im Setup-Reiter unter **Sprache** eingestellt und in der PostgreSQL-Tabelle `app_settings` gespeichert. Viewer übernehmen die gespeicherte Sprache nach dem Login automatisch.
 
-### Kindle image does not update
+## Name
 
-Check the fixed URL:
+BPS steht in dieser App für **Balkon-Photovoltaik-System**.
+
+## Viewer-Zugang reparieren
+
+Falls nach einem Upgrade aus alten Testversionen der Viewer-Login nicht funktioniert, kann der Viewer-Zugang direkt im laufenden System neu gesetzt werden:
+
+```bash
+cd /opt/bpstracker
+./scripts/reset-viewer-password.sh viewer 'NeuesPasswort123!'
+```
+
+Das Skript aktiviert genau einen Viewer, deaktiviert doppelte alte Viewer-Datensätze und entfernt 2FA/Recovery-Codes beim Viewer.
+
+### Benutzer-Diagnose und Passwort-Reset
+
+Aktive Benutzer anzeigen:
+
+```bash
+cd /opt/bpstracker
+./scripts/list-users.sh
+```
+
+Viewer-Passwort direkt in der Datenbank neu setzen und sofort verifizieren:
+
+```bash
+cd /opt/bpstracker
+./scripts/reset-viewer-password.sh viewer 'MeinNeuesPasswort123!'
+```
+
+Admin oder Viewer gezielt setzen:
+
+```bash
+cd /opt/bpstracker
+./scripts/reset-role-password.sh viewer viewer 'MeinNeuesPasswort123!'
+./scripts/reset-role-password.sh admin admin 'MeinAdminPasswort123!'
+```
+
+## Datenaufbewahrung / Datenbankgröße
+
+BPSTracker speichert Rohmesswerte nur für die im Setup konfigurierte Anzahl von Tagen, standardmäßig 30 Tage. Vor dem Löschen alter Rohdaten werden abgeschlossene Tage in `daily_energy_summary` zusammengefasst. Diese Tagesaggregate bleiben dauerhaft erhalten und werden für Gesamtbilanz, Einsparung und Amortisation genutzt.
+
+Prüfen der aktuellen Größe:
+
+```bash
+cd /opt/bpstracker
+./scripts/retention-status.sh
+```
+
+Das Backend führt die Wartung automatisch etwa stündlich aus. Zusätzlich werden abgeschlossene Tage beim Laden der Dashboard-Zusammenfassung materialisiert, damit Gesamtwerte erhalten bleiben.
+
+
+## Luftdatensensor
+
+Im Setup kann optional ein Luftdatensensor aktiviert werden, der unter `http://<ip>/data.json` die Luftdaten-Firmware-JSON liefert. BPSTracker liest daraus nur die aktuellen Werte aus und zeigt sie kompakt im Header an:
+
+- Temperatur
+- Luftfeuchte
+- PM10 (SDS_P1)
+- PM2.5 (SDS_P2)
+
+Diese Daten werden nicht historisch gespeichert und landen nicht in der PostgreSQL-Messwerttabelle.
+
+### Luftdatensensor: Timeout und letzter Wert
+
+Der optionale Luftdatensensor wird mit kurzen HTTP-Timeouts abgefragt, damit ein verzögerter oder nicht erreichbarer Sensor die BPSTracker-Oberfläche nicht blockiert. Wenn der Sensor keine neuen Werte liefert oder nicht erreichbar ist, zeigt die App weiterhin den zuletzt erfolgreich gelesenen Wert aus dem Cache an. Es wird keine Historie der Luftdaten gespeichert, nur der letzte Wert.
+
+### Luftdatensensor Polling
+
+Der Luftdatensensor wird nach einer erfolgreichen Abfrage höchstens alle 180 Sekunden erneut direkt abgefragt. Das passt zum Messintervall vieler Luftdaten-Sensoren. Das Frontend darf häufiger nach dem aktuellen Status fragen; das Backend liefert dann den zuletzt erfolgreich gelesenen Cache zurück. Wenn eine Abfrage fehlschlägt, wird ein schnelleres Retry-Intervall von 30 Sekunden verwendet. Die letzten gültigen Werte bleiben bei Fehlern oder leeren Antworten erhalten.
+
+## Kindle-Display PNG
+
+BPSTracker erzeugt serverseitig ein Kindle-geeignetes PNG mit Uhrzeit, Temperatur,
+Luftfeuchte, PM10, PM2.5 und Hausbezug. Das Bild wird im Backend-Container mit
+Python/Pillow erzeugt und einmal pro Minute aktualisiert, bewusst nicht bei
+Sekunde 0, sondern ab Sekunde 10. Der Kindle kann es über das Frontend abrufen:
 
 ```text
 http://<server-ip>:5173/api/kindle/display.png
 ```
 
-Check metadata:
+Diese URL ist bewusst fest. Für Kindle-Cron-Jobs keine Query-Parameter anhängen. Die API und der nginx-Proxy senden No-Cache-Header, damit immer das zuletzt erzeugte PNG unter genau diesem Pfad ausgeliefert wird.
+
+Debug/Status:
 
 ```text
 http://<server-ip>:5173/api/kindle/meta
 ```
 
-The PNG is generated once per minute and may not change instantly.
+Das Backend bleibt weiterhin nur im internen Docker-Netzwerk erreichbar; der
+Abruf erfolgt über den nginx-Proxy des Frontends.
 
-### Air sensor values are stale
+## Kindle-Display
 
-The air sensor is intentionally polled only every 180 seconds after successful reads.
+Das Kindle-PNG wird serverseitig erzeugt und bleibt dauerhaft unter dieser festen URL erreichbar:
 
-If the sensor is offline, BPSTracker keeps the last valid values.
+```text
+http://<ipadresse>:5173/api/kindle/display.png
+```
+
+Die angezeigte Uhrzeit wird bewusst um eine Minute nach vorne gesetzt. Der Zeitwechsel wird per Datum/Zeit-Arithmetik berechnet, sodass auch Stunden- und Tageswechsel korrekt funktionieren.
+
+Die Icons im Kindle-PNG sind lokal im Backend unter `backend/app/assets/icons/` gebündelte Open-Source-SVGs aus dem Lucide Icon Set. Sie werden nicht zur Laufzeit aus dem Internet geladen.
 
 ---
 
-## Running on Raspberry Pi
+## Prebuilt Docker images
 
-### Raspberry Pi Zero 2
+BPSTracker can be built automatically by GitHub Actions for multiple architectures and published to GitHub Container Registry.
 
-The Pi Zero 2 can potentially run BPSTracker, but it is not ideal.
+The repository includes the workflow:
 
-Limitations:
+```text
+.github/workflows/docker-images.yml
+```
 
-- only 512 MB RAM
-- PostgreSQL can be memory-heavy
-- Docker builds are slow
-- npm builds should be avoided
+It builds:
 
-Recommended:
+```text
+ghcr.io/syschelle/bpstracker-backend:latest
+ghcr.io/syschelle/bpstracker-frontend:latest
+```
 
-- use 64-bit Raspberry Pi OS
-- enable at least 1 GB swap
-- avoid building images on the Pi
-- keep retention short
-- use reasonable polling intervals
+Supported platforms:
 
-Check architecture:
+```text
+linux/amd64
+linux/arm64
+```
+
+This is useful for Raspberry Pi systems or small servers because they no longer need to build Python or frontend images locally.
+
+To deploy using prebuilt images:
 
 ```bash
-uname -m
+cd /opt/bpstracker
+git pull
+bash ./deploy-images.sh
 ```
 
-Recommended output:
+See also:
 
 ```text
-aarch64
+docs/ghcr-images.md
 ```
-
-### Raspberry Pi 3/4/5
-
-A Raspberry Pi 3 or newer is recommended for continuous operation.
-
-A Raspberry Pi 4 or 5 provides a much better experience.
-
----
-
-## Security notes
-
-BPSTracker is intended for local network use.
-
-Recommendations:
-
-- do not expose the application directly to the internet
-- keep the backend private inside Docker
-- use strong admin and viewer passwords
-- enable admin 2FA
-- keep the host system updated
-- restrict access to the local network or VPN
-
-The Kindle endpoint is designed for simple local access and should not be exposed publicly.
-
----
-
-## Project structure
-
-Typical structure:
-
-```text
-bpstracker/
-├── backend/
-│   └── app/
-│       ├── main.py
-│       ├── kindle_display.py
-│       ├── routers/
-│       ├── models.py
-│       ├── schemas.py
-│       └── ...
-├── frontend/
-│   ├── src/
-│   ├── public/
-│   ├── dist/
-│   └── nginx.conf
-├── scripts/
-├── docker-compose.yml
-├── deploy.sh
-├── .env.example
-└── README.md
-```
-
----
-
-## Development notes
-
-The frontend is a React/Vite application.
-
-The backend is a FastAPI application.
-
-For local development, run the services separately or through Docker Compose.
-
-The production deployment uses the built frontend `dist` and nginx.
-
----
-
-## License
-
-This project is licensed under the **Apache License, Version 2.0**.
-
-You may obtain a copy of the license at:
-
-```text
-https://www.apache.org/licenses/LICENSE-2.0
-```
-
-Unless required by applicable law or agreed to in writing, software distributed under the Apache License, Version 2.0 is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-
----
-
-## Disclaimer
-
-BPSTracker is a private monitoring tool for local energy visualization. It is not a certified metering system and should not be used for billing, legal metering, or safety-critical decisions.

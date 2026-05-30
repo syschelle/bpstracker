@@ -33,6 +33,9 @@ const translations = {
     dashboard: 'Dashboard',
     history: 'Historie',
     setup: 'Setup',
+    githubRepository: 'GitHub-Repository',
+    githubRepositoryHint: 'Projektseite, Quellcode und Updates findest du im GitHub-Repository.',
+    openGithubRepository: 'GitHub-Repository öffnen',
     account2fa: 'Admin 2FA',
     logout: 'Logout',
     menu: 'Menü',
@@ -241,6 +244,9 @@ const translations = {
     dashboard: 'Dashboard',
     history: 'History',
     setup: 'Setup',
+    githubRepository: 'GitHub repository',
+    githubRepositoryHint: 'Project page, source code and updates are available in the GitHub repository.',
+    openGithubRepository: 'Open GitHub repository',
     account2fa: 'Admin 2FA',
     logout: 'Logout',
     menu: 'Menu',
@@ -1131,11 +1137,25 @@ function HistoryView() {
   );
 }
 
+
+function GithubRepositoryPanel() {
+  const { t } = useI18n();
+
+  return (
+    <section className="panel github-repository-panel">
+      <div className="panel-head"><h2><Globe2 size={20} /> {t('githubRepository')}</h2></div>
+      <p className="hint">{t('githubRepositoryHint')}</p>
+      <a className="button" href="https://github.com/syschelle/bpstracker" target="_blank" rel="noreferrer">{t('openGithubRepository')}</a>
+    </section>
+  );
+}
+
 function SetupView({ onCurrentUserChange }: { onCurrentUserChange: (user: User) => void }) {
   return (
     <div className="grid gap">
       <LanguageSettingsPanel />
       <TimezoneSettingsPanel />
+      <GithubRepositoryPanel />
       <KindleDisplaySettingsPanel />
       <CurrentValuesApiSettingsPanel />
       <UserCredentialsPanel onCurrentUserChange={onCurrentUserChange} />

@@ -730,3 +730,8 @@ html[data-theme='dark'] .kindle-preview img {
   border-color: #334155;
   background: #f8fafc;
 }
+
+
+.github-repository-panel .button {
+  width: fit-content;
+}
