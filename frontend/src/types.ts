@@ -143,3 +143,11 @@ export interface BackupCreateResponse {
   size_bytes: number;
   download_url: string;
 }
+
+
+export interface ResetValuesResponse {
+  ok: boolean;
+  deleted_measurements: number;
+  deleted_daily_summaries: number;
+  message: string;
+}

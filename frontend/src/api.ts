@@ -1,4 +1,4 @@
-import type { AirSensorCurrent, AirSensorSettings, BackupCreateResponse, BackupInfo, CurrentValuesApiSettings, Device, FinanceSettings, KindleDisplaySettings, Measurement, RetentionSettings, SimulationSettings, Summary, UiSettings, User } from './types';
+import type { AirSensorCurrent, AirSensorSettings, BackupCreateResponse, BackupInfo, CurrentValuesApiSettings, Device, FinanceSettings, KindleDisplaySettings, Measurement, RetentionSettings, ResetValuesResponse, SimulationSettings, Summary, UiSettings, User } from './types';
 
 type RuntimeConfig = {
   API_BASE_URL?: string;
@@ -129,5 +129,6 @@ export const api = {
   createBackup: (password: string, confirm_password: string) => request<BackupCreateResponse>('/api/backups/create', { method: 'POST', body: JSON.stringify({ password, confirm_password }) }),
   downloadBackup: (filename: string) => download(`/api/backups/download/${encodeURIComponent(filename)}`),
   deleteBackup: (filename: string) => request<{ ok: boolean }>(`/api/backups/${encodeURIComponent(filename)}`, { method: 'DELETE' }),
+  resetValues: (confirmation: string) => request<ResetValuesResponse>('/api/maintenance/reset-values', { method: 'POST', body: JSON.stringify({ confirmation }) }),
   kindlePreviewUrl: () => `${API_BASE}/api/kindle/display.png`
 };

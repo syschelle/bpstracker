@@ -262,3 +262,37 @@ def simulated_history(start: datetime, end: datetime, timezone_name: str, bucket
         ))
         cursor += timedelta(seconds=step)
     return points
+
+
+
+def simulated_air_sensor_current(timezone_name: str | None = DEFAULT_TIMEZONE):
+    """Return plausible simulated air sensor values.
+
+    Imported lazily to avoid a hard dependency from the simulation module to the
+    API schema at import time in tools/tests.
+    """
+    from .schemas import AirSensorCurrent
+
+    now = datetime.now(timezone.utc)
+    local_dt = now.astimezone(_zoneinfo(timezone_name))
+    hour = local_dt.hour + local_dt.minute / 60.0
+    seed = _day_seed(local_dt)
+
+    temp = 20.5 + 5.5 * math.sin((2 * math.pi * (hour - 6.0)) / 24.0) + _noise(seed + local_dt.hour, 0.7)
+    humidity = 53.0 - 12.0 * math.sin((2 * math.pi * (hour - 6.0)) / 24.0) + _noise(seed + local_dt.minute, 3.0)
+    pm10 = 6.0 + _smooth_pulse(hour, 8.0, 1.2, 5.0) + _smooth_pulse(hour, 19.0, 1.6, 6.0) + _noise(seed + 123 + local_dt.minute, 1.1)
+    pm25 = 2.2 + _smooth_pulse(hour, 8.2, 1.1, 2.2) + _smooth_pulse(hour, 19.3, 1.4, 2.6) + _noise(seed + 321 + local_dt.minute, 0.5)
+
+    return AirSensorCurrent(
+        enabled=True,
+        configured=True,
+        ok=True,
+        cached=False,
+        temperature_c=round(temp, 1),
+        humidity_percent=round(max(25.0, min(85.0, humidity)), 1),
+        sds_p1=round(max(0.2, pm10), 2),
+        sds_p2=round(max(0.1, pm25), 2),
+        age_seconds=45,
+        software_version='BPSTracker Simulation',
+        last_success_at=now,
+    )

@@ -143,7 +143,7 @@ The history chart shows separate series for:
 - grid import
 - grid export
 
-Grid export is displayed as a positive value so it can be compared visually with grid import and solar production.
+The series are color-coded so the values can be distinguished easily. Grid export is displayed as a positive value so it can be compared visually with grid import and solar production.
 
 ### Setup
 
@@ -503,7 +503,11 @@ The simulation is based on:
 - cloud and daylight fluctuations
 - seasonal solar variation
 
-No simulated measurements are written to the database. The values are generated live.
+No simulated measurements are written to the production measurement tables. The values are generated live and separated from production data. When simulation is disabled, the simulated view disappears and no demo values remain in the production environment.
+
+The simulation also affects the Kindle display, JSON API and air sensor header. Simulated air data includes temperature, humidity, PM10 and PM2.5.
+
+The header displays a visible simulation banner: **You are in the Matrix 😎**
 
 This makes it possible to preview the UI, charts, balances, costs and JSON output before real Shelly devices are configured.
 
@@ -936,6 +940,38 @@ A manual restore flow is expected to look like this:
 6. Start BPSTracker again.
 
 A dedicated restore guide should be added before using backups for production disaster recovery.
+
+---
+
+
+## Reset measured values
+
+Admins can reset all measured values from the **Setup** area.
+
+The reset requires typing:
+
+```text
+reset
+```
+
+This deletes:
+
+- raw measurements
+- daily energy aggregates
+- volatile air sensor caches
+- volatile simulation caches
+- generated Kindle cache files
+
+It keeps:
+
+- users
+- passwords and 2FA configuration
+- configured devices
+- financial settings
+- language/timezone settings
+- optional interface settings
+
+This action cannot be undone. Create an encrypted backup before using it in production.
 
 ---
 

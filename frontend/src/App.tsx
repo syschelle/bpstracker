@@ -174,7 +174,15 @@ const translations = {
     enableSimulation: 'Simulation aktivieren',
     simulationSaved: 'Simulation wurde gespeichert.',
     saveSimulation: 'Simulation speichern',
-    simulationWarning: 'Bei aktivierter Simulation zeigt Dashboard, Historie und JSON-API simulierte Werte an.',
+    simulationWarning: 'Bei aktivierter Simulation zeigt Dashboard, Historie, Kindle-Display, Luftdaten und JSON-API simulierte Werte an. Produktivdaten werden nicht verändert.',
+    matrixBanner: 'Du bist in der Matrix 😎',
+    resetValuesSettings: 'Werte zurücksetzen',
+    resetValuesHint: 'Löscht alle Messwerte, Tagesaggregate und flüchtigen Wert-Caches. Geräte, Benutzer und Setup-Einstellungen bleiben erhalten.',
+    resetValuesWarning: 'Achtung: Diese Aktion kann nicht rückgängig gemacht werden. Gib reset ein, um zu bestätigen.',
+    resetConfirmationLabel: 'Bestätigung',
+    resetValuesButton: 'Alle Werte löschen',
+    resetValuesDone: 'Alle Werte wurden gelöscht.',
+    resetValuesConfirmPlaceholder: 'reset',
     currentValuesApiSettings: 'JSON-API',
     currentValuesApiHint: 'Stellt aktuelle BPSTracker-Werte als JSON unter /api/current-values bereit. Deaktiviere diese Option, wenn du die Schnittstelle nicht nutzt.',
     enableCurrentValuesApi: 'JSON-API aktivieren',
@@ -407,7 +415,15 @@ const translations = {
     enableSimulation: 'Enable simulation',
     simulationSaved: 'Simulation has been saved.',
     saveSimulation: 'Save simulation',
-    simulationWarning: 'When simulation is enabled, dashboard, history and JSON API show simulated values.',
+    simulationWarning: 'When simulation is enabled, dashboard, history, Kindle display, air data and JSON API show simulated values. Production data is not changed.',
+    matrixBanner: 'You are in the Matrix 😎',
+    resetValuesSettings: 'Reset values',
+    resetValuesHint: 'Deletes all measurements, daily aggregates and volatile value caches. Devices, users and setup settings are kept.',
+    resetValuesWarning: 'Warning: This action cannot be undone. Type reset to confirm.',
+    resetConfirmationLabel: 'Confirmation',
+    resetValuesButton: 'Delete all values',
+    resetValuesDone: 'All values have been deleted.',
+    resetValuesConfirmPlaceholder: 'reset',
     currentValuesApiSettings: 'JSON API',
     currentValuesApiHint: 'Provides current BPSTracker values as JSON at /api/current-values. Disable this option if you do not use the endpoint.',
     enableCurrentValuesApi: 'Enable JSON API',
@@ -658,7 +674,31 @@ function isAdmin(user: User | null): boolean {
   return user?.role === 'admin';
 }
 
-export default function App() {
+export default 
+function SimulationBanner() {
+  const { t } = useI18n();
+  const [enabled, setEnabled] = useState(false);
+
+  async function load() {
+    try {
+      const settings = await api.simulationSettings();
+      setEnabled(settings.enabled);
+    } catch {
+      setEnabled(false);
+    }
+  }
+
+  useEffect(() => {
+    void load();
+    const timer = window.setInterval(() => void load(), 15000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  if (!enabled) return null;
+  return <div className="simulation-banner">{t('matrixBanner')}</div>;
+}
+
+function App() {
   const [language, setLanguageState] = useState<Language>(readStoredLanguage);
   const [theme, setTheme] = useState<Theme>(readStoredTheme);
   const [user, setUser] = useState<User | null>(null);
@@ -835,6 +875,7 @@ export default function App() {
                 </div>
               </div>
             </header>
+            <SimulationBanner />
             {tab === 'dashboard' && <Dashboard />}
             {tab === 'history' && <HistoryView />}
             {tab === 'setup' && isAdmin(user) && <SetupView onCurrentUserChange={setUser} />}
@@ -1194,9 +1235,39 @@ function HistoryView() {
           <YAxis />
           <Tooltip />
           <Legend />
-          <Area type="monotone" dataKey="solar" name={t('solarShare')} fillOpacity={0.22} />
-          <Area type="monotone" dataKey="gridImport" name={t('gridImportShare')} fillOpacity={0.18} />
-          <Area type="monotone" dataKey="gridExport" name={t('exportedToday')} fillOpacity={0.18} />
+          <Area
+            type="monotone"
+            dataKey="solar"
+            name={t('solarShare')}
+            stroke="#0d9488"
+            fill="#0d9488"
+            fillOpacity={0.22}
+            strokeWidth={2}
+            dot={false}
+            activeDot={{ r: 4 }}
+          />
+          <Area
+            type="monotone"
+            dataKey="gridImport"
+            name={t('gridImportShare')}
+            stroke="#172033"
+            fill="#172033"
+            fillOpacity={0.16}
+            strokeWidth={2}
+            dot={false}
+            activeDot={{ r: 4 }}
+          />
+          <Area
+            type="monotone"
+            dataKey="gridExport"
+            name={t('exportedToday')}
+            stroke="#f59e0b"
+            fill="#f59e0b"
+            fillOpacity={0.18}
+            strokeWidth={2}
+            dot={false}
+            activeDot={{ r: 4 }}
+          />
         </AreaChart>
       </ResponsiveContainer>
     </section>
@@ -1228,6 +1299,7 @@ function SetupView({ onCurrentUserChange }: { onCurrentUserChange: (user: User) 
       <UserCredentialsPanel onCurrentUserChange={onCurrentUserChange} />
       <FinanceSettingsPanel />
       <BackupSettingsPanel />
+      <ResetValuesPanel />
       <RetentionSettingsPanel />
       <AirSensorSettingsPanel />
       <DeviceSetupPanel />
@@ -1561,6 +1633,48 @@ function RetentionSettingsPanel() {
 
 
 
+
+
+function ResetValuesPanel() {
+  const { t } = useI18n();
+  const [confirmation, setConfirmation] = useState('');
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function reset() {
+    setMessage(null);
+    setError(null);
+    if (confirmation.trim().toLowerCase() !== 'reset') {
+      setError(t('resetValuesWarning'));
+      return;
+    }
+    setBusy(true);
+    try {
+      const result = await api.resetValues(confirmation);
+      setConfirmation('');
+      setMessage(`${t('resetValuesDone')} (${result.deleted_measurements} / ${result.deleted_daily_summaries})`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="panel danger-panel">
+      <div className="panel-head"><h2><Trash2 size={20} /> {t('resetValuesSettings')}</h2></div>
+      <p className="hint">{t('resetValuesHint')}</p>
+      <p className="hint strong-hint">{t('resetValuesWarning')}</p>
+      {message && <div className="info">{message}</div>}
+      {error && <div className="error">{error}</div>}
+      <div className="form-grid finance-form">
+        <label>{t('resetConfirmationLabel')}<input value={confirmation} placeholder={t('resetValuesConfirmPlaceholder')} onChange={e => setConfirmation(e.target.value)} /></label>
+      </div>
+      <button className="danger" disabled={busy || confirmation.trim().toLowerCase() !== 'reset'} onClick={() => void reset()}>{busy ? t('wait') : t('resetValuesButton')}</button>
+    </section>
+  );
+}
 
 function SimulationSettingsPanel() {
   const { t } = useI18n();

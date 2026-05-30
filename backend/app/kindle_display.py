@@ -17,11 +17,13 @@ from sqlalchemy.orm import Session
 from .database import SessionLocal
 from .energy_retention import GRID_ENERGY_SOURCES, SOLAR_ENERGY_SOURCES, delta_energy
 from .models import AppSetting, Measurement
+from .simulation import simulated_air_sensor_current, simulated_values_at
 
 AIR_SENSOR_CACHE_KEY = 'air_sensor_cache'
 UI_SETTINGS_KEY = 'ui'
 FINANCE_SETTINGS_KEY = 'finance'
 KINDLE_DISPLAY_SETTINGS_KEY = 'kindle_display'
+SIMULATION_SETTINGS_KEY = 'simulation'
 DEFAULT_CURRENCY_CODE = 'EUR'
 DEFAULT_TIMEZONE = 'Europe/Berlin'
 GRID_POWER_SOURCES = {'shelly_3em_gen1_total', 'shelly_rpc_em_total'}
@@ -175,6 +177,13 @@ def parse_float(value: object) -> float | None:
         return None
 
 
+
+def _simulation_enabled(db: Session) -> bool:
+    row = db.get(AppSetting, SIMULATION_SETTINGS_KEY)
+    value = row.value if row and isinstance(row.value, dict) else {}
+    return bool(value.get('enabled', False))
+
+
 def _air_cache(db: Session) -> dict[str, Any]:
     row = db.get(AppSetting, AIR_SENSOR_CACHE_KEY)
     return row.value if row and isinstance(row.value, dict) else {}
@@ -284,12 +293,34 @@ def _finance_settings(db: Session) -> tuple[float, str]:
 
 
 def collect_kindle_values(db: Session) -> KindleValues:
+    timezone_name = _ui_timezone(db)
+    kwh_price, currency_code = _finance_settings(db)
+
+    if _simulation_enabled(db):
+        now = datetime.now(timezone.utc)
+        sim = simulated_values_at(now, timezone_name)
+        air = simulated_air_sensor_current(timezone_name)
+        return KindleValues(
+            generated_at=now,
+            temperature_c=air.temperature_c,
+            humidity_percent=air.humidity_percent,
+            pm10=air.sds_p1,
+            pm25=air.sds_p2,
+            home_import_w=sim.grid_w,
+            solar_w=sim.solar_w,
+            today_import_kwh=sim.import_today_kwh,
+            today_solar_kwh=sim.solar_today_kwh,
+            kwh_price=kwh_price,
+            currency_code=currency_code,
+            last_air_success_at=air.last_success_at,
+            last_measurement_at=sim.timestamp,
+            timezone_name=timezone_name,
+        )
+
     cache = _air_cache(db)
     home_import_w, last_measurement_at = _latest_home_import_w(db)
     solar_w = _latest_solar_power_w(db)
-    timezone_name = _ui_timezone(db)
     today_import_kwh, today_solar_kwh = _today_energy_mix(db, timezone_name)
-    kwh_price, currency_code = _finance_settings(db)
     return KindleValues(
         generated_at=datetime.now(timezone.utc),
         temperature_c=parse_float(cache.get('temperature_c')),

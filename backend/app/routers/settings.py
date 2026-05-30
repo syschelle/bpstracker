@@ -12,6 +12,7 @@ from ..database import get_db
 from ..models import AppSetting, AuditLog, User
 from ..schemas import AirSensorCurrent, AirSensorSettings, CurrentValuesApiSettings, FinanceSettings, KindleDisplaySettings, RetentionSettings, SimulationSettings, UiSettings
 from ..security import get_current_user, require_admin
+from ..simulation import simulated_air_sensor_current
 
 router = APIRouter(prefix='/api/settings', tags=['settings'])
 
@@ -22,6 +23,7 @@ AIR_SENSOR_SETTINGS_KEY = 'air_sensor'
 KINDLE_DISPLAY_SETTINGS_KEY = 'kindle_display'
 CURRENT_VALUES_API_SETTINGS_KEY = 'current_values_api'
 SIMULATION_SETTINGS_KEY = 'simulation'
+SIMULATION_CACHE_KEY = 'simulation_cache'
 AIR_SENSOR_CACHE_KEY = 'air_sensor_cache'
 AIR_SENSOR_SUCCESS_POLL_SECONDS = 180
 AIR_SENSOR_RETRY_SECONDS = 30
@@ -472,6 +474,10 @@ def update_simulation_settings(
         db.add(row)
     else:
         row.value = value
+    if not normalized.enabled:
+        cache_row = db.get(AppSetting, SIMULATION_CACHE_KEY)
+        if cache_row is not None:
+            db.delete(cache_row)
     db.add(AuditLog(actor_user_id=actor.id, action='settings.simulation.update', details=value))
     db.commit()
     db.refresh(row)
@@ -505,4 +511,7 @@ def update_air_sensor_settings(
 
 @router.get('/air-sensor/current', response_model=AirSensorCurrent)
 async def get_air_sensor_current(_: User = Depends(get_current_user), db: Session = Depends(get_db)) -> AirSensorCurrent:
+    simulation = get_simulation_settings_from_db(db)
+    if simulation.enabled:
+        return simulated_air_sensor_current(get_ui_settings_from_db(db).timezone)
     return await fetch_air_sensor_current(get_air_sensor_settings_from_db(db), db)
