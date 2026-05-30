@@ -12,7 +12,7 @@ Repository:
 https://github.com/syschelle/bpstracker
 ```
 
-<img width="1495" height="957" alt="BPSTracker dashboard" src="https://github.com/user-attachments/assets/aed13436-0537-4f45-836e-87eb1d285969" />
+![BPSTracker dashboard overview](docs/images/dashboard-overview.png)
 
 ---
 
@@ -134,6 +134,17 @@ Typical ranges:
 - 7 days
 - 30 days
 
+
+### History chart series
+
+The history chart shows separate series for:
+
+- solar production
+- grid import
+- grid export
+
+Grid export is displayed as a positive value so it can be compared visually with grid import and solar production.
+
 ### Setup
 
 The setup area allows administrators to configure:
@@ -230,6 +241,9 @@ The backend remains private inside the Docker network.
 ---
 
 ## Screens and UI
+
+The screenshot above shows the desktop dashboard with live energy cards, air sensor values, device status and latest measurements.
+
 
 BPSTracker is optimized for desktop and mobile browsers.
 

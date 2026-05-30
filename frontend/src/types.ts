@@ -50,6 +50,8 @@ export interface Measurement {
   energy_import_wh?: number | null;
   energy_export_wh?: number | null;
   total_power_w?: number | null;
+  solar_power_w?: number | null;
+  grid_power_w?: number | null;
 }
 
 export interface UiSettings {

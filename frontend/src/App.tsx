@@ -1161,12 +1161,20 @@ function HistoryView() {
 
   useEffect(() => { void load(); }, [hours]);
 
-  const chartData = useMemo(() => history.map(row => ({
-    time: new Date(row.timestamp).toLocaleString(localeFor(language), { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }),
-    power: row.power_w ?? row.total_power_w ?? null,
-    source: row.source_type,
-    device: row.device_id
-  })), [history, language]);
+  const chartData = useMemo(() => history.map(row => {
+    const gridPower = row.grid_power_w ?? row.total_power_w ?? null;
+    const solarPower = row.solar_power_w ?? (row.source_type?.includes('solar') ? row.power_w : null);
+    const fallbackPower = row.power_w ?? row.total_power_w ?? null;
+    return {
+      time: new Date(row.timestamp).toLocaleString(localeFor(language), { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }),
+      solar: solarPower === null || solarPower === undefined ? null : Math.max(0, solarPower),
+      gridImport: gridPower === null || gridPower === undefined ? null : Math.max(0, gridPower),
+      gridExport: gridPower === null || gridPower === undefined ? null : Math.abs(Math.min(0, gridPower)),
+      power: fallbackPower,
+      source: row.source_type,
+      device: row.device_id
+    };
+  }), [history, language]);
 
   return (
     <section className="panel tall">
@@ -1186,7 +1194,9 @@ function HistoryView() {
           <YAxis />
           <Tooltip />
           <Legend />
-          <Area type="monotone" dataKey="power" name={t('powerW')} fillOpacity={0.25} />
+          <Area type="monotone" dataKey="solar" name={t('solarShare')} fillOpacity={0.22} />
+          <Area type="monotone" dataKey="gridImport" name={t('gridImportShare')} fillOpacity={0.18} />
+          <Area type="monotone" dataKey="gridExport" name={t('exportedToday')} fillOpacity={0.18} />
         </AreaChart>
       </ResponsiveContainer>
     </section>
