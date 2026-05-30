@@ -1300,3 +1300,6 @@ BPSTracker is a private monitoring tool for local energy visualization. It is no
 
 
 <!-- Fix simulation banner rendering by keeping App as the default React export. -->
+
+
+<!-- Fix: battery analysis toggle is persisted correctly in finance settings. -->
