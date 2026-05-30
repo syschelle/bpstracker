@@ -1,10 +1,18 @@
 # BPSTracker
 
-**BPSTracker** is a self-hosted monitoring dashboard for a **Balkon-Photovoltaik-System (BPS)** / balcony photovoltaic system. It collects live power and energy data from configured Shelly devices, displays daily and total energy balances, calculates costs and savings, and provides a Kindle-friendly PNG status display for e-ink dashboards.
+**BPSTracker** is a self-hosted monitoring dashboard for a **Balkon-Photovoltaik-System (BPS)** / balcony photovoltaic system.
 
-The project is designed to run locally in Docker, for example on a small home server or Raspberry Pi, with the backend protected inside the Docker network and only the frontend exposed to the local network.
+It collects live power and energy values from Shelly devices, visualizes current house import and solar production, calculates daily and total balances, estimates costs and savings, and can generate a Kindle/e-ink friendly status display.
 
-<img width="1495" height="957" alt="image" src="https://github.com/user-attachments/assets/aed13436-0537-4f45-836e-87eb1d285969" />
+BPSTracker is designed for local home use. The backend is kept inside the Docker network and only the frontend/nginx proxy is exposed to the LAN.
+
+Repository:
+
+```text
+https://github.com/syschelle/bpstracker
+```
+
+<img width="1495" height="957" alt="BPSTracker dashboard" src="https://github.com/user-attachments/assets/aed13436-0537-4f45-836e-87eb1d285969" />
 
 ---
 
@@ -14,15 +22,16 @@ The project is designed to run locally in Docker, for example on a small home se
 - [Main features](#main-features)
 - [Architecture](#architecture)
 - [Screens and UI](#screens-and-ui)
-- [Supported data sources](#supported-data-sources)
-- [Authentication and users](#authentication-and-users)
-- [Kindle display API](#kindle-display-api)
-- [Air quality sensor support](#air-quality-sensor-support)
+- [Supported devices and sensors](#supported-devices-and-sensors)
+- [Authentication and user roles](#authentication-and-user-roles)
+- [Kindle display](#kindle-display)
+- [JSON API](#json-api)
+- [Air quality sensor](#air-quality-sensor)
 - [Data retention](#data-retention)
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Deployment](#deployment)
-- [Updating](#updating)
+- [Updating from GitHub](#updating-from-github)
 - [Configuration](#configuration)
 - [Ports and networking](#ports-and-networking)
 - [Backup and restore](#backup-and-restore)
@@ -31,35 +40,26 @@ The project is designed to run locally in Docker, for example on a small home se
 - [Security notes](#security-notes)
 - [Project structure](#project-structure)
 - [License](#license)
+- [Disclaimer](#disclaimer)
 
 ---
 
 ## Overview
 
-BPSTracker is intended for local energy monitoring of a small photovoltaic setup, especially balcony solar installations. The application focuses on a compact, understandable dashboard instead of a complex enterprise energy management system.
+BPSTracker is a compact local monitoring application for small photovoltaic systems, especially balcony solar installations.
 
-It can show:
+The project focuses on:
 
-- current house/grid import power
-- current solar feed-in power
-- daily solar production
-- daily grid import
-- daily grid export
-- total solar production
-- total grid import/export
-- consumption costs
-- solar savings
-- amortization progress
-- device status
-- current measurements
-- optional air sensor values
-- a generated Kindle PNG display
+- a clear dashboard
+- low-maintenance Docker deployment
+- local-only operation
+- small-device friendly behavior
+- persistent energy totals
+- configurable retention for raw data
+- optional Kindle/e-ink display support
+- optional JSON export for external integrations
 
-The application uses Docker Compose and stores persistent data below:
-
-```text
-/opt/bpstracker
-```
+It is not intended to be a certified billing or metering system.
 
 ---
 
@@ -67,20 +67,25 @@ The application uses Docker Compose and stores persistent data below:
 
 ### Dashboard
 
-The dashboard provides a clear view of the current energy situation:
+The dashboard provides a compact view of the current energy situation.
+
+It includes:
 
 - **House import / Hausbezug**
-  - current grid import or export
+  - current signed grid power
+  - current grid import
+  - current grid export
   - current solar power
-  - solar/grid share visualization
+  - current total consumption estimate
+  - solar/grid share gauge
 
 - **Daily energy balance**
-  - solar
+  - solar production
   - grid import
   - grid export
 
 - **Total energy balance**
-  - total solar energy
+  - total solar production
   - total grid import
   - total grid export
 
@@ -98,13 +103,30 @@ The dashboard provides a clear view of the current energy situation:
   - remaining amount
   - estimated remaining time
 
+- **Device status**
+  - online/offline state
+  - last successful polling time
+
+- **Latest measurements**
+  - current normalized measurement data
+
+Power values in the web dashboard automatically switch from watts to kilowatts when the value reaches 1000 W.
+
+Examples:
+
+```text
+850 W
+1.25 kW
+-1.25 kW
+```
+
 ### History
 
 The history view displays measured power values over selectable periods.
 
-The chart is aggregated into time buckets so that multi-channel Shelly devices do not create broken or misleading vertical spikes.
+The backend aggregates values into chart-friendly time buckets. This avoids visual spikes caused by multiple Shelly channels/phases being stored at nearly the same timestamp.
 
-Supported ranges include:
+Typical ranges:
 
 - 24 hours
 - 7 days
@@ -114,16 +136,19 @@ Supported ranges include:
 
 The setup area allows administrators to configure:
 
-- web interface language
+- language
 - timezone
-- currency
-- kWh price
-- investment costs
-- raw data retention period
+- GitHub repository link
+- Kindle display activation
+- Kindle display preview
+- JSON API activation
+- JSON API preview
+- user credentials
+- financial values
+- data retention
+- air quality sensor
 - Shelly devices
 - polling intervals
-- optional air quality sensor
-- admin and viewer credentials
 
 ### Multilingual UI
 
@@ -132,7 +157,7 @@ The web interface supports:
 - German
 - English
 
-The selected language is stored in the application settings.
+The selected language is stored as an application setting.
 
 ### Theme support
 
@@ -141,7 +166,7 @@ The frontend supports:
 - light theme
 - dark theme
 
-The selected theme is stored locally in the browser.
+The selected theme is stored in the browser.
 
 ### Currency support
 
@@ -164,7 +189,7 @@ UTC
 America/New_York
 ```
 
-Daylight saving time and winter time are handled automatically by the timezone database.
+Daylight saving time and winter time are handled automatically by Python `zoneinfo`.
 
 ---
 
@@ -173,9 +198,9 @@ Daylight saving time and winter time are handled automatically by the timezone d
 BPSTracker consists of three main services:
 
 ```text
-Frontend  ->  nginx + static React build
-Backend   ->  FastAPI / Python
-Database  ->  PostgreSQL
+Frontend  -> nginx + static React build
+Backend   -> FastAPI / Python
+Database  -> PostgreSQL
 ```
 
 The backend is not exposed directly to the outside. The browser accesses the backend only through the frontend/nginx proxy.
@@ -183,7 +208,7 @@ The backend is not exposed directly to the outside. The browser accesses the bac
 Typical access flow:
 
 ```text
-Browser / Kindle
+Browser / Kindle / local integration
       |
       | HTTP
       v
@@ -208,16 +233,16 @@ BPSTracker is optimized for desktop and mobile browsers.
 
 The mobile header is designed to avoid crowding:
 
-- menu button on the left
-- page title and user role in the center
+- hamburger menu on the left
+- page title and role in the center
 - theme toggle on the right
 - air sensor values in a separate responsive row
 
-The navigation menu is available through a hamburger button and is hidden when not needed.
+The side navigation is detached and can be opened or closed with the hamburger button.
 
 ---
 
-## Supported data sources
+## Supported devices and sensors
 
 BPSTracker currently focuses on Shelly devices.
 
@@ -228,7 +253,7 @@ Supported or intended Shelly device types include:
 - Shelly 2PM Gen4
 - generic Shelly NG devices
 
-Each device can be configured in the setup area with:
+Each device can be configured in Setup with:
 
 - name
 - device type
@@ -243,11 +268,11 @@ The backend normalizes measurements and stores them in PostgreSQL.
 
 ---
 
-## Authentication and users
+## Authentication and user roles
 
-BPSTracker always requires authentication.
+BPSTracker requires authentication.
 
-There are exactly two user roles:
+There are two user roles:
 
 ### Admin
 
@@ -260,7 +285,8 @@ The admin can:
 - configure users
 - configure financial settings
 - configure retention
-- configure language/timezone
+- configure language and timezone
+- configure optional APIs
 - manage 2FA
 
 The admin can enable TOTP-based two-factor authentication.
@@ -272,24 +298,24 @@ The viewer can:
 - open the dashboard
 - open the history view
 
-The viewer cannot open setup and cannot manage 2FA.
+The viewer cannot open Setup and cannot manage 2FA.
 
 ### Password storage
 
 Passwords are stored as secure hashes using Argon2id.
 
-Usernames are stored as usernames and are freely configurable. They are not email addresses.
+Usernames are configurable and are not required to be email addresses.
 
 ---
 
-## Kindle display API
+## Kindle display
 
-BPSTracker can generate a Kindle-friendly PNG image for e-ink displays.
+BPSTracker can generate a Kindle/e-ink friendly PNG image.
 
 The fixed endpoint is:
 
 ```text
-http://<ip-address>:5173/api/kindle/display.png
+http://<server-ip>:5173/api/kindle/display.png
 ```
 
 Example:
@@ -299,6 +325,24 @@ http://192.168.178.211:5173/api/kindle/display.png
 ```
 
 The URL is intentionally fixed and does not require query parameters.
+
+### Kindle display activation
+
+The Kindle display can be enabled or disabled in Setup.
+
+When disabled:
+
+- no new Kindle PNG is generated
+- the background task skips rendering
+- the endpoint reports that the Kindle display is disabled
+
+This is useful if the Kindle display is not used and the device should save resources.
+
+### Kindle preview
+
+Setup includes a Kindle preview button.
+
+The preview shows the current generated PNG directly in the browser, so you can check how the image will look on the Kindle.
 
 ### Kindle image behavior
 
@@ -310,7 +354,7 @@ Properties:
 - size: 600 × 800 px
 - grayscale-friendly design
 - generated inside the container
-- no external rendering tools required at runtime
+- no external rendering tool required at runtime
 - generated once per minute
 - not generated exactly at second `00`
 - last valid PNG is kept if rendering fails
@@ -322,10 +366,16 @@ The displayed clock is shifted by one minute to better match Kindle cron refresh
 A metadata endpoint is available:
 
 ```text
-http://<ip-address>:5173/api/kindle/meta
+http://<server-ip>:5173/api/kindle/meta
 ```
 
-It can be used to verify the active renderer version and generation status.
+It can be used to verify:
+
+- whether the Kindle display is enabled
+- when the last image was generated
+- the renderer version
+- the current image size
+- possible rendering errors
 
 ### Example Kindle cron usage
 
@@ -335,19 +385,91 @@ A Kindle can fetch the image with a command like:
 wget -O /mnt/us/bpstracker.png "http://192.168.178.211:5173/api/kindle/display.png"
 ```
 
-Many older Kindle devices have problems with modern HTTPS/TLS, so using plain HTTP inside the local network is recommended.
+Many older Kindle devices have problems with modern HTTPS/TLS. For local Kindle dashboards, plain HTTP inside the local network is usually the most reliable option.
 
 ---
 
-## Air quality sensor support
+## JSON API
 
-BPSTracker can optionally read values from a Luftdaten / Sensor.Community-style sensor endpoint:
+BPSTracker provides an optional JSON API for external tools, scripts, home automation systems or dashboards.
+
+Endpoint:
 
 ```text
-http://<sensor-ip>/data.json
+http://<server-ip>:5173/api/current-values
 ```
 
-More information about the supported sensor project can be found here:
+Example:
+
+```bash
+curl http://192.168.178.211:5173/api/current-values
+```
+
+### JSON API activation
+
+The JSON API can be enabled or disabled in Setup.
+
+When disabled:
+
+- `/api/current-values` does not return values
+- the endpoint reports that the API is disabled
+
+This avoids exposing integration data when the API is not needed.
+
+### JSON API preview
+
+Setup includes a JSON preview button.
+
+The preview calls `/api/current-values` and displays the current JSON response directly in the browser.
+
+### Example response
+
+```json
+{
+  "timestamp_utc": "2026-05-29T20:15:00+00:00",
+  "local_date": "2026-05-29",
+  "timezone": "Europe/Berlin",
+  "last_measurement_at": "2026-05-29T20:14:55+00:00",
+
+  "current_solar_production_w": 120.5,
+  "current_grid_power_w": 284.8,
+  "current_grid_import_w": 284.8,
+  "current_grid_export_w": 0.0,
+  "current_total_consumption_w": 405.3,
+
+  "daily_solar_production_kwh": 1.42,
+  "daily_grid_import_kwh": 8.36,
+  "daily_grid_export_kwh": 0.0,
+
+  "total_solar_production_kwh": 15.7,
+  "total_grid_import_kwh": 128.4,
+  "total_grid_export_kwh": 2.1
+}
+```
+
+### Field meaning
+
+| Field | Meaning |
+|---|---|
+| `current_solar_production_w` | current solar production in W |
+| `current_grid_power_w` | signed current grid power in W |
+| `current_grid_import_w` | current grid import in W |
+| `current_grid_export_w` | current grid export in W |
+| `current_total_consumption_w` | estimated current total consumption in W |
+| `daily_solar_production_kwh` | solar production for the current local day |
+| `daily_grid_import_kwh` | grid import for the current local day |
+| `daily_grid_export_kwh` | grid export for the current local day |
+| `total_solar_production_kwh` | total solar production |
+| `total_grid_import_kwh` | total grid import |
+| `total_grid_export_kwh` | total grid export |
+
+---
+
+## Air quality sensor
+
+BPSTracker can optionally read an air quality sensor based on the **Sensor.Community DNMS / Luftdaten** project.
+
+More information about the supported sensor project:
 
 ```text
 https://sensor.community/en/sensors/dnms/
@@ -426,14 +548,14 @@ This keeps the database small while preserving important long-term values.
 
 Recommended hardware:
 
-- Raspberry Pi 3, 4, or 5
+- Raspberry Pi 3, 4 or 5
 - small home server
 - mini PC
 - NAS with Docker support
 
 ### Minimum system
 
-A Raspberry Pi Zero 2 may work, but it is close to the limit because it has only 512 MB RAM.
+A Raspberry Pi Zero 2 may work, but it is close to the limit because it only has 512 MB RAM.
 
 For low-memory systems:
 
@@ -442,6 +564,7 @@ For low-memory systems:
 - enable swap
 - keep polling intervals reasonable
 - keep raw retention short
+- disable unused features such as Kindle display or JSON API
 
 ---
 
@@ -450,7 +573,7 @@ For low-memory systems:
 Clone the repository:
 
 ```bash
-git clone https://github.com/<your-user>/bpstracker.git
+git clone https://github.com/syschelle/bpstracker.git
 cd bpstracker
 ```
 
@@ -495,7 +618,7 @@ The backend is only reachable inside the Docker network and should not be expose
 
 ---
 
-## Updating
+## Updating from GitHub
 
 If you installed the project from GitHub:
 
@@ -509,13 +632,13 @@ The deployment script should rebuild or restart the required services.
 
 After updating, reload the browser page.
 
-For major frontend changes, a hard reload may be required:
+For frontend changes, a hard reload may be required:
 
 ```text
 Ctrl + F5
 ```
 
-On mobile browsers, clearing the site cache may sometimes be necessary.
+On mobile browsers, closing and reopening the browser tab or clearing the site cache may be necessary.
 
 ---
 
@@ -540,6 +663,14 @@ Europe/Berlin
 
 This automatically handles daylight saving time and winter time.
 
+### GitHub repository
+
+Setup contains a direct link to the project repository:
+
+```text
+https://github.com/syschelle/bpstracker
+```
+
 ### Currency
 
 Supported currencies:
@@ -563,6 +694,15 @@ These values are used to calculate:
 - solar savings
 - amortization progress
 
+### Optional interfaces
+
+Setup allows enabling or disabling:
+
+- Kindle display generation
+- JSON API
+
+Both features include preview/test buttons.
+
 ### Devices
 
 Each Shelly device can be configured with:
@@ -572,6 +712,7 @@ Each Shelly device can be configured with:
 - channel
 - polling interval
 - optional credentials
+- active/inactive state
 
 ### Users
 
@@ -594,19 +735,18 @@ Default external port:
 5173
 ```
 
-The browser and Kindle should use:
+The browser, Kindle and local integrations should use:
 
 ```text
 http://<server-ip>:5173
 ```
-
-Backend API calls are proxied through the frontend container.
 
 Important endpoints:
 
 ```text
 /api/auth/login
 /api/measurements/summary
+/api/current-values
 /api/settings/air-sensor/current
 /api/kindle/display.png
 /api/kindle/meta
@@ -631,7 +771,7 @@ Recommended backup items:
 - application data directory
 - optional generated Kindle PNG cache
 
-Example backup approach:
+Simple backup approach:
 
 ```bash
 tar -czf bpstracker-backup.tar.gz /opt/bpstracker
@@ -699,19 +839,25 @@ On small systems such as a Raspberry Pi Zero 2, avoid running npm builds locally
 
 ### Kindle image does not update
 
-Check the fixed URL:
+Check whether the Kindle display is enabled in Setup.
 
-```text
-http://<server-ip>:5173/api/kindle/display.png
-```
-
-Check metadata:
+Then check:
 
 ```text
 http://<server-ip>:5173/api/kindle/meta
 ```
 
 The PNG is generated once per minute and may not change instantly.
+
+### JSON API does not return values
+
+Check whether the JSON API is enabled in Setup.
+
+Then test:
+
+```bash
+curl http://<server-ip>:5173/api/current-values
+```
 
 ### Air sensor values are stale
 
@@ -741,6 +887,7 @@ Recommended:
 - avoid building images on the Pi
 - keep retention short
 - use reasonable polling intervals
+- disable unused optional features
 
 Check architecture:
 
@@ -772,10 +919,10 @@ Recommendations:
 - keep the backend private inside Docker
 - use strong admin and viewer passwords
 - enable admin 2FA
-- keep the host system updated
-- restrict access to the local network or VPN
+- access remotely only through VPN or another trusted private network
+- enable optional APIs only when they are needed
 
-The Kindle endpoint is designed for simple local access and should not be exposed publicly.
+The Kindle endpoint and JSON API are designed for simple local access and should not be exposed publicly.
 
 ---
 
@@ -802,7 +949,8 @@ bpstracker/
 ├── docker-compose.yml
 ├── deploy.sh
 ├── .env.example
-└── README.md
+├── README.md
+└── LICENSE
 ```
 
 ---
