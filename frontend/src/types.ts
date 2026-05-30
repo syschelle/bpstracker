@@ -1,0 +1,124 @@
+export type Language = 'de' | 'en';
+export type CurrencyCode = 'EUR' | 'USD' | 'GBP';
+
+export type DeviceType = 'auto' | 'shelly_3em_gen1' | 'shelly_pro_3em_gen2' | 'shelly_2pm_gen4' | 'shelly_ng_generic';
+
+export interface User {
+  id: number;
+  username: string;
+  role: 'admin' | 'viewer';
+  is_active: boolean;
+  totp_enabled: boolean;
+  created_at: string;
+}
+
+export interface DeviceStatus {
+  online: boolean;
+  detected_model?: string | null;
+  generation?: string | null;
+  firmware?: string | null;
+  last_success_at?: string | null;
+  last_error_at?: string | null;
+  last_error?: string | null;
+}
+
+export interface Device {
+  id: number;
+  name: string;
+  device_type: DeviceType;
+  host: string;
+  username?: string | null;
+  is_active: boolean;
+  poll_interval_seconds: number;
+  channel?: number | null;
+  created_at: string;
+  updated_at: string;
+  status?: DeviceStatus | null;
+}
+
+export interface Measurement {
+  id: number;
+  timestamp: string;
+  device_id: number;
+  source_type: string;
+  channel?: number | null;
+  phase?: string | null;
+  power_w?: number | null;
+  voltage_v?: number | null;
+  current_a?: number | null;
+  power_factor?: number | null;
+  energy_import_wh?: number | null;
+  energy_export_wh?: number | null;
+  total_power_w?: number | null;
+}
+
+export interface UiSettings {
+  language: Language;
+  timezone: string;
+}
+
+export interface FinanceSettings {
+  kwh_price_eur: number;
+  investment_cost_eur: number;
+  currency_code: CurrencyCode;
+}
+
+export interface RetentionSettings {
+  raw_retention_days: number;
+  daily_aggregates_forever: boolean;
+}
+
+export interface KindleDisplaySettings {
+  enabled: boolean;
+}
+
+export interface CurrentValuesApiSettings {
+  enabled: boolean;
+}
+
+export interface Summary {
+  current_grid_power_w?: number | null;
+  current_solar_power_w?: number | null;
+  current_total_power_w?: number | null;
+  imported_today_kwh?: number | null;
+  exported_today_kwh?: number | null;
+  solar_today_kwh?: number | null;
+  imported_total_kwh?: number | null;
+  exported_total_kwh?: number | null;
+  solar_total_kwh?: number | null;
+  kwh_price_eur: number;
+  investment_cost_eur: number;
+  currency_code: CurrencyCode;
+  consumption_cost_today_eur?: number | null;
+  savings_today_eur?: number | null;
+  savings_total_eur?: number | null;
+  remaining_to_breakeven_eur?: number | null;
+  breakeven_progress_percent?: number | null;
+  estimated_breakeven_days?: number | null;
+  estimated_breakeven_date?: string | null;
+  last_measurement_at?: string | null;
+  device_count: number;
+  online_device_count: number;
+  raw_retention_days: number;
+}
+
+
+export interface AirSensorSettings {
+  enabled: boolean;
+  host?: string | null;
+}
+
+export interface AirSensorCurrent {
+  enabled: boolean;
+  configured: boolean;
+  ok: boolean;
+  cached?: boolean;
+  temperature_c?: number | null;
+  humidity_percent?: number | null;
+  sds_p1?: number | null;
+  sds_p2?: number | null;
+  age_seconds?: number | null;
+  software_version?: string | null;
+  last_success_at?: string | null;
+  last_error?: string | null;
+}
