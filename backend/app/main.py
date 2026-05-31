@@ -13,8 +13,8 @@ from .database import Base, SessionLocal, engine
 from .models import User, UserRole
 from .poller import Poller
 from .kindle_display import kindle_display_service
-from .routers import auth, backups, current_values, devices, kindle, maintenance, measurements, settings as settings_router, users
-from .security import delete_recovery_codes, password_hash
+from .routers import auth, backups, current_values, devices, install, kindle, maintenance, measurements, settings as settings_router, users
+from .security import delete_recovery_codes
 
 poller = Poller()
 
@@ -179,59 +179,39 @@ def migrate_existing_schema() -> None:
 def bootstrap_database() -> None:
     migrate_existing_schema()
     Base.metadata.create_all(bind=engine)
-    settings = get_settings()
     with SessionLocal() as db:
-        ensure_builtin_users(
-            db,
-            admin_username=settings.initial_admin_username,
-            admin_password=settings.initial_admin_password,
-            viewer_username=settings.initial_viewer_username,
-            viewer_password=settings.initial_viewer_password,
-        )
+        normalize_existing_users(db)
 
 
-def ensure_builtin_users(db: Session, admin_username: str, admin_password: str, viewer_username: str, viewer_password: str) -> None:
-    admin_username = admin_username.strip() or 'admin'
-    viewer_username = viewer_username.strip() or 'viewer'
+def _has_password(user: User | None) -> bool:
+    return bool(user and user.password_hash and user.password_hash.strip())
 
+
+def normalize_existing_users(db: Session) -> None:
+    """Clean up legacy duplicate users without provisioning default accounts.
+
+    New installations intentionally start with no users. The unauthenticated
+    /api/install/admin endpoint remains available until an active admin with a
+    stored password hash exists. Existing installations keep their configured
+    users, while older duplicate rows are made inactive for deterministic login.
+    """
     admin_users = db.query(User).filter(User.role == UserRole.admin).order_by(User.id).all()
     viewer_users = db.query(User).filter(User.role == UserRole.viewer).order_by(User.id).all()
-    admin = next((candidate for candidate in admin_users if candidate.is_active), None) or (admin_users[0] if admin_users else None)
-    viewer = next((candidate for candidate in viewer_users if candidate.is_active), None) or (viewer_users[0] if viewer_users else None)
 
+    admin = next((candidate for candidate in admin_users if candidate.is_active and _has_password(candidate)), None)
     if admin is None:
-        if db.query(User).filter(User.username == admin_username).first():
-            admin_username = f'{admin_username}_admin'
-        admin = User(
-            username=admin_username,
-            password_hash=password_hash(admin_password.strip()),
-            role=UserRole.admin,
-            is_active=True,
-        )
-        db.add(admin)
-        db.flush()
+        admin = next((candidate for candidate in admin_users if _has_password(candidate)), None)
 
+    viewer = next((candidate for candidate in viewer_users if candidate.is_active and _has_password(candidate)), None)
     if viewer is None:
-        if viewer_username.lower() == admin.username.lower() or db.query(User).filter(User.username == viewer_username).first():
-            viewer_username = f'{viewer_username}_viewer'
-        viewer = User(
-            username=viewer_username,
-            password_hash=password_hash(viewer_password.strip()),
-            role=UserRole.viewer,
-            is_active=True,
-            totp_enabled=False,
-            totp_secret=None,
-        )
-        db.add(viewer)
-        db.flush()
+        viewer = next((candidate for candidate in viewer_users if _has_password(candidate)), None)
 
-    # There must be exactly one active admin and one active viewer. Older test
-    # deployments may have duplicate role rows because the singleton role rule
-    # was introduced after the first MVP. Keep the first active account and
-    # deactivate the rest so Login and Setup are deterministic.
     for duplicate in admin_users:
         if admin is not None and duplicate.id != admin.id:
             duplicate.is_active = False
+            duplicate.totp_enabled = False
+            duplicate.totp_secret = None
+            delete_recovery_codes(db, duplicate)
             db.add(duplicate)
 
     for duplicate in viewer_users:
@@ -242,6 +222,10 @@ def ensure_builtin_users(db: Session, admin_username: str, admin_password: str, 
             delete_recovery_codes(db, duplicate)
             db.add(duplicate)
 
+    if admin is not None:
+        admin.is_active = True
+        db.add(admin)
+
     # Viewer must never have Setup/2FA rights, even when migrating an old test database.
     if viewer is not None:
         viewer.is_active = True
@@ -249,10 +233,6 @@ def ensure_builtin_users(db: Session, admin_username: str, admin_password: str, 
         viewer.totp_secret = None
         delete_recovery_codes(db, viewer)
         db.add(viewer)
-
-    if admin is not None:
-        admin.is_active = True
-        db.add(admin)
 
     db.commit()
 
@@ -288,6 +268,7 @@ app.add_middleware(
     allow_headers=['*'],
 )
 
+app.include_router(install.router)
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(devices.router)

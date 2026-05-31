@@ -46,7 +46,7 @@ mkdir -p "$APP_DIR/data/postgres" "$APP_DIR/data/backend" "$APP_DIR/backups"
 if [ ! -f "$APP_DIR/.env" ]; then
   cp "$APP_DIR/.env.example" "$APP_DIR/.env"
   echo "Created $APP_DIR/.env"
-  echo "Bitte prüfe $APP_DIR/.env und ändere die Standardpasswörter."
+  echo "Bitte prüfe $APP_DIR/.env, setze einen starken SECRET_KEY und lege den initialen Admin anschließend in der Weboberfläche an."
 fi
 
 cd "$APP_DIR"

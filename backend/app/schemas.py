@@ -15,6 +15,21 @@ class TokenResponse(BaseModel):
     challenge_token: str | None = None
 
 
+
+
+class InstallStatusResponse(BaseModel):
+    install_required: bool
+
+
+class InstallAdminRequest(BaseModel):
+    username: str = Field(min_length=1, max_length=80, pattern=r'^[A-Za-z0-9_.-]+$')
+    password: str = Field(min_length=8, max_length=256)
+    confirm_password: str = Field(min_length=8, max_length=256)
+
+
+class InstallCompleteResponse(BaseModel):
+    ok: bool = True
+
 class LoginRequest(BaseModel):
     username: str = Field(min_length=1, max_length=80)
     password: str

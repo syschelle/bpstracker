@@ -221,6 +221,8 @@ Start mit lokalem Build:
 bash ./deploy.sh
 ```
 
+Bei einer frischen Datenbank öffnet sich in der Weboberfläche zuerst die Ersteinrichtung. Dort legt der erste Anwender den Admin-Benutzernamen und das Admin-Passwort fest. In `.env` werden keine Admin- oder Viewer-Zugangsdaten ausgeliefert.
+
 Die Weboberfläche ist anschließend erreichbar unter:
 
 ```text
@@ -280,7 +282,7 @@ Im Setup können unter anderem konfiguriert werden:
 - Kindle-Display
 - Simulation
 - JSON-API
-- Admin-/Viewer-Zugang
+- Admin-Zugang und optionaler Viewer-Zugang
 - Finanzwerte
 - Akku-Amortisationsberechnung
 - verschlüsselte Backups
@@ -698,6 +700,7 @@ bash ./deploy.sh
 Empfehlungen:
 
 - `.env` niemals in GitHub hochladen
+- den initialen Admin nur über die Ersteinrichtung beim ersten Start anlegen
 - starke Passwörter verwenden
 - 2FA aktivieren
 - regelmäßige verschlüsselte Backups erstellen

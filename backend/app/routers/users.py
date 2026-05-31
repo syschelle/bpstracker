@@ -29,17 +29,18 @@ def update_role_credentials(
     # account for the role and disable duplicates so the Setup tab is deterministic.
     role_users = db.query(User).filter(User.role == role).order_by(User.id).all()
     user = next((candidate for candidate in role_users if candidate.is_active), None) or (role_users[0] if role_users else None)
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User role not found')
 
     username = payload.username.strip()
     password = payload.password.strip() if payload.password else None
+    if not user and not password:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Password is required when creating a user role')
     # If an inactive duplicate with this username exists from an older test build,
     # rename it instead of blocking the intended admin/setup change. Active users
     # with another role still conflict as expected.
+    current_user_id = user.id if user is not None else -1
     username_conflicts = (
         db.query(User)
-        .filter(func.lower(User.username) == username.lower(), User.id != user.id)
+        .filter(func.lower(User.username) == username.lower(), User.id != current_user_id)
         .order_by(User.id)
         .all()
     )
@@ -49,10 +50,13 @@ def update_role_credentials(
         conflict.username = f'{conflict.username}_disabled_{conflict.id}'
         db.add(conflict)
 
-    user.username = username
-    if password:
-        user.password_hash = password_hash(password)
-    user.is_active = True
+    if user is None:
+        user = User(username=username, password_hash=password_hash(password or ''), role=role, is_active=True)
+    else:
+        user.username = username
+        if password:
+            user.password_hash = password_hash(password)
+        user.is_active = True
 
     # Disable duplicate accounts with the same role from old test deployments.
     for duplicate in role_users:
@@ -71,6 +75,7 @@ def update_role_credentials(
         user.totp_secret = None
         delete_recovery_codes(db, user)
 
+    db.add(user)
     db.add(AuditLog(actor_user_id=actor.id, action='user.credentials.update', details={'role': role.value, 'password_changed': bool(password)}))
     db.commit()
     db.refresh(user)

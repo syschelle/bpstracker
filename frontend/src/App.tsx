@@ -23,11 +23,18 @@ const translations = {
   de: {
     appSubtitle: 'Balkon-Photovoltaik-System Monitoring',
     loginTitle: 'Einloggen',
+    installTitle: 'Ersteinrichtung',
+    installHint: 'Diese Installation hat noch keinen Admin-Zugang. Lege jetzt den ersten Admin-Benutzer an. Es werden keine Benutzer oder Passwörter aus der .env übernommen.',
     username: 'Benutzername',
     password: 'Passwort',
+    confirmPassword: 'Passwort wiederholen',
+    installButton: 'Admin anlegen',
+    installPasswordMismatch: 'Die Passwörter stimmen nicht überein.',
+    installCompleteLoginNow: 'Admin wurde angelegt. Bitte melde dich jetzt an.',
+    installFailed: 'Ersteinrichtung fehlgeschlagen',
     loginButton: 'Login',
     wait: 'Bitte warten…',
-    loginHint: 'Initiale Zugangsdaten stehen in deiner lokalen .env. Danach änderst du Admin und Viewer im Setup.',
+    loginHint: 'Melde dich mit dem eingerichteten Admin- oder Viewer-Zugang an. Initiale Zugangsdaten werden nicht mehr in der .env gespeichert.',
     loginFailed: 'Login fehlgeschlagen',
     twoFaFailed: '2FA fehlgeschlagen',
     twoFaCodeOrRecovery: '2FA-Code oder Recovery-Code',
@@ -131,11 +138,11 @@ const translations = {
     timezoneSaved: 'Zeitzone wurde gespeichert.',
     saveTimezone: 'Zeitzone speichern',
     userAccess: 'Benutzerzugänge',
-    userAccessHint: 'Es gibt genau zwei Rollen. Der Viewer darf Dashboard und Historie sehen, aber kein Setup öffnen. Benutzernamen werden frei vergeben und im Klartext gespeichert; Passwörter werden mit Argon2id gehasht. 2FA ist nur für den Admin vorgesehen.',
+    userAccessHint: 'Der Admin wird bei der Ersteinrichtung angelegt. Ein Viewer kann optional hier erstellt oder geändert werden; er darf Dashboard und Historie sehen, aber kein Setup öffnen. Benutzernamen werden frei vergeben und im Klartext gespeichert; Passwörter werden mit Argon2id gehasht. 2FA ist nur für den Admin vorgesehen.',
     newPassword: 'Neues Passwort',
     unchangedPlaceholder: 'leer lassen = unverändert',
     saveAdmin: 'Admin speichern',
-    saveViewer: 'Viewer speichern',
+    saveViewer: 'Viewer erstellen/speichern',
     adminSaved: 'Admin wurde gespeichert.',
     viewerSaved: 'Viewer wurde gespeichert.',
     twoFaManagedInTab: '2FA verwaltest du im Reiter „Admin 2FA“.',
@@ -307,11 +314,18 @@ const translations = {
   en: {
     appSubtitle: 'Balcony Photovoltaic System Monitoring',
     loginTitle: 'Sign in',
+    installTitle: 'Initial setup',
+    installHint: 'This installation does not have an admin account yet. Create the first admin user now. No users or passwords are imported from the .env file.',
     username: 'Username',
     password: 'Password',
+    confirmPassword: 'Repeat password',
+    installButton: 'Create admin',
+    installPasswordMismatch: 'The passwords do not match.',
+    installCompleteLoginNow: 'Admin has been created. Please sign in now.',
+    installFailed: 'Initial setup failed',
     loginButton: 'Sign in',
     wait: 'Please wait…',
-    loginHint: 'Initial credentials are stored in your local .env file. Afterward, change the admin and viewer accounts in Setup.',
+    loginHint: 'Sign in with the configured admin or viewer account. Initial credentials are no longer stored in the .env file.',
     loginFailed: 'Login failed',
     twoFaFailed: '2FA failed',
     twoFaCodeOrRecovery: '2FA code or recovery code',
@@ -415,11 +429,11 @@ const translations = {
     timezoneSaved: 'Time zone has been saved.',
     saveTimezone: 'Save time zone',
     userAccess: 'User access',
-    userAccessHint: 'There are exactly two roles. The viewer may see Dashboard and History, but cannot open Setup. Usernames are freely configurable and stored in plain text; passwords are hashed with Argon2id. 2FA is intended only for the admin.',
+    userAccessHint: 'The admin is created during initial setup. A viewer can optionally be created or changed here; the viewer may see Dashboard and History, but cannot open Setup. Usernames are freely configurable and stored in plain text; passwords are hashed with Argon2id. 2FA is intended only for the admin.',
     newPassword: 'New password',
     unchangedPlaceholder: 'leave empty = unchanged',
     saveAdmin: 'Save admin',
-    saveViewer: 'Save viewer',
+    saveViewer: 'Create/save viewer',
     adminSaved: 'Admin has been saved.',
     viewerSaved: 'Viewer has been saved.',
     twoFaManagedInTab: 'Manage 2FA in the “Admin 2FA” tab.',
@@ -864,11 +878,16 @@ export default function App() {
   const [language, setLanguageState] = useState<Language>(readStoredLanguage);
   const [theme, setTheme] = useState<Theme>(readStoredTheme);
   const [user, setUser] = useState<User | null>(null);
-  const [loginUsername, setLoginUsername] = useState('admin');
+  const [loginUsername, setLoginUsername] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [installRequired, setInstallRequired] = useState<boolean | null>(null);
+  const [installUsername, setInstallUsername] = useState('');
+  const [installPassword, setInstallPassword] = useState('');
+  const [installPasswordConfirm, setInstallPasswordConfirm] = useState('');
   const [challenge, setChallenge] = useState<string | null>(null);
   const [twoFaCode, setTwoFaCode] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState<Tab>('dashboard');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -948,16 +967,53 @@ export default function App() {
   }, [menuOpen]);
 
   useEffect(() => {
+    api.installStatus()
+      .then(status => {
+        setInstallRequired(status.install_required);
+        if (status.install_required) {
+          setToken(null);
+          setUser(null);
+        }
+      })
+      .catch(() => setInstallRequired(false));
+  }, []);
+
+  useEffect(() => {
+    if (installRequired !== false) return;
     if (!getToken()) return;
     loadCurrentUserAndLanguage().catch(() => setToken(null));
-  }, [loadCurrentUserAndLanguage]);
+  }, [installRequired, loadCurrentUserAndLanguage]);
 
   useEffect(() => {
     if (!isAdmin(user) && (tab === 'setup' || tab === 'account')) setTab('dashboard');
   }, [tab, user]);
 
+  async function handleInstall() {
+    setError(null);
+    setInfo(null);
+    if (installPassword !== installPasswordConfirm) {
+      setError(t('installPasswordMismatch'));
+      return;
+    }
+    setLoading(true);
+    try {
+      await api.installAdmin(installUsername, installPassword, installPasswordConfirm);
+      setInstallRequired(false);
+      setLoginUsername(installUsername);
+      setLoginPassword('');
+      setInstallPassword('');
+      setInstallPasswordConfirm('');
+      setInfo(t('installCompleteLoginNow'));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('installFailed'));
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleLogin() {
     setError(null);
+    setInfo(null);
     setLoading(true);
     try {
       const response = await api.login(loginUsername, loginPassword);
@@ -996,6 +1052,7 @@ export default function App() {
     setUser(null);
     setChallenge(null);
     setLoginPassword('');
+    setInfo(null);
     setMenuOpen(false);
   }
 
@@ -1018,19 +1075,38 @@ export default function App() {
                 {theme === 'dark' ? <Sun size={19} /> : <Moon size={19} />}
               </button>
             </div>
-            <h1>{t('loginTitle')}</h1>
-            {error && <div className="error">{error}</div>}
-            {!challenge ? (
+            {installRequired === null ? (
               <>
-                <label>{t('username')}<input autoFocus value={loginUsername} onChange={e => setLoginUsername(e.target.value)} /></label>
-                <label>{t('password')}<input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') void handleLogin(); }} /></label>
-                <button onClick={handleLogin} disabled={loading}>{loading ? t('wait') : t('loginButton')}</button>
-                <p className="hint">{t('loginHint')}</p>
+                <h1>{t('wait')}</h1>
+              </>
+            ) : installRequired ? (
+              <>
+                <h1>{t('installTitle')}</h1>
+                {error && <div className="error">{error}</div>}
+                <p className="hint">{t('installHint')}</p>
+                <label>{t('username')}<input autoFocus value={installUsername} onChange={e => setInstallUsername(e.target.value)} /></label>
+                <label>{t('password')}<input type="password" value={installPassword} onChange={e => setInstallPassword(e.target.value)} /></label>
+                <label>{t('confirmPassword')}<input type="password" value={installPasswordConfirm} onChange={e => setInstallPasswordConfirm(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') void handleInstall(); }} /></label>
+                <button onClick={handleInstall} disabled={loading}>{loading ? t('wait') : t('installButton')}</button>
               </>
             ) : (
               <>
-                <label>{t('twoFaCodeOrRecovery')}<input autoFocus value={twoFaCode} onChange={e => setTwoFaCode(e.target.value)} placeholder={t('twoFaPlaceholder')} onKeyDown={e => { if (e.key === 'Enter') void handle2faVerify(); }} /></label>
-                <button onClick={handle2faVerify} disabled={loading}>{t('confirm2fa')}</button>
+                <h1>{t('loginTitle')}</h1>
+                {error && <div className="error">{error}</div>}
+                {info && <div className="info">{info}</div>}
+                {!challenge ? (
+                  <>
+                    <label>{t('username')}<input autoFocus value={loginUsername} onChange={e => setLoginUsername(e.target.value)} /></label>
+                    <label>{t('password')}<input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') void handleLogin(); }} /></label>
+                    <button onClick={handleLogin} disabled={loading}>{loading ? t('wait') : t('loginButton')}</button>
+                    <p className="hint">{t('loginHint')}</p>
+                  </>
+                ) : (
+                  <>
+                    <label>{t('twoFaCodeOrRecovery')}<input autoFocus value={twoFaCode} onChange={e => setTwoFaCode(e.target.value)} placeholder={t('twoFaPlaceholder')} onKeyDown={e => { if (e.key === 'Enter') void handle2faVerify(); }} /></label>
+                    <button onClick={handle2faVerify} disabled={loading}>{t('confirm2fa')}</button>
+                  </>
+                )}
               </>
             )}
           </section>
@@ -1735,8 +1811,8 @@ function UserCredentialsPanel({ onCurrentUserChange }: { onCurrentUserChange: (u
   async function load() {
     const data = await api.users();
     setUsers(data);
-    setAdminUsername(data.find(u => u.role === 'admin')?.username ?? 'admin');
-    setViewerUsername(data.find(u => u.role === 'viewer')?.username ?? 'viewer');
+    setAdminUsername(data.find(u => u.role === 'admin')?.username ?? '');
+    setViewerUsername(data.find(u => u.role === 'viewer')?.username ?? '');
   }
 
   useEffect(() => { void load(); }, []);

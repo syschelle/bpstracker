@@ -830,6 +830,8 @@ Deploy the application:
 bash ./deploy.sh
 ```
 
+On a fresh database, open the web interface and complete the initial setup screen. The first user sets the admin username and password there. No admin or viewer credentials are shipped in `.env`.
+
 The deployment is designed to install and run the application below:
 
 ```text
@@ -956,12 +958,7 @@ Each Shelly device can be configured with:
 
 ### Users
 
-The setup area allows changing:
-
-- admin username
-- admin password
-- viewer username
-- viewer password
+The initial setup screen creates the first admin account. After that, the setup area allows changing the admin credentials and optionally creating or changing a viewer account.
 
 The viewer has no setup access.
 
@@ -1371,7 +1368,8 @@ Recommendations:
 
 - do not expose the application directly to the internet
 - keep the backend private inside Docker
-- use strong admin and viewer passwords
+- create the initial admin only through the install screen on first start
+- use strong admin and optional viewer passwords
 - enable admin 2FA
 - access remotely only through VPN or another trusted private network
 - enable optional APIs only when they are needed
