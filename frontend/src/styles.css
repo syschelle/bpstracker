@@ -932,3 +932,18 @@ html[data-theme='dark'] .achievement-header-widget {
     order: 4;
   }
 }
+
+
+.achievement-header-widget img {
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: 0 0 auto;
+  border-radius: 999px;
+}
+
+@media (max-width: 560px) {
+  .achievement-header-widget img {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+}

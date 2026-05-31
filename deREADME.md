@@ -527,7 +527,7 @@ Kino-Abend
 Solar-Legende
 ```
 
-Die Achievements basieren auf der gesamten Ersparnis (`savings_total_eur`). Sie werden lokal im Browser gespeichert und bleiben nach dem Freischalten sieben Tage sichtbar. Die Texte sind mehrsprachig auf Deutsch und Englisch verfügbar. Die Achievements sind nur eine motivierende Anzeige und verändern die eigentliche Amortisations- oder Finanzberechnung nicht.
+Die Achievements basieren auf der gesamten Ersparnis (`savings_total_eur`). Sie werden lokal im Browser gespeichert und bleiben nach dem Freischalten sieben Tage sichtbar. Jedes Achievement hat zusätzlich ein kleines lokales SVG-Badge, das im Header angezeigt wird. Die Texte sind mehrsprachig auf Deutsch und Englisch verfügbar. Die Achievements sind nur eine motivierende Anzeige und verändern die eigentliche Amortisations- oder Finanzberechnung nicht.
 
 ---
 

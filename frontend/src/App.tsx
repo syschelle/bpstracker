@@ -755,17 +755,18 @@ type AchievementDefinition = {
   id: string;
   threshold: number;
   translationKey: TranslationKey;
+  image: string;
 };
 
 const ACHIEVEMENTS: AchievementDefinition[] = [
-  { id: 'coffee', threshold: 3, translationKey: 'achievementCoffee' },
-  { id: 'cake', threshold: 8, translationKey: 'achievementCake' },
-  { id: 'pizza', threshold: 15, translationKey: 'achievementPizza' },
-  { id: 'movie', threshold: 25, translationKey: 'achievementMovie' },
-  { id: 'plant', threshold: 40, translationKey: 'achievementPlant' },
-  { id: 'gadget', threshold: 75, translationKey: 'achievementGadget' },
-  { id: 'dinner', threshold: 120, translationKey: 'achievementDinner' },
-  { id: 'legend', threshold: 250, translationKey: 'achievementLegend' },
+  { id: 'coffee', image: '/achievement-badges/coffee.svg', threshold: 3, translationKey: 'achievementCoffee' },
+  { id: 'cake', image: '/achievement-badges/cake.svg', threshold: 8, translationKey: 'achievementCake' },
+  { id: 'pizza', image: '/achievement-badges/pizza.svg', threshold: 15, translationKey: 'achievementPizza' },
+  { id: 'movie', image: '/achievement-badges/movie.svg', threshold: 25, translationKey: 'achievementMovie' },
+  { id: 'plant', image: '/achievement-badges/plant.svg', threshold: 40, translationKey: 'achievementPlant' },
+  { id: 'gadget', image: '/achievement-badges/gadget.svg', threshold: 75, translationKey: 'achievementGadget' },
+  { id: 'dinner', image: '/achievement-badges/dinner.svg', threshold: 120, translationKey: 'achievementDinner' },
+  { id: 'legend', image: '/achievement-badges/legend.svg', threshold: 250, translationKey: 'achievementLegend' },
 ];
 
 const ACHIEVEMENT_VISIBLE_DAYS = 7;
@@ -1110,6 +1111,7 @@ function AchievementHeader() {
 
   return (
     <div className="achievement-header-widget" title={t('achievementTitle')}>
+      <img src={definition.image} alt="" aria-hidden="true" />
       <span>{t(definition.translationKey)}</span>
     </div>
   );

@@ -728,7 +728,7 @@ Movie night
 Solar legend
 ```
 
-Achievements are based on `savings_total_eur`, are stored locally in the browser and remain visible for seven days after they are unlocked. They are available in German and English and are meant as a fun motivation layer; they do not change the financial calculations.
+Achievements are based on `savings_total_eur`, are stored locally in the browser and remain visible for seven days after they are unlocked. Each achievement also has a small local SVG badge shown in the header. They are available in German and English and are meant as a fun motivation layer; they do not change the financial calculations.
 
 
 ## Battery investment analysis
