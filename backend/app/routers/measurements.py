@@ -212,7 +212,7 @@ def history(
         if row.source_type in SOLAR_ENERGY_SOURCES and row.power_w is not None:
             # Average per channel within a bucket, then sum channels. This avoids
             # alternating 0/actual values when a Shelly 2PM has multiple channels.
-            buckets[bucket]['solar_by_key'][key].append(max(0.0, row.power_w))
+            buckets[bucket]['solar_by_key'][key].append(abs(row.power_w))
         elif row.source_type in GRID_POWER_SOURCES:
             buckets[bucket]['grid_values'].append(row.total_power_w if row.total_power_w is not None else value)
         else:
@@ -292,7 +292,7 @@ def summary(_: User = Depends(get_current_user), db: Session = Depends(get_db)) 
             current_grid_power = row.total_power_w
         if row.source_type in SOLAR_ENERGY_SOURCES and row.power_w is not None:
             # Assumption: switch/PM channel is the solar feed-in point.
-            current_solar_power = (current_solar_power or 0.0) + max(0.0, row.power_w)
+            current_solar_power = (current_solar_power or 0.0) + abs(row.power_w)
 
     now = datetime.now(timezone.utc)
     today = now.replace(hour=0, minute=0, second=0, microsecond=0)

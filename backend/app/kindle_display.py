@@ -262,7 +262,7 @@ def _latest_solar_power_w(db: Session) -> float | None:
     latest_by_source: dict[str, float] = {}
     for row in recent:
         if row.source_type not in latest_by_source and row.power_w is not None:
-            latest_by_source[row.source_type] = max(0.0, row.power_w)
+            latest_by_source[row.source_type] = abs(row.power_w)
     return sum(latest_by_source.values()) if latest_by_source else None
 
 

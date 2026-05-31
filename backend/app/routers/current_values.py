@@ -147,7 +147,7 @@ def current_values(db: Session = Depends(get_db)) -> dict:
             current_grid_power_w = row.total_power_w
 
         if row.source_type in SOLAR_ENERGY_SOURCES and row.power_w is not None:
-            current_solar_power_w = (current_solar_power_w or 0.0) + max(0.0, row.power_w)
+            current_solar_power_w = (current_solar_power_w or 0.0) + abs(row.power_w)
 
     # Signed grid power: positive means import, negative means export.
     signed_grid_power_w = current_grid_power_w

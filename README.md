@@ -69,6 +69,8 @@ It is not intended to be a certified billing or metering system.
 
 ### Dashboard
 
+Solar feed-in channels may report negative power values, depending on the Shelly wiring and measurement direction. BPSTracker treats negative solar/feed-in power as positive solar production for dashboard, history, JSON API and Kindle display calculations.
+
 The dashboard provides a compact view of the current energy situation.
 
 It includes:

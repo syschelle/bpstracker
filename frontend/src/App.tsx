@@ -1269,7 +1269,7 @@ function HistoryView() {
     const fallbackPower = row.power_w ?? row.total_power_w ?? null;
     return {
       time: new Date(row.timestamp).toLocaleString(localeFor(language), { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }),
-      solar: solarPower === null || solarPower === undefined ? null : Math.max(0, solarPower),
+      solar: solarPower === null || solarPower === undefined ? null : Math.abs(solarPower),
       gridImport: gridPower === null || gridPower === undefined ? null : Math.max(0, gridPower),
       gridExport: gridPower === null || gridPower === undefined ? null : Math.abs(Math.min(0, gridPower)),
       power: fallbackPower,
