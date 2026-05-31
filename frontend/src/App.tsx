@@ -49,6 +49,7 @@ const translations = {
     toggleTheme: 'Theme wechseln',
     switchLanguage: 'Sprache wechseln',
     achievementTitle: 'Energiespar-Erfolg',
+    achievementFirstSolar: '☀️ Erster Sonnenstrom: Auf dem Weg zum Stromimperium!',
     achievementCoffee: '☕ Kaffee-Kasse geladen: Du hast schon Geld für einen Kaffee gespart!',
     achievementCake: '🍰 Kuchen-Level erreicht: Die Sonne spendiert dir ein Stück Kuchen.',
     achievementPizza: '🍕 Pizza-Power: Deine Anlage hat eine Pizza verdient.',
@@ -332,6 +333,7 @@ const translations = {
     toggleTheme: 'Toggle theme',
     switchLanguage: 'Change language',
     achievementTitle: 'Solar saving achievement',
+    achievementFirstSolar: '☀️ First solar power: your system generated electricity for the first time!',
     achievementCoffee: '☕ Coffee fund unlocked: you have already saved enough for a coffee!',
     achievementCake: '🍰 Cake level reached: the sun is buying you a slice of cake.',
     achievementPizza: '🍕 Pizza power: your system has earned a pizza.',
@@ -759,6 +761,7 @@ type AchievementDefinition = {
 };
 
 const ACHIEVEMENTS: AchievementDefinition[] = [
+  { id: 'first-solar', image: '/achievement-badges/first-solar.svg', threshold: 0, translationKey: 'achievementFirstSolar' },
   { id: 'coffee', image: '/achievement-badges/coffee.svg', threshold: 3, translationKey: 'achievementCoffee' },
   { id: 'cake', image: '/achievement-badges/cake.svg', threshold: 8, translationKey: 'achievementCake' },
   { id: 'pizza', image: '/achievement-badges/pizza.svg', threshold: 15, translationKey: 'achievementPizza' },
@@ -791,12 +794,15 @@ function writeStoredAchievements(items: StoredAchievement[]): void {
   localStorage.setItem(ACHIEVEMENT_STORAGE_KEY, JSON.stringify(items));
 }
 
-function updateAchievements(totalSavings: number | null | undefined): StoredAchievement[] {
+function updateAchievements(totalSavings: number | null | undefined, totalSolarKwh?: number | null): StoredAchievement[] {
   const now = new Date();
   const existing = readStoredAchievements();
   const byId = new Map(existing.map(item => [item.id, item]));
+  if (typeof totalSolarKwh === 'number' && Number.isFinite(totalSolarKwh) && totalSolarKwh > 0 && !byId.has('first-solar')) {
+    byId.set('first-solar', { id: 'first-solar', unlockedAt: now.toISOString() });
+  }
   if (typeof totalSavings === 'number' && Number.isFinite(totalSavings)) {
-    for (const achievement of ACHIEVEMENTS) {
+    for (const achievement of ACHIEVEMENTS.filter(item => item.id !== 'first-solar')) {
       if (totalSavings >= achievement.threshold && !byId.has(achievement.id)) {
         byId.set(achievement.id, { id: achievement.id, unlockedAt: now.toISOString() });
       }
@@ -1091,7 +1097,7 @@ function AchievementHeader() {
   async function load() {
     try {
       const summary = await api.summary();
-      const visible = updateAchievements(summary.savings_total_eur);
+      const visible = updateAchievements(summary.savings_total_eur, summary.solar_total_kwh);
       setAchievement(visible.length ? visible[visible.length - 1] : null);
     } catch {
       const visible = updateAchievements(null);

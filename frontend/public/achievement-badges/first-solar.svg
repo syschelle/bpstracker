@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="first solar achievement">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+  <circle cx="32" cy="32" r="27" fill="#fef3c7" stroke="#f59e0b" stroke-width="3" filter="url(#shadow)"/>
+  <circle cx="32" cy="32" r="13" fill="#facc15"/>
+  <g stroke="#f59e0b" stroke-width="3" stroke-linecap="round">
+    <path d="M32 7v8"/><path d="M32 49v8"/><path d="M7 32h8"/><path d="M49 32h8"/>
+    <path d="M14.3 14.3l5.7 5.7"/><path d="M44 44l5.7 5.7"/><path d="M49.7 14.3L44 20"/><path d="M20 44l-5.7 5.7"/>
+  </g>
+  <path d="M21 43h22l-3 9H18z" fill="#0f766e"/>
+  <path d="M24 45h5l-1 5h-5zM31 45h5l-1 5h-5zM38 45h4l-1 5h-4z" fill="#99f6e4" opacity="0.9"/>
+</svg>
