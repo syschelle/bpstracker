@@ -1058,8 +1058,8 @@ export default function App() {
                 </div>
               </div>
               <div className="header-actions">
-                <AirSensorHeader />
                 <AchievementHeader />
+                <AirSensorHeader />
                 <button
                   className="language-switch"
                   onClick={() => setLanguage(language === 'de' ? 'en' : 'de')}
