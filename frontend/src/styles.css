@@ -806,3 +806,20 @@ html[data-theme='dark'] .language-switch {
   border-color: rgba(148, 163, 184, 0.24);
   color: #e5e7eb;
 }
+
+
+.home-import-value.negative {
+  color: #dc2626;
+}
+
+.home-import-value.zero {
+  color: #16a34a;
+}
+
+.home-import-value.positive {
+  color: #111827;
+}
+
+html[data-theme='dark'] .home-import-value.positive {
+  color: #e5e7eb;
+}

@@ -1074,13 +1074,14 @@ function GridPowerMetric({ summary }: { summary: Summary | null }) {
   const gridPercent = hasPower ? clampPercent((gridImportPower / totalPower) * 100) : 0;
   const solarPercent = hasPower ? clampPercent(100 - gridPercent) : 0;
   const exporting = gridPower < -0.01;
+  const gridValueClass = gridPower < -0.01 ? 'negative' : Math.abs(gridPower) <= 0.01 ? 'zero' : 'positive';
 
   return (
     <div className="metric metric-grid-power">
       <div className="grid-power-top">
         <div className="grid-power-values">
           <p>{t('gridPower')}</p>
-          <strong>{fmtW(summary?.current_grid_power_w, language)}</strong>
+          <strong className={`home-import-value ${gridValueClass}`}>{fmtW(summary?.current_grid_power_w, language)}</strong>
           <div className="embedded-solar-value">
             <span>{t('solarShare')}</span>
             <b>{fmtW(solarRaw ?? 0, language)}</b>
@@ -1334,8 +1335,8 @@ function HistoryView() {
             type="monotone"
             dataKey="solar"
             name={t('solarShare')}
-            stroke="#0d9488"
-            fill="#0d9488"
+            stroke="#16a34a"
+            fill="#16a34a"
             fillOpacity={0.22}
             strokeWidth={2}
             dot={false}
@@ -1356,8 +1357,8 @@ function HistoryView() {
             type="monotone"
             dataKey="gridExport"
             name={t('exportedToday')}
-            stroke="#f59e0b"
-            fill="#f59e0b"
+            stroke="#dc2626"
+            fill="#dc2626"
             fillOpacity={0.18}
             strokeWidth={2}
             dot={false}

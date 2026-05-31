@@ -1339,3 +1339,9 @@ In simulation mode, configured devices are also simulated according to their pur
 
 
 <!-- UI: The language setup panel was removed because language is now a browser cookie preference. -->
+
+
+<!-- UI: History colors: solar green, grid import blue, grid export red. -->
+
+
+<!-- UI: Home import value color: negative red, zero green, positive default text color. -->
