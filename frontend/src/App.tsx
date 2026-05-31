@@ -3,12 +3,15 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Activity, Euro, Globe2, History, LogOut, Menu, Moon, Plus, RefreshCcw, Settings, ShieldCheck, Sun, Droplets, Thermometer, Trash2, UserCog, Wind, Zap } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api, setToken, getToken } from './api';
+import packageJson from '../package.json';
 import type { AirSensorCurrent, AirSensorSettings, BackupInfo, CurrencyCode, CurrentValuesApiSettings, Device, DevicePurpose, DeviceType, FinanceSettings, KindleDisplaySettings, Language, Measurement, PublicDashboardSettings, RetentionSettings, SimulationSettings, Summary, UiSettings, User } from './types';
 
 type Tab = 'dashboard' | 'history' | 'setup' | 'account';
 type TranslationKey = keyof typeof translations.de;
 type Translator = (key: TranslationKey, vars?: Record<string, string | number>) => string;
 type Theme = 'light' | 'dark';
+
+const APP_VERSION = `v${packageJson.version}`;
 
 type I18nContextValue = {
   language: Language;
@@ -798,7 +801,7 @@ export default function App() {
           <header className="public-dashboard-header">
             <div>
               <h1>{t('publicDashboardTitle')}</h1>
-              <p>BPSTracker</p>
+              <p>BPSTracker {APP_VERSION}</p>
             </div>
             <button
               className="language-switch"
@@ -920,7 +923,7 @@ export default function App() {
             <div className="login-top">
               <div>
                 <div className="brand"><Zap /> BPSTracker</div>
-                <div className="brand-subtitle">{t('appSubtitle')}</div>
+                <div className="brand-subtitle">{t('appSubtitle')} · <span className="app-version">{APP_VERSION}</span></div>
               </div>
               <button className="icon-button theme-toggle" onClick={toggleTheme} aria-label={t('toggleTheme')} title={theme === 'dark' ? t('themeLight') : t('themeDark')}>
                 {theme === 'dark' ? <Sun size={19} /> : <Moon size={19} />}
@@ -952,6 +955,7 @@ export default function App() {
             {isAdmin(user) && <button className={tab === 'setup' ? 'active' : ''} onClick={() => goTo('setup')}><Settings /> {t('setup')}</button>}
             {isAdmin(user) && <button className={tab === 'account' ? 'active' : ''} onClick={() => goTo('account')}><ShieldCheck /> {t('account2fa')}</button>}
             <button onClick={logout}><LogOut /> {t('logout')}</button>
+            <div className="side-nav-version">BPSTracker {APP_VERSION}</div>
           </aside>
           <section className="content">
             <header>
@@ -979,7 +983,7 @@ export default function App() {
                 </button>
                 <div className="header-brand">
                   <div className="brand"><Zap /> BPSTracker</div>
-                  <div className="brand-subtitle">{t('appSubtitle')}</div>
+                  <div className="brand-subtitle">{t('appSubtitle')} · <span className="app-version">{APP_VERSION}</span></div>
                 </div>
               </div>
             </header>

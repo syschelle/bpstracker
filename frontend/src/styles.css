@@ -882,3 +882,18 @@ html[data-theme='dark'] .metric .home-import-value.positive {
   gap: 0.35rem;
   white-space: nowrap;
 }
+
+
+.app-version,
+.side-nav-version {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 850;
+  letter-spacing: 0.03em;
+}
+
+.side-nav-version {
+  margin-top: auto;
+  padding: 0.9rem 0.65rem 0.15rem;
+  opacity: 0.72;
+}

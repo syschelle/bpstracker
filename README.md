@@ -1399,3 +1399,6 @@ In simulation mode, configured devices are also simulated according to their pur
 
 
 <!-- UI: Public dashboard includes current air sensor values when configured. -->
+
+
+<!-- UI: The web interface displays the current BPSTracker version from frontend/package.json. -->
