@@ -4,11 +4,10 @@ import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
-from urllib.parse import quote
-
 import httpx
 
 from .models import DeviceType
+from .network_security import OutboundHostError, lan_http_url, normalize_outbound_http_host, resolve_lan_http_target
 
 
 @dataclass
@@ -55,9 +54,8 @@ class ShellyClientError(RuntimeError):
     pass
 
 
-def _base_url(host: str) -> str:
-    host = host.strip().removeprefix('http://').removeprefix('https://').strip('/')
-    return f'http://{quote(host, safe=":[]")}'
+def normalize_shelly_host(host: str | None) -> str | None:
+    return normalize_outbound_http_host(host)
 
 
 def _auth(credentials: ShellyCredentials | None) -> httpx.Auth | None:
@@ -89,12 +87,22 @@ class ShellyClient:
         self.timeout_seconds = timeout_seconds
 
     async def _get_json(self, host: str, path: str, credentials: ShellyCredentials | None) -> dict[str, Any]:
-        url = _base_url(host) + path
         try:
-            async with httpx.AsyncClient(timeout=self.timeout_seconds, auth=_auth(credentials), follow_redirects=True) as client:
-                response = await client.get(url)
+            target = resolve_lan_http_target(host)
+            url = lan_http_url(target, path)
+        except OutboundHostError as exc:
+            raise ShellyClientError(f'{path} blocked for {host}: {exc}') from exc
+
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout_seconds, auth=_auth(credentials), follow_redirects=False) as client:
+                response = await client.get(url, headers={'Host': target.host_header})
+                if response.is_redirect:
+                    location = response.headers.get('location', '')
+                    raise ShellyClientError(f'{path} redirect blocked for {host}: {location}')
                 response.raise_for_status()
                 data = response.json()
+        except ShellyClientError:
+            raise
         except Exception as exc:  # noqa: BLE001 - surface device communication error to UI
             raise ShellyClientError(f'{path} failed for {host}: {exc}') from exc
         if not isinstance(data, dict):

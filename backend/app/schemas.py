@@ -72,7 +72,7 @@ class DeviceBase(BaseModel):
     name: str
     device_type: DeviceType = DeviceType.auto
     purpose: DevicePurpose = DevicePurpose.auto
-    host: str
+    host: str = Field(max_length=255)
     username: str | None = None
     is_active: bool = True
     poll_interval_seconds: int = Field(default=30, ge=5, le=3600)
@@ -87,7 +87,7 @@ class DeviceUpdate(BaseModel):
     name: str | None = None
     device_type: DeviceType | None = None
     purpose: DevicePurpose | None = None
-    host: str | None = None
+    host: str | None = Field(default=None, max_length=255)
     username: str | None = None
     password: str | None = None
     clear_password: bool = False

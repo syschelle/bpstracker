@@ -9,9 +9,20 @@ from ..models import AuditLog, Device, User
 from ..poller import poll_and_store_device
 from ..schemas import DeviceCreate, DeviceRead, DeviceUpdate, TestDeviceResponse
 from ..security import decrypt_secret, encrypt_secret, get_current_user, require_admin
-from ..shelly import ShellyClient, ShellyCredentials, ShellyDeviceConfig, ShellyClientError
+from ..network_security import OutboundHostError
+from ..shelly import ShellyClient, ShellyCredentials, ShellyDeviceConfig, ShellyClientError, normalize_shelly_host
 
 router = APIRouter(prefix='/api/devices', tags=['devices'])
+
+
+def _normalize_device_host_or_400(host: str | None) -> str:
+    try:
+        normalized = normalize_shelly_host(host)
+    except OutboundHostError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    if not normalized:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Host darf nicht leer sein.')
+    return normalized
 
 @router.get('', response_model=list[DeviceRead])
 def list_devices(_: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[Device]:
@@ -20,11 +31,12 @@ def list_devices(_: User = Depends(get_current_user), db: Session = Depends(get_
 
 @router.post('', response_model=DeviceRead)
 def create_device(payload: DeviceCreate, user: User = Depends(require_admin), db: Session = Depends(get_db)) -> Device:
+    host = _normalize_device_host_or_400(payload.host)
     device = Device(
         name=payload.name,
         device_type=payload.device_type,
         purpose=payload.purpose.value if hasattr(payload.purpose, 'value') else payload.purpose,
-        host=payload.host,
+        host=host,
         username=payload.username,
         password_ciphertext=encrypt_secret(payload.password),
         is_active=payload.is_active,
@@ -32,7 +44,7 @@ def create_device(payload: DeviceCreate, user: User = Depends(require_admin), db
         channel=payload.channel,
     )
     db.add(device)
-    db.add(AuditLog(actor_user_id=user.id, action='device.create', details={'name': payload.name, 'host': payload.host}))
+    db.add(AuditLog(actor_user_id=user.id, action='device.create', details={'name': payload.name, 'host': host}))
     db.commit()
     db.refresh(device)
     return db.query(Device).options(joinedload(Device.status)).filter(Device.id == device.id).one()
@@ -53,6 +65,8 @@ def update_device(device_id: int, payload: DeviceUpdate, user: User = Depends(re
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Device not found')
 
     update = payload.model_dump(exclude_unset=True)
+    if 'host' in update:
+        update['host'] = _normalize_device_host_or_400(update.get('host'))
     clear_password = update.pop('clear_password', False)
     password = update.pop('password', None)
     for key, value in update.items():

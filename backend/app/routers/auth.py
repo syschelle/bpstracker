@@ -1,11 +1,14 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+import hashlib
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models import AuditLog, User, UserRole
+from ..rate_limit import FixedWindowRateLimiter, client_rate_limit_key, raise_rate_limited
 from ..schemas import (
     LoginRequest,
     RecoveryCodesResponse,
@@ -36,6 +39,21 @@ from ..security import (
 
 router = APIRouter(prefix='/api/auth', tags=['auth'])
 
+LOGIN_IP_LIMIT = FixedWindowRateLimiter(limit=20, window_seconds=60)
+LOGIN_ACCOUNT_LIMIT = FixedWindowRateLimiter(limit=5, window_seconds=60)
+TWO_FA_IP_LIMIT = FixedWindowRateLimiter(limit=20, window_seconds=60)
+TWO_FA_CHALLENGE_LIMIT = FixedWindowRateLimiter(limit=5, window_seconds=60)
+
+
+def _hash_key(value: str) -> str:
+    return hashlib.sha256(value.encode('utf-8')).hexdigest()[:32]
+
+
+def _enforce_limiter(limiter: FixedWindowRateLimiter, key: str) -> None:
+    retry_after = limiter.check(key)
+    if retry_after is not None:
+        raise_rate_limited(retry_after)
+
 
 def _user_payload(user: User, recovery_codes: list[str] | None = None) -> dict:
     payload = UserRead.model_validate(user).model_dump()
@@ -45,11 +63,15 @@ def _user_payload(user: User, recovery_codes: list[str] | None = None) -> dict:
 
 
 @router.post('/login', response_model=TokenResponse)
-def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
+def login(payload: LoginRequest, request: Request, db: Session = Depends(get_db)) -> TokenResponse:
     # Usernames are stored readable, but login should be forgiving about leading/trailing
     # whitespace and letter case. This prevents lockouts after manual setup edits.
     username = payload.username.strip()
     password = payload.password.strip()
+    client_key = client_rate_limit_key(request)
+    account_key = f'{client_key}:{username.lower()}'
+    _enforce_limiter(LOGIN_IP_LIMIT, client_key)
+    _enforce_limiter(LOGIN_ACCOUNT_LIMIT, account_key)
     # Prefer the active account. Older upgraded databases may still contain inactive
     # duplicates from previous test versions; those must not shadow the real viewer.
     user = (
@@ -74,13 +96,20 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse
         db.commit()
         db.refresh(user)
 
+    LOGIN_ACCOUNT_LIMIT.clear(account_key)
+
     if user.role == UserRole.admin and user.totp_enabled:
         return TokenResponse(requires_2fa=True, challenge_token=create_2fa_challenge_token(str(user.id)))
     return TokenResponse(access_token=create_access_token(str(user.id)), requires_2fa=False)
 
 
 @router.post('/2fa/verify', response_model=TokenResponse)
-def verify_2fa(payload: TwoFaVerifyRequest, db: Session = Depends(get_db)) -> TokenResponse:
+def verify_2fa(payload: TwoFaVerifyRequest, request: Request, db: Session = Depends(get_db)) -> TokenResponse:
+    client_key = client_rate_limit_key(request)
+    challenge_key = _hash_key(payload.challenge_token)
+    _enforce_limiter(TWO_FA_IP_LIMIT, client_key)
+    _enforce_limiter(TWO_FA_CHALLENGE_LIMIT, challenge_key)
+
     decoded = decode_token(payload.challenge_token, expected_type='2fa')
 
     try:
@@ -97,6 +126,8 @@ def verify_2fa(payload: TwoFaVerifyRequest, db: Session = Depends(get_db)) -> To
     recovery_ok = False if totp_ok else consume_recovery_code(db, user, payload.code)
     if not totp_ok and not recovery_ok:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid 2FA code')
+
+    TWO_FA_CHALLENGE_LIMIT.clear(challenge_key)
 
     if recovery_ok:
         db.add(AuditLog(actor_user_id=user.id, action='auth.2fa.recovery_code.used', details={}))

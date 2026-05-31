@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -11,6 +10,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import AppSetting, AuditLog, User
 from ..schemas import AirSensorCurrent, AirSensorSettings, CurrentValuesApiSettings, PublicDashboardSettings, FinanceSettings, KindleDisplaySettings, RetentionSettings, SimulationSettings, UiSettings
+from ..network_security import OutboundHostError, lan_http_url, normalize_outbound_http_host, resolve_lan_http_target
 from ..security import get_current_user, require_admin
 from ..simulation import simulated_air_sensor_current
 
@@ -38,14 +38,19 @@ ALLOWED_CURRENCIES = {'EUR', 'USD', 'GBP'}
 
 
 def _normalize_host(value: str | None) -> str | None:
-    if value is None:
-        return None
-    host = str(value).strip()
-    if not host:
-        return None
-    host = re.sub(r'^https?://', '', host, flags=re.IGNORECASE)
-    host = host.split('/')[0].strip()
-    return host or None
+    try:
+        return normalize_outbound_http_host(value)
+    except OutboundHostError:
+        # Reading settings should not crash if an older database contains an invalid
+        # value. Admin updates and outbound fetches perform strict validation.
+        return str(value).strip() if value else None
+
+
+def _normalize_host_or_400(value: str | None) -> str | None:
+    try:
+        return normalize_outbound_http_host(value)
+    except OutboundHostError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
 
 def _normalize_timezone(value: object) -> str:
@@ -227,11 +232,15 @@ async def fetch_air_sensor_current(settings: AirSensorSettings, db: Session) -> 
     if stored_error and last_attempt_at and (now - last_attempt_at).total_seconds() < AIR_SENSOR_RETRY_SECONDS:
         return _air_sensor_cache_from_db(db, settings, configured, ok=False, last_error=stored_error)
 
-    url = f'http://{settings.host}/data.json'
     timeout = httpx.Timeout(connect=1.0, read=3.0, write=1.0, pool=1.0)
     try:
+        target = resolve_lan_http_target(settings.host or '')
+        url = lan_http_url(target, '/data.json')
         async with httpx.AsyncClient(timeout=timeout, follow_redirects=False) as client:
-            response = await client.get(url)
+            response = await client.get(url, headers={'Host': target.host_header})
+            if response.is_redirect:
+                location = response.headers.get('location', '')
+                raise OutboundHostError(f'Redirect blockiert: {location}')
             response.raise_for_status()
             payload = response.json()
     except Exception as exc:  # network/device errors should not break the dashboard
@@ -534,7 +543,9 @@ def update_air_sensor_settings(
     actor: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ) -> AirSensorSettings:
-    normalized = _normalize_air_sensor_value(payload.model_dump())
+    raw_value = payload.model_dump()
+    raw_value['host'] = _normalize_host_or_400(raw_value.get('host'))
+    normalized = _normalize_air_sensor_value(raw_value)
     row = db.get(AppSetting, AIR_SENSOR_SETTINGS_KEY)
     value = normalized.model_dump()
     if row is None:

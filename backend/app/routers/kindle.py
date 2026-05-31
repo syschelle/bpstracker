@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 
 from ..kindle_display import is_kindle_display_enabled, kindle_display_service
+from ..models import User
+from ..security import require_admin
 
 router = APIRouter(prefix='/api/kindle', tags=['kindle'])
 
@@ -12,9 +14,11 @@ router = APIRouter(prefix='/api/kindle', tags=['kindle'])
 async def kindle_display_png() -> FileResponse:
     """Return the latest cached Kindle display PNG.
 
-    The route intentionally does not trigger sensor reads or rendering work. The
-    background task generates the file once per minute; this endpoint only serves
-    the last valid image so Kindle cron jobs get a fast response.
+    This endpoint intentionally remains unauthenticated when Kindle display
+    generation is enabled, because Kindle cron/image fetch workflows generally
+    cannot attach bearer tokens. It does not trigger sensor reads or rendering
+    work except for the initial missing-file bootstrap. Control endpoints below
+    are admin-only.
     """
     if not is_kindle_display_enabled():
         raise HTTPException(status_code=503, detail='Kindle display generation is disabled in setup')
@@ -41,7 +45,7 @@ async def kindle_display_png() -> FileResponse:
 
 
 @router.post('/refresh')
-async def refresh_kindle_display() -> dict:
+async def refresh_kindle_display(_: User = Depends(require_admin)) -> dict:
     if not is_kindle_display_enabled():
         raise HTTPException(status_code=503, detail='Kindle display generation is disabled in setup')
     await kindle_display_service.generate_once(force=True)
@@ -49,5 +53,5 @@ async def refresh_kindle_display() -> dict:
 
 
 @router.get('/meta')
-def kindle_display_meta() -> dict:
+def kindle_display_meta(_: User = Depends(require_admin)) -> dict:
     return kindle_display_service.meta()

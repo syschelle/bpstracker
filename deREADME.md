@@ -388,7 +388,7 @@ BPSTracker kann ein Kindle-kompatibles PNG erzeugen:
 http://<ip-adresse>:5173/api/kindle/display.png
 ```
 
-Die Datei wird im Hintergrund erzeugt und kann regelmäßig vom Kindle abgeholt werden.
+Die Datei wird im Hintergrund erzeugt und kann regelmäßig vom Kindle abgeholt werden. `display.png` bleibt bewusst als optional öffentlicher Cache-Endpunkt verfügbar, weil viele Kindle-/E-Ink-Abrufe keine Bearer-Token mitsenden können. Metadaten und manuelles Refresh sind davon getrennt und nur für Admins erreichbar.
 
 Angezeigt werden unter anderem:
 
@@ -704,6 +704,8 @@ Empfehlungen:
 - den initialen Admin nur über die Ersteinrichtung beim ersten Start anlegen
 - starke Passwörter verwenden
 - 2FA aktivieren
+- Shelly- und Luftdaten-Hosts nur als LAN-Host/IP konfigurieren; öffentliche, Loopback- und Metadata-IP-Adressen werden blockiert
+- fehlgeschlagene Login- und 2FA-Versuche werden serverseitig begrenzt
 - regelmäßige verschlüsselte Backups erstellen
 - Backup-Passwort sicher verwahren
 - öffentliche Exponierung nur über Reverse Proxy mit HTTPS

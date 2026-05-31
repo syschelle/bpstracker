@@ -440,7 +440,7 @@ Example:
 http://192.168.178.211:5173/api/kindle/display.png
 ```
 
-The URL is intentionally fixed and does not require query parameters.
+The URL is intentionally fixed and does not require query parameters. `display.png` intentionally remains an optional public, cache-only image endpoint for Kindle/e-ink fetch jobs that cannot attach bearer tokens. It does not expose metadata and does not provide a manual refresh API.
 
 ### Kindle display activation
 
@@ -479,15 +479,15 @@ Properties:
 
 The displayed clock is shifted by one minute to better match Kindle cron refresh timing.
 
-### Kindle debug endpoint
+### Kindle admin metadata endpoint
 
-A metadata endpoint is available:
+A metadata endpoint is available for authenticated administrators only:
 
 ```text
-http://<server-ip>:5173/api/kindle/meta
+GET /api/kindle/meta
 ```
 
-It can be used to verify:
+It can be used in the setup UI or with an admin bearer token to verify:
 
 - whether the Kindle display is enabled
 - when the last image was generated
@@ -986,7 +986,6 @@ Important endpoints:
 /api/current-values
 /api/settings/air-sensor/current
 /api/kindle/display.png
-/api/kindle/meta
 ```
 
 The backend itself should not be published to the host network.
@@ -1373,8 +1372,10 @@ Recommendations:
 - enable admin 2FA
 - access remotely only through VPN or another trusted private network
 - enable optional APIs only when they are needed
+- configure Shelly and Luftdaten hosts as LAN hosts/IPs only; public, loopback and metadata IPs are rejected
+- failed login and 2FA verification attempts are rate-limited in-process
 
-The Kindle endpoint and JSON API are designed for simple local access and should not be exposed publicly.
+The Kindle display image and JSON API are designed for simple local access and should not be exposed publicly. Kindle `refresh` and `meta` endpoints require an admin bearer token.
 
 ---
 
