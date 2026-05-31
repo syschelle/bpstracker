@@ -48,6 +48,15 @@ const translations = {
     themeDark: 'Dunkles Theme',
     toggleTheme: 'Theme wechseln',
     switchLanguage: 'Sprache wechseln',
+    achievementTitle: 'Energiespar-Erfolg',
+    achievementCoffee: '☕ Kaffee-Kasse geladen: Du hast schon Geld für einen Kaffee gespart!',
+    achievementCake: '🍰 Kuchen-Level erreicht: Die Sonne spendiert dir ein Stück Kuchen.',
+    achievementPizza: '🍕 Pizza-Power: Deine Anlage hat eine Pizza verdient.',
+    achievementMovie: '🎬 Kino-Abend: Die Sonne hat dir fast den Eintritt bezahlt.',
+    achievementPlant: '🌱 Pflanzenfreund: Deine Ersparnis fühlt sich schon ziemlich grün an.',
+    achievementGadget: '🔌 Technik-Bonus: Das reicht schon für ein kleines Smart-Home-Gadget.',
+    achievementDinner: '🍽️ Sonnen-Dinner: Deine PV spart sich Richtung Abendessen.',
+    achievementLegend: '🏆 Solar-Legende: Deine Anlage arbeitet sich ernsthaft in Richtung Gewinnzone.',
     roleAdmin: 'Admin',
     roleViewer: 'Viewer',
     gridPower: 'Hausbezug',
@@ -322,6 +331,15 @@ const translations = {
     themeDark: 'Dark theme',
     toggleTheme: 'Toggle theme',
     switchLanguage: 'Change language',
+    achievementTitle: 'Solar saving achievement',
+    achievementCoffee: '☕ Coffee fund unlocked: you have already saved enough for a coffee!',
+    achievementCake: '🍰 Cake level reached: the sun is buying you a slice of cake.',
+    achievementPizza: '🍕 Pizza power: your system has earned a pizza.',
+    achievementMovie: '🎬 Movie night: the sun nearly paid your ticket.',
+    achievementPlant: '🌱 Plant friend: your savings are looking nicely green.',
+    achievementGadget: '🔌 Gadget bonus: enough for a small smart-home gadget.',
+    achievementDinner: '🍽️ Solar dinner: your PV is saving its way toward dinner.',
+    achievementLegend: '🏆 Solar legend: your system is seriously moving toward profit.',
     roleAdmin: 'Admin',
     roleViewer: 'Viewer',
     gridPower: 'Home import',
@@ -732,6 +750,70 @@ function clampPercent(value: number): number {
   return Math.max(0, Math.min(100, value));
 }
 
+
+type AchievementDefinition = {
+  id: string;
+  threshold: number;
+  translationKey: TranslationKey;
+};
+
+const ACHIEVEMENTS: AchievementDefinition[] = [
+  { id: 'coffee', threshold: 3, translationKey: 'achievementCoffee' },
+  { id: 'cake', threshold: 8, translationKey: 'achievementCake' },
+  { id: 'pizza', threshold: 15, translationKey: 'achievementPizza' },
+  { id: 'movie', threshold: 25, translationKey: 'achievementMovie' },
+  { id: 'plant', threshold: 40, translationKey: 'achievementPlant' },
+  { id: 'gadget', threshold: 75, translationKey: 'achievementGadget' },
+  { id: 'dinner', threshold: 120, translationKey: 'achievementDinner' },
+  { id: 'legend', threshold: 250, translationKey: 'achievementLegend' },
+];
+
+const ACHIEVEMENT_VISIBLE_DAYS = 7;
+const ACHIEVEMENT_STORAGE_KEY = 'bpstracker-achievements';
+
+type StoredAchievement = {
+  id: string;
+  unlockedAt: string;
+};
+
+function readStoredAchievements(): StoredAchievement[] {
+  try {
+    const raw = localStorage.getItem(ACHIEVEMENT_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter(item => typeof item?.id === 'string' && typeof item?.unlockedAt === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeStoredAchievements(items: StoredAchievement[]): void {
+  localStorage.setItem(ACHIEVEMENT_STORAGE_KEY, JSON.stringify(items));
+}
+
+function updateAchievements(totalSavings: number | null | undefined): StoredAchievement[] {
+  const now = new Date();
+  const existing = readStoredAchievements();
+  const byId = new Map(existing.map(item => [item.id, item]));
+  if (typeof totalSavings === 'number' && Number.isFinite(totalSavings)) {
+    for (const achievement of ACHIEVEMENTS) {
+      if (totalSavings >= achievement.threshold && !byId.has(achievement.id)) {
+        byId.set(achievement.id, { id: achievement.id, unlockedAt: now.toISOString() });
+      }
+    }
+  }
+  const next = Array.from(byId.values()).filter(item => {
+    const unlocked = new Date(item.unlockedAt).getTime();
+    return Number.isFinite(unlocked) && now.getTime() - unlocked <= ACHIEVEMENT_VISIBLE_DAYS * 24 * 60 * 60 * 1000;
+  });
+  writeStoredAchievements(next);
+  return next;
+}
+
+function achievementDefinition(id: string): AchievementDefinition | undefined {
+  return ACHIEVEMENTS.find(achievement => achievement.id === id);
+}
+
+
 function fmtDays(value: number | null | undefined, language: Language, t: Translator): string {
   if (value === null || value === undefined) return translations[language].none;
   if (value <= 0) return t('reached');
@@ -970,6 +1052,7 @@ export default function App() {
               </div>
               <div className="header-actions">
                 <AirSensorHeader />
+                <AchievementHeader />
                 <button
                   className="language-switch"
                   onClick={() => setLanguage(language === 'de' ? 'en' : 'de')}
@@ -996,6 +1079,39 @@ export default function App() {
         </main>
       )}
     </I18nContext.Provider>
+  );
+}
+
+
+function AchievementHeader() {
+  const { t } = useI18n();
+  const [achievement, setAchievement] = useState<StoredAchievement | null>(null);
+
+  async function load() {
+    try {
+      const summary = await api.summary();
+      const visible = updateAchievements(summary.savings_total_eur);
+      setAchievement(visible.length ? visible[visible.length - 1] : null);
+    } catch {
+      const visible = updateAchievements(null);
+      setAchievement(visible.length ? visible[visible.length - 1] : null);
+    }
+  }
+
+  useEffect(() => {
+    void load();
+    const timer = window.setInterval(() => void load(), 60 * 60 * 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  if (!achievement) return null;
+  const definition = achievementDefinition(achievement.id);
+  if (!definition) return null;
+
+  return (
+    <div className="achievement-header-widget" title={t('achievementTitle')}>
+      <span>{t(definition.translationKey)}</span>
+    </div>
   );
 }
 

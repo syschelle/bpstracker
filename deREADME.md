@@ -11,6 +11,7 @@ Das Projekt ist für den lokalen Betrieb im Heimnetz gedacht. Backend und Datenb
 - [Screenshots](#screenshots)
 - [Hauptfunktionen](#hauptfunktionen)
 - [Architektur](#architektur)
+- [Systemvoraussetzungen](#systemvoraussetzungen)
 - [Geräte-Zweck](#geräte-zweck)
 - [Unterstützte Geräte](#unterstützte-geräte)
 - [Installation mit Docker](#installation-mit-docker)
@@ -23,6 +24,7 @@ Das Projekt ist für den lokalen Betrieb im Heimnetz gedacht. Backend und Datenb
 - [Öffentliches Dashboard](#öffentliches-dashboard)
 - [JSON-API](#json-api)
 - [Luftdatensensor](#luftdatensensor)
+- [Amortisations-Achievements](#amortisations-achievements)
 - [Akku-Amortisationsberechnung](#akku-amortisationsberechnung)
 - [Verschlüsselte Backups](#verschlüsselte-backups)
 - [Werte zurücksetzen](#werte-zurücksetzen)
@@ -70,6 +72,60 @@ Das Projekt ist für den lokalen Betrieb im Heimnetz gedacht. Backend und Datenb
 - Reset-Funktion für Messwerte
 - Docker-Deployment
 - Multi-Arch-Docker-Images für `linux/amd64` und `linux/arm64`
+
+---
+
+## Systemvoraussetzungen
+
+BPSTracker ist für den selbst gehosteten Betrieb als Docker-Anwendung gedacht.
+
+Mindestvoraussetzungen:
+
+- Linux-Host mit Docker Engine
+- Docker Compose Plugin
+- Git zum Klonen und Aktualisieren des Repositorys
+- 64-Bit-Betriebssystem
+- Netzwerkzugriff vom BPSTracker-Host auf die konfigurierten Shelly-Geräte
+- moderner Browser für die Weboberfläche
+
+Empfohlene Hardware:
+
+- Raspberry Pi 3 / 4 / 5 mit 64-Bit-Betriebssystem
+- Raspberry Pi Zero 2 W mit 64-Bit-Betriebssystem für kleinere Installationen
+- x86_64 Mini-PC, NAS oder Server
+- mindestens 1 GB RAM
+- persistenter Speicher für PostgreSQL-Daten und Backups
+
+Unterstützte Container-Plattformen:
+
+```text
+linux/amd64
+linux/arm64
+```
+
+Raspberry-Pi-Prüfung:
+
+```bash
+uname -m
+```
+
+Empfohlenes Ergebnis:
+
+```text
+aarch64
+```
+
+Für Raspberry-Pi-Systeme wird ein 64-Bit-Betriebssystem empfohlen, damit die `linux/arm64` Images verwendet werden können.
+
+Benötigte Netzwerkports:
+
+```text
+5173  Weboberfläche / Frontend
+5432  PostgreSQL, nur internes Docker-Netzwerk
+8000  Backend-API, nur internes Docker-Netzwerk
+```
+
+Nur der Frontend-Port muss im lokalen Netzwerk erreichbar sein. Backend und Datenbank sollten im Docker-Netzwerk bleiben.
 
 ---
 
@@ -455,6 +511,23 @@ BPSTracker verwendet daraus:
 Der Sensor wird nicht historisch gespeichert. Die Werte werden nur aktuell im Webinterface und optional im Kindle-Display angezeigt.
 
 Wenn der Sensor nicht antwortet, blockiert er die App nicht. Es werden Timeouts verwendet, und bei Fehlern bleibt der letzte bekannte Wert erhalten.
+
+---
+
+## Amortisations-Achievements
+
+BPSTracker zeigt kleine, spielerische Achievements im Header, sobald die gesamte Solar-Ersparnis bestimmte Schwellen erreicht.
+
+Beispiele:
+
+```text
+Kaffee-Kasse geladen
+Pizza-Power
+Kino-Abend
+Solar-Legende
+```
+
+Die Achievements basieren auf der gesamten Ersparnis (`savings_total_eur`). Sie werden lokal im Browser gespeichert und bleiben nach dem Freischalten sieben Tage sichtbar. Die Texte sind mehrsprachig auf Deutsch und Englisch verfügbar. Die Achievements sind nur eine motivierende Anzeige und verändern die eigentliche Amortisations- oder Finanzberechnung nicht.
 
 ---
 

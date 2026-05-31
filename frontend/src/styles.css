@@ -897,3 +897,38 @@ html[data-theme='dark'] .metric .home-import-value.positive {
   padding: 0.9rem 0.65rem 0.15rem;
   opacity: 0.72;
 }
+
+
+.achievement-header-widget {
+  max-width: min(28rem, 42vw);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.22), rgba(34, 197, 94, 0.16));
+  border: 1px solid rgba(234, 179, 8, 0.34);
+  color: var(--text);
+  font-weight: 900;
+  font-size: 0.78rem;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.09);
+  overflow: hidden;
+}
+
+.achievement-header-widget span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+html[data-theme='dark'] .achievement-header-widget {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.20), rgba(34, 197, 94, 0.14));
+  border-color: rgba(250, 204, 21, 0.28);
+}
+
+@media (max-width: 980px) {
+  .achievement-header-widget {
+    max-width: 100%;
+    order: 4;
+  }
+}

@@ -21,6 +21,7 @@ https://github.com/syschelle/bpstracker
 - [Overview](#overview)
 - [Main features](#main-features)
 - [Architecture](#architecture)
+- [System requirements](#system-requirements)
 - [Screens and UI](#screens-and-ui)
 - [Supported devices and sensors](#supported-devices-and-sensors)
 - [Authentication and user roles](#authentication-and-user-roles)
@@ -205,6 +206,60 @@ America/New_York
 ```
 
 Daylight saving time and winter time are handled automatically by Python `zoneinfo`.
+
+---
+
+## System requirements
+
+BPSTracker is designed to run as a self-hosted Docker application.
+
+Minimum requirements:
+
+- Linux host with Docker Engine
+- Docker Compose plugin
+- Git, for cloning and updating the repository
+- 64-bit operating system
+- Network access from the BPSTracker host to the configured Shelly devices
+- A modern browser for the web interface
+
+Recommended hardware:
+
+- Raspberry Pi 3 / 4 / 5 with a 64-bit OS
+- Raspberry Pi Zero 2 W with a 64-bit OS for smaller installations
+- x86_64 mini PC, NAS or server
+- at least 1 GB RAM
+- persistent storage for PostgreSQL data and backups
+
+Supported container platforms:
+
+```text
+linux/amd64
+linux/arm64
+```
+
+Raspberry Pi check:
+
+```bash
+uname -m
+```
+
+Recommended result:
+
+```text
+aarch64
+```
+
+For Raspberry Pi systems, a 64-bit OS is recommended so the `linux/arm64` images can be used.
+
+Required network ports:
+
+```text
+5173  Web interface / frontend
+5432  PostgreSQL, internal Docker network only
+8000  Backend API, internal Docker network only
+```
+
+Only the frontend port needs to be exposed to the local network. Backend and database should stay inside the Docker network.
 
 ---
 
@@ -659,6 +714,22 @@ The sensor is polled conservatively:
 This prevents a slow or unreachable sensor from blocking the BPSTracker application.
 
 ---
+
+## Amortization achievements
+
+BPSTracker shows small, playful amortization achievements in the header when the total solar savings pass certain thresholds.
+
+Examples:
+
+```text
+Coffee fund unlocked
+Pizza power
+Movie night
+Solar legend
+```
+
+Achievements are based on `savings_total_eur`, are stored locally in the browser and remain visible for seven days after they are unlocked. They are available in German and English and are meant as a fun motivation layer; they do not change the financial calculations.
+
 
 ## Battery investment analysis
 
