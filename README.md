@@ -1345,3 +1345,9 @@ In simulation mode, configured devices are also simulated according to their pur
 
 
 <!-- UI: Home import value color: negative red, zero green, positive default text color. -->
+
+
+<!-- UI: Fix dark mode color override for negative home import values. -->
+
+
+<!-- UI: Language setup panel restored because Kindle display uses the saved UI language. -->

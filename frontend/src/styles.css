@@ -808,18 +808,20 @@ html[data-theme='dark'] .language-switch {
 }
 
 
-.home-import-value.negative {
-  color: #dc2626;
+.metric .home-import-value.negative,
+html[data-theme='dark'] .metric .home-import-value.negative {
+  color: #dc2626 !important;
 }
 
-.home-import-value.zero {
-  color: #16a34a;
+.metric .home-import-value.zero,
+html[data-theme='dark'] .metric .home-import-value.zero {
+  color: #16a34a !important;
 }
 
-.home-import-value.positive {
-  color: #111827;
+.metric .home-import-value.positive {
+  color: #111827 !important;
 }
 
-html[data-theme='dark'] .home-import-value.positive {
-  color: #e5e7eb;
+html[data-theme='dark'] .metric .home-import-value.positive {
+  color: #e5e7eb !important;
 }

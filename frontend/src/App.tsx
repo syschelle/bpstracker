@@ -102,7 +102,7 @@ const translations = {
     csvExport: 'CSV Export',
     powerW: 'Leistung W',
     languageSettings: 'Sprache',
-    languageHint: 'Diese Einstellung gilt für die gesamte Weboberfläche. Deutsch ist die Standardsprache.',
+    languageHint: 'Diese Einstellung speichert die Standardsprache serverseitig, z. B. für das Kindle-Display. Die Sprache im Browser kann zusätzlich im Header per Cookie geändert werden.',
     languageLabel: 'Oberflächensprache',
     german: 'Deutsch',
     english: 'English',
@@ -1386,6 +1386,7 @@ function GithubRepositoryPanel() {
 function SetupView({ onCurrentUserChange }: { onCurrentUserChange: (user: User) => void }) {
   return (
     <div className="grid gap">
+      <LanguageSettingsPanel />
       <TimezoneSettingsPanel />
       <GithubRepositoryPanel />
       <KindleDisplaySettingsPanel />
@@ -1409,6 +1410,49 @@ const TIMEZONE_OPTIONS: { value: string; labelKey: TranslationKey }[] = [
   { value: 'America/New_York', labelKey: 'timezoneAmericaNewYork' },
 ];
 
+
+
+function LanguageSettingsPanel() {
+  const { language, setLanguage, t } = useI18n();
+  const [settings, setSettings] = useState<UiSettings>({ language, timezone: 'Europe/Berlin' });
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function load() {
+    const loaded = await api.uiSettings();
+    setSettings(loaded);
+  }
+
+  useEffect(() => { void load(); }, []);
+
+  async function save() {
+    setMessage(null);
+    const saved = await api.updateUiSettings({
+      language: settings.language,
+      timezone: settings.timezone || 'Europe/Berlin',
+    });
+    setSettings(saved);
+    setLanguage(saved.language);
+    setMessage(t('languageSaved'));
+  }
+
+  return (
+    <section className="panel">
+      <div className="panel-head"><h2><Globe2 size={20} /> {t('languageSettings')}</h2></div>
+      <p className="hint">{t('languageHint')}</p>
+      {message && <div className="info">{message}</div>}
+      <div className="form-grid finance-form">
+        <label>{t('languageLabel')}
+          <select value={settings.language} onChange={e => setSettings({ ...settings, language: e.target.value as Language })}>
+            <option value="de">{t('german')}</option>
+            <option value="en">{t('english')}</option>
+          </select>
+        </label>
+      </div>
+      <p className="hint">Kindle-Display und serverseitige Ausgaben verwenden diese gespeicherte Sprache. Der Header-Umschalter bleibt eine Browser-/Cookie-Auswahl.</p>
+      <button onClick={() => void save()}>{t('saveLanguage')}</button>
+    </section>
+  );
+}
 
 function TimezoneSettingsPanel() {
   const { t } = useI18n();
