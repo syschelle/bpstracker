@@ -11,6 +11,7 @@ Das Projekt ist für den lokalen Betrieb im Heimnetz gedacht. Backend und Datenb
 - [Screenshots](#screenshots)
 - [Hauptfunktionen](#hauptfunktionen)
 - [Architektur](#architektur)
+- [Geräte-Zweck](#geräte-zweck)
 - [Unterstützte Geräte](#unterstützte-geräte)
 - [Installation mit Docker](#installation-mit-docker)
 - [Betrieb mit vorgebauten Docker-Images](#betrieb-mit-vorgebauten-docker-images)
@@ -19,6 +20,7 @@ Das Projekt ist für den lokalen Betrieb im Heimnetz gedacht. Backend und Datenb
 - [Historie](#historie)
 - [Simulation](#simulation)
 - [Kindle-Display](#kindle-display)
+- [Öffentliches Dashboard](#öffentliches-dashboard)
 - [JSON-API](#json-api)
 - [Luftdatensensor](#luftdatensensor)
 - [Akku-Amortisationsberechnung](#akku-amortisationsberechnung)
@@ -63,6 +65,7 @@ Das Projekt ist für den lokalen Betrieb im Heimnetz gedacht. Backend und Datenb
 - optionale Luftdatenanzeige im Header
 - optionale Kindle-kompatible PNG-Anzeige
 - optionale JSON-API für aktuelle Werte
+- optionales öffentliches Dashboard ohne Login
 - verschlüsselte Admin-Backups
 - Reset-Funktion für Messwerte
 - Docker-Deployment
@@ -95,6 +98,32 @@ Backend / FastAPI :8000
         v
 PostgreSQL
 ```
+
+---
+
+## Geräte-Zweck
+
+Jedes Shelly-Gerät kann im Setup einen Zweck bekommen:
+
+```text
+Automatisch erkennen
+Hausbezug / Netz
+Solar / Einspeisung
+Verbraucher / Sonstiges
+Ignorieren
+```
+
+Damit können auch mehrere Solar-/Einspeisegeräte sauber konfiguriert werden. Geräte mit dem Zweck **Solar / Einspeisung** werden für Dashboard, Historie, JSON-API und Kindle-Display summiert.
+
+Verhalten:
+
+- **Hausbezug / Netz**: wird als Haus-/Netzzähler verwendet
+- **Solar / Einspeisung**: wird als Solarproduktion / Einspeisung gewertet
+- **Verbraucher / Sonstiges**: bleibt als Messwert sichtbar, wird aber nicht als Hauptquelle für Netz oder Solar gezählt
+- **Ignorieren**: wird aus berechneten Dashboard-Werten ausgeschlossen
+- **Automatisch erkennen**: nutzt das bisherige Verhalten anhand der Shelly-Messquelle
+
+Negative Leistungswerte bei Solar-/Einspeisegeräten werden für berechnete Werte als positive Solarproduktion gewertet.
 
 ---
 
@@ -204,6 +233,8 @@ Im Setup können unter anderem konfiguriert werden:
 - Luftdatensensor
 - Geräte
 
+Die Sprache im Setup ist die serverseitige Standardsprache. Sie wird unter anderem für serverseitig erzeugte Ausgaben wie das Kindle-Display verwendet. Zusätzlich gibt es im Header einen EN/DE-Umschalter, der nur die Browser-Sprache per Cookie ändert.
+
 Die Zeitzone wird als IANA-Zeitzone gespeichert, zum Beispiel:
 
 ```text
@@ -231,6 +262,14 @@ Das Dashboard zeigt unter anderem:
 - Luftdaten im Header, falls aktiviert
 - Simulationshinweis, falls der Demo-Modus aktiv ist
 
+In der Kachel **Hausbezug / Home import** wird der Wert farblich markiert:
+
+```text
+negativ  → rot
+0 W      → grün
+positiv  → Standard-Textfarbe
+```
+
 Bei aktivierter Simulation wird im Header angezeigt:
 
 ```text
@@ -249,7 +288,7 @@ Die Darstellung enthält getrennte Kurven für:
 - Netzbezug
 - Einspeisung
 
-Die Werte sind farblich getrennt, damit sie leichter unterschieden werden können. Einspeisung wird positiv dargestellt, um sie im Diagramm besser mit Solar und Netzbezug vergleichen zu können.
+Die Werte sind farblich getrennt, damit sie leichter unterschieden werden können. Solar ist grün, Netzbezug blau und Einspeisung rot. Einspeisung wird positiv dargestellt, um sie im Diagramm besser mit Solar und Netzbezug vergleichen zu können.
 
 ---
 
@@ -279,6 +318,8 @@ Die Simulation betrifft:
 
 Die Simulation schreibt keine produktiven Messwerte in die Messwerttabellen. Wenn die Simulation deaktiviert wird, verschwinden die simulierten Werte wieder aus der Anzeige.
 
+Im Simulationsmodus werden auch konfigurierte Geräte anhand ihres Zwecks simuliert. So können Geräte im Setup geplant werden, obwohl sie physisch noch nicht vorhanden sind. Mehrere Geräte mit dem Zweck **Solar / Einspeisung** werden simuliert, aufgeteilt und für die berechneten Anzeigen summiert.
+
 ---
 
 ## Kindle-Display
@@ -303,6 +344,8 @@ Angezeigt werden unter anderem:
 - Solarwert
 - Tageskosten und Einsparung
 
+Die Sprache für das Kindle-Display kommt aus der gespeicherten Setup-Sprache. Der Header-Umschalter ändert nur die Sprache des aktuellen Browsers per Cookie.
+
 Das Kindle-Display berücksichtigt die eingestellte Sprache:
 
 Deutsch:
@@ -320,6 +363,50 @@ Englisch:
 2:05 PM
 Updated: 2:05:12 PM
 ```
+
+---
+
+## Öffentliches Dashboard
+
+BPSTracker kann optional eine separate öffentliche Dashboard-Seite bereitstellen, die ohne Login erreichbar ist.
+
+Die Funktion kann im Setup aktiviert werden:
+
+```text
+Setup → Öffentliches Dashboard
+```
+
+Wenn sie aktiviert ist, ist die öffentliche Seite erreichbar unter:
+
+```text
+/public/dashboard
+```
+
+Beispiel:
+
+```text
+http://<ip-adresse>:5173/public/dashboard
+```
+
+Die öffentliche Seite zeigt:
+
+- Dashboard-Kacheln
+- Gerätestatus
+- aktuelle Messwerte
+
+Sie zeigt **nicht**:
+
+- Setup
+- Historie
+- Account / 2FA
+- Benutzerverwaltung
+- Backups
+- Reset-Funktionen
+- Admin-Funktionen
+
+Die öffentlichen Backend-Endpunkte funktionieren nur, wenn die Freigabe im Setup aktiv ist. Ist die Freigabe deaktiviert, ist das öffentliche Dashboard nicht verfügbar.
+
+Aktiviere diese Funktion nur, wenn diese Werte für Besucher in deinem Netzwerk oder über deinen Reverse Proxy sichtbar sein dürfen.
 
 ---
 
