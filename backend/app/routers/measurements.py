@@ -26,6 +26,51 @@ from ..security import get_current_user
 router = APIRouter(prefix='/api/measurements', tags=['measurements'])
 
 GRID_POWER_SOURCES = {'shelly_3em_gen1_total', 'shelly_rpc_em_total'}
+
+DEVICE_PURPOSE_AUTO = 'auto'
+DEVICE_PURPOSE_GRID = 'grid'
+DEVICE_PURPOSE_SOLAR = 'solar'
+DEVICE_PURPOSE_CONSUMER = 'consumer'
+DEVICE_PURPOSE_IGNORED = 'ignored'
+
+
+def _device_purposes(db: Session) -> dict[int, str]:
+    rows = db.query(Device.id, Device.purpose).all()
+    return {int(device_id): str(purpose or DEVICE_PURPOSE_AUTO) for device_id, purpose in rows}
+
+
+def _purpose_for(row: Measurement | MeasurementRead, purposes: dict[int, str]) -> str:
+    return purposes.get(int(row.device_id), DEVICE_PURPOSE_AUTO)
+
+
+def _is_solar_row(row: Measurement | MeasurementRead, purposes: dict[int, str]) -> bool:
+    purpose = _purpose_for(row, purposes)
+    if purpose == DEVICE_PURPOSE_IGNORED:
+        return False
+    if purpose == DEVICE_PURPOSE_SOLAR:
+        return True
+    return purpose == DEVICE_PURPOSE_AUTO and row.source_type in SOLAR_ENERGY_SOURCES
+
+
+def _is_grid_row(row: Measurement | MeasurementRead, purposes: dict[int, str]) -> bool:
+    purpose = _purpose_for(row, purposes)
+    if purpose == DEVICE_PURPOSE_IGNORED:
+        return False
+    if purpose == DEVICE_PURPOSE_GRID:
+        return True
+    return purpose == DEVICE_PURPOSE_AUTO and row.source_type in GRID_POWER_SOURCES
+
+
+def _solar_power_value(row: Measurement | MeasurementRead) -> float | None:
+    value = row.power_w if row.power_w is not None else row.total_power_w
+    return abs(value) if value is not None else None
+
+
+def _grid_power_value(row: Measurement | MeasurementRead) -> float | None:
+    if row.total_power_w is not None:
+        return row.total_power_w
+    return row.power_w
+
 BATTERY_ROUNDTRIP_EFFICIENCY = 0.90
 
 
@@ -145,7 +190,8 @@ def latest_measurements(_: User = Depends(get_current_user), db: Session = Depen
     simulation = get_simulation_settings_from_db(db)
     if simulation.enabled:
         ui = get_ui_settings_from_db(db)
-        return simulated_latest(ui.timezone)
+        devices = db.query(Device).order_by(Device.id).all()
+        return simulated_latest(ui.timezone, devices)
 
     subq = (
         db.query(Measurement.device_id, Measurement.source_type, Measurement.channel, Measurement.phase, func.max(Measurement.timestamp).label('max_ts'))
@@ -195,6 +241,7 @@ def history(
         return simulated_history(start, end, ui.timezone, bucket_seconds)
 
     rows = _raw_history_rows(db, start, end, device_id=device_id, source_type=source_type, limit=limit)
+    purposes = _device_purposes(db)
 
     buckets: dict[datetime, dict] = defaultdict(lambda: {
         'solar_by_key': defaultdict(list),
@@ -209,13 +256,17 @@ def history(
             continue
 
         key = (row.device_id, row.source_type, row.channel, row.phase)
-        if row.source_type in SOLAR_ENERGY_SOURCES and row.power_w is not None:
+        if _is_solar_row(row, purposes):
             # Average per channel within a bucket, then sum channels. This avoids
             # alternating 0/actual values when a Shelly 2PM has multiple channels.
-            buckets[bucket]['solar_by_key'][key].append(abs(row.power_w))
-        elif row.source_type in GRID_POWER_SOURCES:
-            buckets[bucket]['grid_values'].append(row.total_power_w if row.total_power_w is not None else value)
-        else:
+            solar_value = _solar_power_value(row)
+            if solar_value is not None:
+                buckets[bucket]['solar_by_key'][key].append(solar_value)
+        elif _is_grid_row(row, purposes):
+            grid_value = _grid_power_value(row)
+            if grid_value is not None:
+                buckets[bucket]['grid_values'].append(grid_value)
+        elif _purpose_for(row, purposes) != DEVICE_PURPOSE_IGNORED:
             buckets[bucket]['fallback_by_key'][key].append(value)
 
     points: list[HistoryPoint] = []
@@ -253,11 +304,13 @@ def summary(_: User = Depends(get_current_user), db: Session = Depends(get_db)) 
         finance = get_finance_settings_from_db(db)
         ui = get_ui_settings_from_db(db)
         retention = get_retention_settings_from_db(db)
+        devices = db.query(Device).order_by(Device.id).all()
         simulated = simulated_summary(
             ui.timezone,
             kwh_price=finance.kwh_price_eur,
             investment=finance.investment_cost_eur,
             currency_code=finance.currency_code,
+            devices=devices,
         )
         battery = battery_analysis(
             simulated.exported_today_kwh,
@@ -277,6 +330,7 @@ def summary(_: User = Depends(get_current_user), db: Session = Depends(get_db)) 
         return simulated
 
     latest = latest_measurements(_, db)
+    purposes = _device_purposes(db)
     device_count = db.query(Device).count()
     online_count = db.query(DeviceStatus).filter(DeviceStatus.online.is_(True)).count()
     current_total_power = None
@@ -287,12 +341,15 @@ def summary(_: User = Depends(get_current_user), db: Session = Depends(get_db)) 
     for row in latest:
         if last_at is None or row.timestamp > last_at:
             last_at = row.timestamp
-        if row.source_type in GRID_POWER_SOURCES and row.total_power_w is not None:
-            current_total_power = row.total_power_w
-            current_grid_power = row.total_power_w
-        if row.source_type in SOLAR_ENERGY_SOURCES and row.power_w is not None:
-            # Assumption: switch/PM channel is the solar feed-in point.
-            current_solar_power = (current_solar_power or 0.0) + abs(row.power_w)
+        if _is_grid_row(row, purposes):
+            grid_value = _grid_power_value(row)
+            if grid_value is not None:
+                current_total_power = grid_value
+                current_grid_power = grid_value
+        if _is_solar_row(row, purposes):
+            solar_value = _solar_power_value(row)
+            if solar_value is not None:
+                current_solar_power = (current_solar_power or 0.0) + solar_value
 
     now = datetime.now(timezone.utc)
     today = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -302,10 +359,12 @@ def summary(_: User = Depends(get_current_user), db: Session = Depends(get_db)) 
     ensure_completed_daily_summaries(db, now)
 
     today_rows = db.query(Measurement).filter(Measurement.timestamp >= today).order_by(Measurement.timestamp.asc()).all()
+    grid_today_rows = [row for row in today_rows if _is_grid_row(row, purposes)]
+    solar_today_rows = [row for row in today_rows if _is_solar_row(row, purposes)]
 
-    imported_today_wh = delta_energy(today_rows, 'energy_import_wh', GRID_ENERGY_SOURCES)
-    exported_today_wh = delta_energy(today_rows, 'energy_export_wh', GRID_ENERGY_SOURCES)
-    solar_today_wh = delta_energy(today_rows, 'energy_import_wh', SOLAR_ENERGY_SOURCES)
+    imported_today_wh = delta_energy(grid_today_rows, 'energy_import_wh', None)
+    exported_today_wh = delta_energy(grid_today_rows, 'energy_export_wh', None)
+    solar_today_wh = delta_energy(solar_today_rows, 'energy_import_wh', None)
 
     imported_today_kwh = imported_today_wh / 1000 if imported_today_wh is not None else None
     exported_today_kwh = exported_today_wh / 1000 if exported_today_wh is not None else None

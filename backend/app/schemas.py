@@ -5,7 +5,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .models import DeviceType, UserRole
+from .models import DevicePurpose, DeviceType, UserRole
 
 
 class TokenResponse(BaseModel):
@@ -56,6 +56,7 @@ class UserCredentialUpdate(BaseModel):
 class DeviceBase(BaseModel):
     name: str
     device_type: DeviceType = DeviceType.auto
+    purpose: DevicePurpose = DevicePurpose.auto
     host: str
     username: str | None = None
     is_active: bool = True
@@ -70,6 +71,7 @@ class DeviceCreate(DeviceBase):
 class DeviceUpdate(BaseModel):
     name: str | None = None
     device_type: DeviceType | None = None
+    purpose: DevicePurpose | None = None
     host: str | None = None
     username: str | None = None
     password: str | None = None

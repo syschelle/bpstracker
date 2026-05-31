@@ -5,6 +5,7 @@ import random
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+from typing import Any
 
 from .schemas import HistoryPoint, MeasurementRead, SummaryResponse
 
@@ -154,7 +155,35 @@ def simulated_values_at(utc_dt: datetime, timezone_name: str | None = DEFAULT_TI
     )
 
 
-def simulated_summary(timezone_name: str, *, kwh_price: float, investment: float, currency_code: str) -> SummaryResponse:
+
+def _purpose_of(device: Any) -> str:
+    return str(getattr(device, 'purpose', None) or 'auto')
+
+
+def _active_devices(devices: list[Any] | None) -> list[Any]:
+    return [device for device in (devices or []) if bool(getattr(device, 'is_active', True))]
+
+
+def _simulated_device_groups(devices: list[Any] | None) -> tuple[list[Any], list[Any], list[Any]]:
+    active = _active_devices(devices)
+    grid = [device for device in active if _purpose_of(device) == 'grid']
+    solar = [device for device in active if _purpose_of(device) == 'solar']
+    other = [device for device in active if _purpose_of(device) in {'consumer', 'auto'}]
+    # Keep demo usable even when no devices are configured yet.
+    if not active:
+        return [], [], []
+    return grid, solar, other
+
+
+def _split_value(total: float, count: int, index: int) -> float:
+    if count <= 1:
+        return total
+    weights = [1.0 + 0.08 * math.sin((i + 1) * 1.7) for i in range(count)]
+    total_weight = sum(weights)
+    return total * weights[index] / total_weight
+
+
+def simulated_summary(timezone_name: str, *, kwh_price: float, investment: float, currency_code: str, devices: list[Any] | None = None) -> SummaryResponse:
     now = datetime.now(timezone.utc)
     values = simulated_values_at(now, timezone_name)
     consumption_cost_today = values.import_today_kwh * kwh_price
@@ -174,6 +203,9 @@ def simulated_summary(timezone_name: str, *, kwh_price: float, investment: float
         elif remaining == 0:
             estimated_days = 0.0
             estimated_date = now
+
+    active_devices = _active_devices(devices)
+    configured_count = len(active_devices) if active_devices else 1
 
     return SummaryResponse(
         current_grid_power_w=values.grid_w,
@@ -196,48 +228,117 @@ def simulated_summary(timezone_name: str, *, kwh_price: float, investment: float
         estimated_breakeven_days=estimated_days,
         estimated_breakeven_date=estimated_date,
         last_measurement_at=values.timestamp,
-        device_count=1,
-        online_device_count=1,
+        device_count=configured_count,
+        online_device_count=configured_count,
         raw_retention_days=30,
     )
 
 
-def simulated_latest(timezone_name: str) -> list[MeasurementRead]:
+def simulated_latest(timezone_name: str, devices: list[Any] | None = None) -> list[MeasurementRead]:
     now = datetime.now(timezone.utc)
     values = simulated_values_at(now, timezone_name)
-    return [
-        MeasurementRead(
-            id=-1,
+    active = _active_devices(devices)
+
+    if not active:
+        return [
+            MeasurementRead(
+                id=-1,
+                timestamp=values.timestamp,
+                device_id=-1,
+                source_type='simulation_grid',
+                channel=None,
+                phase=None,
+                power_w=values.grid_w,
+                voltage_v=230.0,
+                current_a=round(abs(values.grid_w) / 230.0, 2),
+                power_factor=0.98,
+                energy_import_wh=round(values.import_today_kwh * 1000, 1),
+                energy_export_wh=round(values.export_today_kwh * 1000, 1),
+                total_power_w=values.grid_w,
+            ),
+            MeasurementRead(
+                id=-2,
+                timestamp=values.timestamp,
+                device_id=-2,
+                source_type='simulation_solar',
+                channel=0,
+                phase=None,
+                power_w=-values.solar_w,
+                voltage_v=230.0,
+                current_a=round(values.solar_w / 230.0, 2),
+                power_factor=1.0,
+                energy_import_wh=round(values.solar_today_kwh * 1000, 1),
+                energy_export_wh=None,
+                total_power_w=None,
+            ),
+        ]
+
+    grid_devices, solar_devices, other_devices = _simulated_device_groups(active)
+    rows: list[MeasurementRead] = []
+    row_id = -1
+
+    for index, device in enumerate(grid_devices):
+        grid_w = _split_value(values.grid_w, len(grid_devices), index)
+        rows.append(MeasurementRead(
+            id=row_id,
             timestamp=values.timestamp,
-            device_id=-1,
+            device_id=int(getattr(device, 'id', row_id)),
             source_type='simulation_grid',
-            channel=None,
+            channel=getattr(device, 'channel', None),
             phase=None,
-            power_w=values.grid_w,
+            power_w=grid_w,
             voltage_v=230.0,
-            current_a=round(abs(values.grid_w) / 230.0, 2),
+            current_a=round(abs(grid_w) / 230.0, 2),
             power_factor=0.98,
             energy_import_wh=round(values.import_today_kwh * 1000, 1),
             energy_export_wh=round(values.export_today_kwh * 1000, 1),
-            total_power_w=values.grid_w,
-        ),
-        MeasurementRead(
-            id=-2,
+            total_power_w=grid_w,
+        ))
+        row_id -= 1
+
+    for index, device in enumerate(solar_devices):
+        solar_w = _split_value(values.solar_w, len(solar_devices), index)
+        # Many Shelly feed-in setups report production as negative power.
+        rows.append(MeasurementRead(
+            id=row_id,
             timestamp=values.timestamp,
-            device_id=-1,
+            device_id=int(getattr(device, 'id', row_id)),
             source_type='simulation_solar',
-            channel=0,
+            channel=getattr(device, 'channel', 0),
             phase=None,
-            power_w=values.solar_w,
+            power_w=-solar_w,
             voltage_v=230.0,
-            current_a=round(values.solar_w / 230.0, 2),
+            current_a=round(solar_w / 230.0, 2),
             power_factor=1.0,
-            energy_import_wh=round(values.solar_today_kwh * 1000, 1),
+            energy_import_wh=round(values.solar_today_kwh * 1000 / max(1, len(solar_devices)), 1),
             energy_export_wh=None,
             total_power_w=None,
-        ),
-    ]
+        ))
+        row_id -= 1
 
+    for index, device in enumerate(other_devices):
+        consumer_w = _split_value(max(80.0, values.consumption_w - max(0.0, values.solar_w)), len(other_devices), index)
+        rows.append(MeasurementRead(
+            id=row_id,
+            timestamp=values.timestamp,
+            device_id=int(getattr(device, 'id', row_id)),
+            source_type='simulation_consumer',
+            channel=getattr(device, 'channel', None),
+            phase=None,
+            power_w=consumer_w,
+            voltage_v=230.0,
+            current_a=round(abs(consumer_w) / 230.0, 2),
+            power_factor=0.96,
+            energy_import_wh=None,
+            energy_export_wh=None,
+            total_power_w=None,
+        ))
+        row_id -= 1
+
+    # If only consumer/ignored devices exist, keep at least one virtual aggregate row for the dashboard.
+    if not rows:
+        return simulated_latest(timezone_name, None)
+    return rows
 
 def simulated_history(start: datetime, end: datetime, timezone_name: str, bucket_seconds: int) -> list[HistoryPoint]:
     points: list[HistoryPoint] = []

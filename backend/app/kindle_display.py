@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from .database import SessionLocal
 from .energy_retention import GRID_ENERGY_SOURCES, SOLAR_ENERGY_SOURCES, delta_energy
-from .models import AppSetting, Measurement
+from .models import AppSetting, Device, Measurement
 from .simulation import simulated_air_sensor_current, simulated_values_at
 
 AIR_SENSOR_CACHE_KEY = 'air_sensor_cache'
@@ -28,6 +28,39 @@ DEFAULT_CURRENCY_CODE = 'EUR'
 DEFAULT_TIMEZONE = 'Europe/Berlin'
 GRID_POWER_SOURCES = {'shelly_3em_gen1_total', 'shelly_rpc_em_total'}
 SOLAR_POWER_SOURCES = {'shelly_rpc_switch', 'shelly_rpc_pm'}
+
+DEVICE_PURPOSE_AUTO = 'auto'
+DEVICE_PURPOSE_GRID = 'grid'
+DEVICE_PURPOSE_SOLAR = 'solar'
+DEVICE_PURPOSE_IGNORED = 'ignored'
+
+
+def _device_purposes(db: Session) -> dict[int, str]:
+    rows = db.query(Device.id, Device.purpose).all()
+    return {int(device_id): str(purpose or DEVICE_PURPOSE_AUTO) for device_id, purpose in rows}
+
+
+def _purpose_for(row: Measurement, purposes: dict[int, str]) -> str:
+    return purposes.get(int(row.device_id), DEVICE_PURPOSE_AUTO)
+
+
+def _is_solar_row(row: Measurement, purposes: dict[int, str]) -> bool:
+    purpose = _purpose_for(row, purposes)
+    if purpose == DEVICE_PURPOSE_IGNORED:
+        return False
+    if purpose == DEVICE_PURPOSE_SOLAR:
+        return True
+    return purpose == DEVICE_PURPOSE_AUTO and row.source_type in SOLAR_POWER_SOURCES
+
+
+def _is_grid_row(row: Measurement, purposes: dict[int, str]) -> bool:
+    purpose = _purpose_for(row, purposes)
+    if purpose == DEVICE_PURPOSE_IGNORED:
+        return False
+    if purpose == DEVICE_PURPOSE_GRID:
+        return True
+    return purpose == DEVICE_PURPOSE_AUTO and row.source_type in GRID_POWER_SOURCES
+
 KINDLE_OUTPUT_PATH = Path('/app/data/kindle-display.png')
 KINDLE_TMP_PATH = Path('/app/data/kindle-display.tmp.png')
 KINDLE_WIDTH = 600
@@ -191,36 +224,27 @@ def _air_cache(db: Session) -> dict[str, Any]:
 
 
 def _latest_home_import_w(db: Session) -> tuple[float | None, datetime | None]:
-    row = (
+    purposes = _device_purposes(db)
+    recent = (
         db.query(Measurement)
-        .filter(Measurement.source_type.in_(GRID_POWER_SOURCES))
-        .filter(Measurement.total_power_w.isnot(None))
+        .filter(Measurement.total_power_w.isnot(None) | Measurement.power_w.isnot(None))
         .order_by(Measurement.timestamp.desc())
-        .first()
+        .limit(120)
+        .all()
     )
-    if row is not None:
-        return row.total_power_w, row.timestamp
+    for row in recent:
+        if _is_grid_row(row, purposes):
+            value = row.total_power_w if row.total_power_w is not None else row.power_w
+            if value is not None:
+                return value, row.timestamp
 
-    fallback = (
-        db.query(Measurement)
-        .filter(Measurement.total_power_w.isnot(None))
-        .order_by(Measurement.timestamp.desc())
-        .first()
-    )
-    if fallback is not None:
-        return fallback.total_power_w, fallback.timestamp
+    for row in recent:
+        if _purpose_for(row, purposes) != DEVICE_PURPOSE_IGNORED:
+            value = row.total_power_w if row.total_power_w is not None else row.power_w
+            if value is not None:
+                return value, row.timestamp
 
-    # Last resort: any recent power value, useful for early test installations.
-    value, ts = (
-        db.query(Measurement.power_w, func.max(Measurement.timestamp))
-        .filter(Measurement.power_w.isnot(None))
-        .group_by(Measurement.power_w)
-        .order_by(func.max(Measurement.timestamp).desc())
-        .first()
-        or (None, None)
-    )
-    return value, ts
-
+    return None, None
 
 def _ui_timezone(db: Session) -> str:
     row = db.get(AppSetting, UI_SETTINGS_KEY)
@@ -248,23 +272,25 @@ def _zoneinfo(timezone_name: str) -> ZoneInfo:
 
 
 def _latest_solar_power_w(db: Session) -> float | None:
+    purposes = _device_purposes(db)
     recent = (
         db.query(Measurement)
-        .filter(Measurement.source_type.in_(SOLAR_POWER_SOURCES))
         .filter(Measurement.power_w.isnot(None))
         .order_by(Measurement.timestamp.desc())
-        .limit(20)
+        .limit(80)
         .all()
     )
     if not recent:
         return None
 
-    latest_by_source: dict[str, float] = {}
+    latest_by_source: dict[tuple[int, str, int | None], float] = {}
     for row in recent:
-        if row.source_type not in latest_by_source and row.power_w is not None:
-            latest_by_source[row.source_type] = abs(row.power_w)
+        if not _is_solar_row(row, purposes):
+            continue
+        key = (row.device_id, row.source_type, row.channel)
+        if key not in latest_by_source and row.power_w is not None:
+            latest_by_source[key] = abs(row.power_w)
     return sum(latest_by_source.values()) if latest_by_source else None
-
 
 def _today_energy_mix(db: Session, timezone_name: str) -> tuple[float | None, float | None]:
     tz = _zoneinfo(timezone_name)
@@ -280,8 +306,11 @@ def _today_energy_mix(db: Session, timezone_name: str) -> tuple[float | None, fl
         .order_by(Measurement.timestamp.asc())
         .all()
     )
-    imported_wh = delta_energy(rows, 'energy_import_wh', GRID_ENERGY_SOURCES)
-    solar_wh = delta_energy(rows, 'energy_import_wh', SOLAR_ENERGY_SOURCES)
+    purposes = _device_purposes(db)
+    grid_rows = [row for row in rows if _is_grid_row(row, purposes)]
+    solar_rows = [row for row in rows if _is_solar_row(row, purposes)]
+    imported_wh = delta_energy(grid_rows, 'energy_import_wh', None)
+    solar_wh = delta_energy(solar_rows, 'energy_import_wh', None)
     imported_kwh = imported_wh / 1000.0 if imported_wh is not None else None
     solar_kwh = solar_wh / 1000.0 if solar_wh is not None else None
     return imported_kwh, solar_kwh

@@ -2,6 +2,7 @@ export type Language = 'de' | 'en';
 export type CurrencyCode = 'EUR' | 'USD' | 'GBP';
 
 export type DeviceType = 'auto' | 'shelly_3em_gen1' | 'shelly_pro_3em_gen2' | 'shelly_2pm_gen4' | 'shelly_ng_generic';
+export type DevicePurpose = 'auto' | 'grid' | 'solar' | 'consumer' | 'ignored';
 
 export interface User {
   id: number;
@@ -26,6 +27,7 @@ export interface Device {
   id: number;
   name: string;
   device_type: DeviceType;
+  purpose: DevicePurpose;
   host: string;
   username?: string | null;
   is_active: boolean;

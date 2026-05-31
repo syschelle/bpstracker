@@ -15,7 +15,7 @@ from ..energy_retention import (
     ensure_completed_daily_summaries,
     get_stored_total_kwh,
 )
-from ..models import AppSetting, Measurement
+from ..models import AppSetting, Device, Measurement
 from ..simulation import simulated_values_at
 
 router = APIRouter(prefix='/api/current-values', tags=['current-values'])
@@ -25,6 +25,50 @@ UI_SETTINGS_KEY = 'ui'
 CURRENT_VALUES_API_SETTINGS_KEY = 'current_values_api'
 SIMULATION_SETTINGS_KEY = 'simulation'
 DEFAULT_TIMEZONE = 'Europe/Berlin'
+
+DEVICE_PURPOSE_AUTO = 'auto'
+DEVICE_PURPOSE_GRID = 'grid'
+DEVICE_PURPOSE_SOLAR = 'solar'
+DEVICE_PURPOSE_IGNORED = 'ignored'
+
+
+def _device_purposes(db: Session) -> dict[int, str]:
+    rows = db.query(Device.id, Device.purpose).all()
+    return {int(device_id): str(purpose or DEVICE_PURPOSE_AUTO) for device_id, purpose in rows}
+
+
+def _purpose_for(row: Measurement, purposes: dict[int, str]) -> str:
+    return purposes.get(int(row.device_id), DEVICE_PURPOSE_AUTO)
+
+
+def _is_solar_row(row: Measurement, purposes: dict[int, str]) -> bool:
+    purpose = _purpose_for(row, purposes)
+    if purpose == DEVICE_PURPOSE_IGNORED:
+        return False
+    if purpose == DEVICE_PURPOSE_SOLAR:
+        return True
+    return purpose == DEVICE_PURPOSE_AUTO and row.source_type in SOLAR_ENERGY_SOURCES
+
+
+def _is_grid_row(row: Measurement, purposes: dict[int, str]) -> bool:
+    purpose = _purpose_for(row, purposes)
+    if purpose == DEVICE_PURPOSE_IGNORED:
+        return False
+    if purpose == DEVICE_PURPOSE_GRID:
+        return True
+    return purpose == DEVICE_PURPOSE_AUTO and row.source_type in GRID_POWER_SOURCES
+
+
+def _solar_power_value(row: Measurement) -> float | None:
+    value = row.power_w if row.power_w is not None else row.total_power_w
+    return abs(value) if value is not None else None
+
+
+def _grid_power_value(row: Measurement) -> float | None:
+    if row.total_power_w is not None:
+        return row.total_power_w
+    return row.power_w
+
 
 
 def _simulation_enabled(db: Session) -> bool:

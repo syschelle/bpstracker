@@ -24,6 +24,7 @@ def create_device(payload: DeviceCreate, user: User = Depends(require_admin), db
     device = Device(
         name=payload.name,
         device_type=payload.device_type,
+        purpose=payload.purpose.value if hasattr(payload.purpose, 'value') else payload.purpose,
         host=payload.host,
         username=payload.username,
         password_ciphertext=encrypt_secret(payload.password),

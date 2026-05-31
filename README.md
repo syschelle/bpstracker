@@ -278,6 +278,31 @@ The side navigation is detached and can be opened or closed with the hamburger b
 
 ---
 
+## Device purpose
+
+Each Shelly device can have a purpose in Setup:
+
+```text
+Auto detect
+Home/grid import
+Solar/feed-in
+Consumer/other
+Ignore
+```
+
+This makes multi-device installations easier to configure. For example, multiple solar/feed-in Shelly devices can be configured as `Solar/feed-in`; BPSTracker sums them for the dashboard, history, JSON API and Kindle display.
+
+Purpose behavior:
+
+- `Home/grid import`: counted as the house/grid meter
+- `Solar/feed-in`: counted as solar production / feed-in; negative Shelly power values are treated as positive solar production
+- `Consumer/other`: kept as raw measurement data, but not used as the main grid or solar source
+- `Ignore`: excluded from calculated dashboard values
+- `Auto detect`: legacy behavior based on the detected Shelly measurement source
+
+Existing installations are migrated automatically and keep `Auto detect` as the default purpose.
+
+
 ## Supported devices and sensors
 
 BPSTracker currently focuses on Shelly devices.
@@ -1305,3 +1330,6 @@ BPSTracker is a private monitoring tool for local energy visualization. It is no
 
 
 <!-- Fix: battery analysis toggle is persisted correctly in finance settings. -->
+
+
+In simulation mode, configured devices are also simulated according to their purpose. You can create planned Shelly devices before they physically exist and assign purposes such as `Solar/feed-in` or `Home/grid import`.

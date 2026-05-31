@@ -3,7 +3,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Activity, Euro, Globe2, History, LogOut, Menu, Moon, Plus, RefreshCcw, Settings, ShieldCheck, Sun, Droplets, Thermometer, Trash2, UserCog, Wind, Zap } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api, setToken, getToken } from './api';
-import type { AirSensorCurrent, AirSensorSettings, BackupInfo, CurrencyCode, CurrentValuesApiSettings, Device, DeviceType, FinanceSettings, KindleDisplaySettings, Language, Measurement, RetentionSettings, SimulationSettings, Summary, UiSettings, User } from './types';
+import type { AirSensorCurrent, AirSensorSettings, BackupInfo, CurrencyCode, CurrentValuesApiSettings, Device, DevicePurpose, DeviceType, FinanceSettings, KindleDisplaySettings, Language, Measurement, RetentionSettings, SimulationSettings, Summary, UiSettings, User } from './types';
 
 type Tab = 'dashboard' | 'history' | 'setup' | 'account';
 type TranslationKey = keyof typeof translations.de;
@@ -229,6 +229,13 @@ const translations = {
     humidity: 'Luftfeuchte',
     fineDust: 'Feinstaub',
     newShellyDevice: 'Neues Shelly-Gerät',
+    devicePurpose: 'Zweck',
+    devicePurposeAuto: 'Automatisch erkennen',
+    devicePurposeGrid: 'Hausbezug / Netz',
+    devicePurposeSolar: 'Solar / Einspeisung',
+    devicePurposeConsumer: 'Verbraucher / Sonstiges',
+    devicePurposeIgnored: 'Ignorieren',
+    devicePurposeHint: 'Der Zweck steuert, ob ein Shelly als Netz-/Hausbezug, Solar-Einspeisung oder nur als Rohmessgerät gezählt wird. Mehrere Solar-/Einspeisegeräte werden summiert.',
     type: 'Typ',
     autoDetection: 'Auto-Erkennung',
     ipHostname: 'IP/Hostname',
@@ -486,6 +493,13 @@ const translations = {
     humidity: 'Humidity',
     fineDust: 'Particulate matter',
     newShellyDevice: 'New Shelly device',
+    devicePurpose: 'Purpose',
+    devicePurposeAuto: 'Auto detect',
+    devicePurposeGrid: 'Home/grid import',
+    devicePurposeSolar: 'Solar/feed-in',
+    devicePurposeConsumer: 'Consumer/other',
+    devicePurposeIgnored: 'Ignore',
+    devicePurposeHint: 'The purpose controls whether a Shelly is counted as grid/home import, solar feed-in, or only as a raw measuring device. Multiple solar/feed-in devices are summed.',
     type: 'Type',
     autoDetection: 'Auto detection',
     ipHostname: 'IP/hostname',
@@ -582,6 +596,7 @@ function localeFor(language: Language): string {
 type DeviceForm = {
   name: string;
   device_type: DeviceType;
+  purpose: DevicePurpose;
   host: string;
   username: string;
   password: string;
@@ -593,6 +608,7 @@ type DeviceForm = {
 const emptyDevice: DeviceForm = {
   name: '',
   device_type: 'auto',
+  purpose: 'auto',
   host: '',
   username: '',
   password: '',
@@ -605,6 +621,7 @@ function deviceToForm(device: Device): DeviceForm {
   return {
     name: device.name,
     device_type: device.device_type,
+    purpose: device.purpose || 'auto',
     host: device.host,
     username: device.username || '',
     password: '',
@@ -618,6 +635,7 @@ function devicePayloadFromForm(form: DeviceForm) {
   return {
     name: form.name.trim(),
     device_type: form.device_type,
+    purpose: form.purpose,
     host: form.host.trim(),
     username: form.username.trim() || null,
     password: form.password.trim() || null,
@@ -1936,6 +1954,30 @@ function AirSensorSettingsPanel() {
   );
 }
 
+
+
+function deviceTypeLabel(deviceType: DeviceType, t: Translator): string {
+  const labels: Record<DeviceType, string> = {
+    auto: t('autoDetection'),
+    shelly_3em_gen1: 'Shelly 3EM Gen1',
+    shelly_pro_3em_gen2: 'Shelly Pro/NG 3EM',
+    shelly_2pm_gen4: 'Shelly 2PM Gen4',
+    shelly_ng_generic: 'Shelly NG generisch',
+  };
+  return labels[deviceType] || deviceType;
+}
+
+function devicePurposeLabel(purpose: DevicePurpose, t: Translator): string {
+  const labels: Record<DevicePurpose, string> = {
+    auto: t('devicePurposeAuto'),
+    grid: t('devicePurposeGrid'),
+    solar: t('devicePurposeSolar'),
+    consumer: t('devicePurposeConsumer'),
+    ignored: t('devicePurposeIgnored'),
+  };
+  return labels[purpose] || purpose;
+}
+
 function DeviceSetupPanel() {
   const { t } = useI18n();
   const [devices, setDevices] = useState<Device[]>([]);
@@ -2009,6 +2051,16 @@ function DeviceSetupPanel() {
     </select>
   );
 
+  const devicePurposeSelect = (value: DevicePurpose, onChange: (value: DevicePurpose) => void) => (
+    <select value={value} onChange={e => onChange(e.target.value as DevicePurpose)}>
+      <option value="auto">{t('devicePurposeAuto')}</option>
+      <option value="grid">{t('devicePurposeGrid')}</option>
+      <option value="solar">{t('devicePurposeSolar')}</option>
+      <option value="consumer">{t('devicePurposeConsumer')}</option>
+      <option value="ignored">{t('devicePurposeIgnored')}</option>
+    </select>
+  );
+
   return (
     <div className="grid gap">
       {message && <div className="info">{message}</div>}
@@ -2017,6 +2069,7 @@ function DeviceSetupPanel() {
         <div className="form-grid">
           <label>{t('name')}<input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Hausanschluss" /></label>
           <label>{t('type')}{deviceTypeSelect(form.device_type, device_type => setForm({ ...form, device_type }))}</label>
+          <label>{t('devicePurpose')}{devicePurposeSelect(form.purpose, purpose => setForm({ ...form, purpose }))}</label>
           <label>{t('ipHostname')}<input value={form.host} onChange={e => setForm({ ...form, host: e.target.value })} placeholder="192.168.178.50" /></label>
           <label>{t('channel')}<input value={form.channel} onChange={e => setForm({ ...form, channel: e.target.value === '' ? '' : Number(e.target.value) })} placeholder="leer, 0 oder 1" /></label>
           <label>{t('shellyUserOptional')}<input value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} /></label>
@@ -2024,16 +2077,18 @@ function DeviceSetupPanel() {
           <label>{t('pollingSeconds')}<input type="number" min={5} value={form.poll_interval_seconds} onChange={e => setForm({ ...form, poll_interval_seconds: Number(e.target.value) })} /></label>
           <label className="check"><input type="checkbox" checked={form.is_active} onChange={e => setForm({ ...form, is_active: e.target.checked })} /> {t('active')}</label>
         </div>
+        <p className="hint">{t('devicePurposeHint')}</p>
         <button onClick={() => void save()}><Plus size={16} /> {t('addDevice')}</button>
       </section>
       <section className="panel">
         <h2>{t('configuredDevices')}</h2>
         <table>
-          <thead><tr><th>{t('name')}</th><th>{t('type')}</th><th>{t('host')}</th><th>{t('channel')}</th><th>{t('polling')}</th><th>{t('status')}</th><th>{t('actions')}</th></tr></thead>
+          <thead><tr><th>{t('name')}</th><th>{t('type')}</th><th>{t('devicePurpose')}</th><th>{t('host')}</th><th>{t('channel')}</th><th>{t('polling')}</th><th>{t('status')}</th><th>{t('actions')}</th></tr></thead>
           <tbody>
             {devices.map(device => editingId === device.id ? <tr key={device.id} className="edit-row">
               <td><input value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} /></td>
               <td>{deviceTypeSelect(editForm.device_type, device_type => setEditForm({ ...editForm, device_type }))}</td>
+              <td>{devicePurposeSelect(editForm.purpose, purpose => setEditForm({ ...editForm, purpose }))}</td>
               <td><input value={editForm.host} onChange={e => setEditForm({ ...editForm, host: e.target.value })} /></td>
               <td><input value={editForm.channel} onChange={e => setEditForm({ ...editForm, channel: e.target.value === '' ? '' : Number(e.target.value) })} placeholder="leer, 0 oder 1" /></td>
               <td><input type="number" min={5} value={editForm.poll_interval_seconds} onChange={e => setEditForm({ ...editForm, poll_interval_seconds: Number(e.target.value) })} /></td>
@@ -2051,7 +2106,7 @@ function DeviceSetupPanel() {
                 </div>
               </td>
             </tr> : <tr key={device.id}>
-              <td>{device.name}</td><td>{device.device_type}</td><td>{device.host}</td><td>{device.channel ?? t('all')}</td><td>{device.poll_interval_seconds}s</td>
+              <td>{device.name}</td><td>{deviceTypeLabel(device.device_type, t)}</td><td>{devicePurposeLabel((device.purpose || 'auto') as DevicePurpose, t)}</td><td>{device.host}</td><td>{device.channel ?? t('all')}</td><td>{device.poll_interval_seconds}s</td>
               <td><span className={device.status?.online ? 'badge ok' : 'badge'}>{device.status?.online ? t('online') : t('offline')}</span></td>
               <td className="actions"><button onClick={() => startEdit(device)}>{t('edit')}</button><button onClick={() => void test(device.id)}>{t('test')}</button><button onClick={() => void poll(device.id)}>{t('pollNow')}</button><button className="danger" onClick={() => void remove(device.id)}><Trash2 size={14} /></button></td>
             </tr>)}

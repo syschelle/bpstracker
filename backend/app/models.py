@@ -22,6 +22,14 @@ class DeviceType(str, Enum):
     shelly_ng_generic = 'shelly_ng_generic'
 
 
+class DevicePurpose(str, Enum):
+    auto = 'auto'
+    grid = 'grid'
+    solar = 'solar'
+    consumer = 'consumer'
+    ignored = 'ignored'
+
+
 class UserRole(str, Enum):
     admin = 'admin'
     viewer = 'viewer'
@@ -64,6 +72,7 @@ class Device(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(120))
     device_type: Mapped[DeviceType] = mapped_column(SAEnum(DeviceType), default=DeviceType.auto)
+    purpose: Mapped[str] = mapped_column(String(30), default=DevicePurpose.auto.value)
     host: Mapped[str] = mapped_column(String(255), index=True)
     username: Mapped[str | None] = mapped_column(String(255), nullable=True)
     password_ciphertext: Mapped[str | None] = mapped_column(Text, nullable=True)
