@@ -858,3 +858,27 @@ html[data-theme='dark'] .metric .home-import-value.positive {
   max-width: 1180px;
   margin: 0 auto;
 }
+
+
+.public-air-sensor {
+  max-width: 1180px;
+}
+
+.public-air-sensor.offline {
+  opacity: 0.72;
+}
+
+.public-air-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem 1rem;
+  align-items: center;
+  font-weight: 850;
+}
+
+.public-air-grid span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+}

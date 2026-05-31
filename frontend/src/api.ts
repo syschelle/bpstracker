@@ -121,6 +121,7 @@ export const api = {
   latest: () => request<Measurement[]>('/api/measurements/latest'),
   summary: () => request<Summary>('/api/measurements/summary'),
   publicSummary: () => request<Summary>('/api/measurements/public/summary'),
+  publicAirSensorCurrent: () => request<AirSensorCurrent>('/api/settings/public/air-sensor/current'),
   publicLatest: () => request<Measurement[]>('/api/measurements/public/latest'),
   publicDevices: () => request<Device[]>('/api/devices/public/status'),
   currentValues: () => request<Record<string, unknown>>('/api/current-values'),

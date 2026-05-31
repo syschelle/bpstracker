@@ -477,11 +477,12 @@ http://<ip-address>:5173/public/dashboard
 The public dashboard shows:
 
 - dashboard energy cards
-- device status
-- latest measurements
+- current air sensor values, if the air sensor is configured
 
 It does not expose:
 
+- device status
+- latest measurements
 - Setup
 - History
 - Account / 2FA
@@ -1392,3 +1393,9 @@ In simulation mode, configured devices are also simulated according to their pur
 
 
 <!-- UI: Language setup panel restored because Kindle display uses the saved UI language. -->
+
+
+<!-- UI: Public dashboard hides device status and latest measurements. -->
+
+
+<!-- UI: Public dashboard includes current air sensor values when configured. -->

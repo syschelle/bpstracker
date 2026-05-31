@@ -201,7 +201,7 @@ const translations = {
     resetValuesDone: 'Alle Werte wurden gelöscht.',
     resetValuesConfirmPlaceholder: 'reset',
     publicDashboardSettings: 'Öffentliches Dashboard',
-    publicDashboardHint: 'Aktiviert eine separate Dashboard-Seite ohne Login. Besucher sehen nur Dashboard-Werte, Gerätestatus und aktuelle Messwerte.',
+    publicDashboardHint: 'Aktiviert eine separate Dashboard-Seite ohne Login. Besucher sehen nur Dashboard-Kacheln und, falls konfiguriert, aktuelle Luftdaten.',
     enablePublicDashboard: 'Öffentliches Dashboard aktivieren',
     publicDashboardSaved: 'Öffentliches Dashboard wurde gespeichert.',
     publicDashboardLink: 'Öffentlicher Dashboard-Link',
@@ -475,7 +475,7 @@ const translations = {
     resetValuesDone: 'All values have been deleted.',
     resetValuesConfirmPlaceholder: 'reset',
     publicDashboardSettings: 'Public dashboard',
-    publicDashboardHint: 'Enables a separate dashboard page without login. Visitors only see dashboard values, device status and latest measurements.',
+    publicDashboardHint: 'Enables a separate dashboard page without login. Visitors only see the dashboard cards and, if configured, current air sensor values.',
     enablePublicDashboard: 'Enable public dashboard',
     publicDashboardSaved: 'Public dashboard has been saved.',
     publicDashboardLink: 'Public dashboard link',
@@ -1036,19 +1036,37 @@ function tabTitle(tab: Tab, t: Translator): string {
 }
 
 
-function PublicDashboard() {
+function PublicAirSensorWidget({ sensor }: { sensor: AirSensorCurrent | null }) {
   const { language, t } = useI18n();
+  if (!sensor?.enabled || !sensor.configured) return null;
+
+  return (
+    <section className={sensor.ok ? 'panel public-air-sensor' : 'panel public-air-sensor offline'} title={sensor.ok ? t('airSensorSettings') : (sensor.last_error || t('offline'))}>
+      <div className="panel-head"><h2><Wind size={20} /> {t('airSensorSettings')}</h2></div>
+      <div className="public-air-grid">
+        <span><Thermometer size={18} /> {fmtTemperature(sensor.temperature_c, language)}</span>
+        <span><Droplets size={18} /> {fmtPercent(sensor.humidity_percent, language)}</span>
+        <span><Wind size={18} /> PM10 {fmtMicrograms(sensor.sds_p1, language)}</span>
+        <span><Wind size={18} /> PM2.5 {fmtMicrograms(sensor.sds_p2, language)}</span>
+      </div>
+    </section>
+  );
+}
+
+function PublicDashboard() {
+  const { t } = useI18n();
   const [summary, setSummary] = useState<Summary | null>(null);
-  const [latest, setLatest] = useState<Measurement[]>([]);
-  const [devices, setDevices] = useState<Device[]>([]);
+  const [sensor, setSensor] = useState<AirSensorCurrent | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
     try {
-      const [summaryData, latestData, deviceData] = await Promise.all([api.publicSummary(), api.publicLatest(), api.publicDevices()]);
+      const [summaryData, sensorData] = await Promise.all([
+        api.publicSummary(),
+        api.publicAirSensorCurrent().catch(() => null),
+      ]);
       setSummary(summaryData);
-      setLatest(latestData);
-      setDevices(deviceData);
+      setSensor(sensorData);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('publicDashboardLoadFailed'));
@@ -1064,42 +1082,13 @@ function PublicDashboard() {
   return (
     <div className="grid gap public-dashboard-content">
       {error && <div className="error">{error}</div>}
+      <PublicAirSensorWidget sensor={sensor} />
       <div className="cards dashboard-cards">
         <GridPowerMetric summary={summary} />
         <DailyBalanceMetric summary={summary} />
         <TotalBalanceMetric summary={summary} />
         <CostBalanceMetric summary={summary} mode="daily" />
         <CostBalanceMetric summary={summary} mode="total" />
-      </div>
-      <div className="dashboard-detail-grid">
-        <section className="panel dashboard-device-status">
-          <div className="panel-head"><h2>{t('deviceStatus')}</h2><button onClick={() => void load()}><RefreshCcw size={16} /> {t('refresh')}</button></div>
-          <div className="table-wrap compact-table-wrap">
-            <table className="compact-dashboard-table">
-              <thead><tr><th>{t('name')}</th><th>{t('status')}</th><th>{t('lastPoll')}</th></tr></thead>
-              <tbody>
-                {devices.map(device => <tr key={device.id}>
-                  <td>{device.name}</td>
-                  <td><span className={device.status?.online ? 'badge ok' : 'badge'}>{device.status?.online ? t('online') : t('offline')}</span></td>
-                  <td>{fmtDate(device.status?.last_success_at, language)}</td>
-                </tr>)}
-              </tbody>
-            </table>
-          </div>
-        </section>
-        <section className="panel dashboard-latest-measurements">
-          <h2>{t('latestMeasurements')}</h2>
-          <div className="table-wrap compact-table-wrap">
-            <table className="compact-dashboard-table">
-              <thead><tr><th>{t('time')}</th><th>{t('channel')}</th><th>{t('phase')}</th><th>{t('power')}</th><th>{t('voltage')}</th></tr></thead>
-              <tbody>
-                {latest.map(row => <tr key={row.id}>
-                  <td>{fmtDate(row.timestamp, language)}</td><td>{row.channel ?? t('none')}</td><td>{row.phase ?? t('none')}</td><td>{fmtW(row.power_w, language)}</td><td>{row.voltage_v ?? t('none')}</td>
-                </tr>)}
-              </tbody>
-            </table>
-          </div>
-        </section>
       </div>
     </div>
   );

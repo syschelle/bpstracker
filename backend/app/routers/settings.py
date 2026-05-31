@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import httpx
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -550,6 +550,16 @@ def update_air_sensor_settings(
 
 @router.get('/air-sensor/current', response_model=AirSensorCurrent)
 async def get_air_sensor_current(_: User = Depends(get_current_user), db: Session = Depends(get_db)) -> AirSensorCurrent:
+    simulation = get_simulation_settings_from_db(db)
+    if simulation.enabled:
+        return simulated_air_sensor_current(get_ui_settings_from_db(db).timezone)
+    return await fetch_air_sensor_current(get_air_sensor_settings_from_db(db), db)
+
+
+@router.get('/public/air-sensor/current', response_model=AirSensorCurrent)
+async def get_public_air_sensor_current(db: Session = Depends(get_db)) -> AirSensorCurrent:
+    if not get_public_dashboard_settings_from_db(db).enabled:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Public dashboard is disabled')
     simulation = get_simulation_settings_from_db(db)
     if simulation.enabled:
         return simulated_air_sensor_current(get_ui_settings_from_db(db).timezone)
