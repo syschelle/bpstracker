@@ -566,7 +566,7 @@ function useI18n(): I18nContextValue {
 }
 
 function readStoredLanguage(): Language {
-  const value = localStorage.getItem('bpstracker-language');
+  const value = readCookie('bpstracker-language') || localStorage.getItem('bpstracker-language');
   return value === 'en' ? 'en' : 'de';
 }
 
@@ -763,6 +763,7 @@ export default function App() {
   const setLanguage = useCallback((nextLanguage: Language) => {
     setLanguageState(nextLanguage);
     localStorage.setItem('bpstracker-language', nextLanguage);
+    writeCookie('bpstracker-language', nextLanguage);
     document.documentElement.lang = nextLanguage;
   }, []);
 
@@ -776,7 +777,12 @@ export default function App() {
   const loadCurrentUserAndLanguage = useCallback(async () => {
     const [currentUser, ui] = await Promise.all([api.me(), api.uiSettings().catch(() => null)]);
     setUser(currentUser);
-    if (ui?.language) setLanguage(ui.language);
+    const cookieLanguage = readCookie('bpstracker-language');
+    if ((cookieLanguage === 'de' || cookieLanguage === 'en')) {
+      setLanguage(cookieLanguage);
+    } else if (ui?.language) {
+      setLanguage(ui.language);
+    }
   }, [setLanguage]);
 
   useEffect(() => {
@@ -1369,7 +1375,6 @@ function GithubRepositoryPanel() {
 function SetupView({ onCurrentUserChange }: { onCurrentUserChange: (user: User) => void }) {
   return (
     <div className="grid gap">
-      <LanguageSettingsPanel />
       <TimezoneSettingsPanel />
       <GithubRepositoryPanel />
       <KindleDisplaySettingsPanel />
@@ -1386,44 +1391,13 @@ function SetupView({ onCurrentUserChange }: { onCurrentUserChange: (user: User) 
   );
 }
 
-function LanguageSettingsPanel() {
-  const { language, setLanguage, t } = useI18n();
-  const [selectedLanguage, setSelectedLanguage] = useState<Language>(language);
-  const [message, setMessage] = useState<string | null>(null);
-
-  useEffect(() => { setSelectedLanguage(language); }, [language]);
-
-  async function save() {
-    setMessage(null);
-    const current = await api.uiSettings().catch(() => ({ language, timezone: 'Europe/Berlin' }));
-    const saved = await api.updateUiSettings({ language: selectedLanguage, timezone: current.timezone || 'Europe/Berlin' });
-    setLanguage(saved.language);
-    setMessage(t('languageSaved'));
-  }
-
-  return (
-    <section className="panel">
-      <div className="panel-head"><h2><Globe2 size={20} /> {t('languageSettings')}</h2></div>
-      <p className="hint">{t('languageHint')}</p>
-      {message && <div className="info">{message}</div>}
-      <div className="form-grid finance-form">
-        <label>{t('languageLabel')}<select value={selectedLanguage} onChange={e => setSelectedLanguage(e.target.value as Language)}>
-          <option value="de">{t('german')}</option>
-          <option value="en">{t('english')}</option>
-        </select></label>
-      </div>
-      <button onClick={() => void save()}>{t('saveLanguage')}</button>
-    </section>
-  );
-}
-
-
-const TIMEZONE_OPTIONS = [
+const TIMEZONE_OPTIONS: { value: string; labelKey: TranslationKey }[] = [
   { value: 'Europe/Berlin', labelKey: 'timezoneEuropeBerlin' },
   { value: 'Europe/London', labelKey: 'timezoneEuropeLondon' },
   { value: 'UTC', labelKey: 'timezoneUtc' },
   { value: 'America/New_York', labelKey: 'timezoneAmericaNewYork' },
-] as const;
+];
+
 
 function TimezoneSettingsPanel() {
   const { t } = useI18n();

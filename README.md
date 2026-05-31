@@ -1336,3 +1336,6 @@ In simulation mode, configured devices are also simulated according to their pur
 
 
 <!-- UI: grid import history color has stronger contrast in dark theme. -->
+
+
+<!-- UI: The language setup panel was removed because language is now a browser cookie preference. -->
