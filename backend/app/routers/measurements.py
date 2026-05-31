@@ -5,7 +5,7 @@ import io
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -18,12 +18,17 @@ from ..energy_retention import (
     ensure_completed_daily_summaries,
     get_stored_total_kwh,
 )
-from ..routers.settings import get_finance_settings_from_db, get_retention_settings_from_db, get_simulation_settings_from_db, get_ui_settings_from_db
+from ..routers.settings import get_finance_settings_from_db, get_public_dashboard_settings_from_db, get_retention_settings_from_db, get_simulation_settings_from_db, get_ui_settings_from_db
 from ..schemas import HistoryPoint, MeasurementRead, SummaryResponse
 from ..simulation import simulated_history, simulated_latest, simulated_summary
 from ..security import get_current_user
 
 router = APIRouter(prefix='/api/measurements', tags=['measurements'])
+
+
+def _require_public_dashboard(db: Session) -> None:
+    if not get_public_dashboard_settings_from_db(db).enabled:
+        raise HTTPException(status_code=404, detail='Public dashboard is disabled')
 
 GRID_POWER_SOURCES = {'shelly_3em_gen1_total', 'shelly_rpc_em_total'}
 
@@ -467,3 +472,15 @@ def export_csv(
     for row in rows:
         writer.writerow([row.timestamp.isoformat(), row.device_id, row.source_type, row.channel, row.phase, row.power_w, row.voltage_v, row.current_a, row.power_factor, row.energy_import_wh, row.energy_export_wh, row.total_power_w])
     return Response(content=output.getvalue(), media_type='text/csv', headers={'Content-Disposition': 'attachment; filename="bpstracker-measurements.csv"'})
+
+
+@router.get('/public/summary', response_model=SummaryResponse)
+def public_summary(db: Session = Depends(get_db)) -> SummaryResponse:
+    _require_public_dashboard(db)
+    return summary(None, db)  # type: ignore[arg-type]
+
+
+@router.get('/public/latest', response_model=list[MeasurementRead])
+def public_latest_measurements(db: Session = Depends(get_db)) -> list[Measurement | MeasurementRead]:
+    _require_public_dashboard(db)
+    return latest_measurements(None, db)  # type: ignore[arg-type]

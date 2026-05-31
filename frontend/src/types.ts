@@ -170,3 +170,8 @@ export interface ResetValuesResponse {
   deleted_daily_summaries: number;
   message: string;
 }
+
+
+export interface PublicDashboardSettings {
+  enabled: boolean;
+}

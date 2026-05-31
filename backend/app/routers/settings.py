@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models import AppSetting, AuditLog, User
-from ..schemas import AirSensorCurrent, AirSensorSettings, CurrentValuesApiSettings, FinanceSettings, KindleDisplaySettings, RetentionSettings, SimulationSettings, UiSettings
+from ..schemas import AirSensorCurrent, AirSensorSettings, CurrentValuesApiSettings, PublicDashboardSettings, FinanceSettings, KindleDisplaySettings, RetentionSettings, SimulationSettings, UiSettings
 from ..security import get_current_user, require_admin
 from ..simulation import simulated_air_sensor_current
 
@@ -22,6 +22,7 @@ RETENTION_SETTINGS_KEY = 'retention'
 AIR_SENSOR_SETTINGS_KEY = 'air_sensor'
 KINDLE_DISPLAY_SETTINGS_KEY = 'kindle_display'
 CURRENT_VALUES_API_SETTINGS_KEY = 'current_values_api'
+PUBLIC_DASHBOARD_SETTINGS_KEY = 'public_dashboard'
 SIMULATION_SETTINGS_KEY = 'simulation'
 SIMULATION_CACHE_KEY = 'simulation_cache'
 AIR_SENSOR_CACHE_KEY = 'air_sensor_cache'
@@ -310,6 +311,16 @@ def _normalize_current_values_api_value(value: dict | None) -> CurrentValuesApiS
     return CurrentValuesApiSettings(enabled=bool(value.get('enabled', False)))
 
 
+def _normalize_public_dashboard_value(value: dict | None) -> PublicDashboardSettings:
+    value = value or {}
+    return PublicDashboardSettings(enabled=bool(value.get('enabled', False)))
+
+
+def get_public_dashboard_settings_from_db(db: Session) -> PublicDashboardSettings:
+    row = db.get(AppSetting, PUBLIC_DASHBOARD_SETTINGS_KEY)
+    return _normalize_public_dashboard_value(row.value if row else None)
+
+
 def get_current_values_api_settings_from_db(db: Session) -> CurrentValuesApiSettings:
     row = db.get(AppSetting, CURRENT_VALUES_API_SETTINGS_KEY)
     return _normalize_current_values_api_value(row.value if row else None)
@@ -429,6 +440,31 @@ def update_kindle_display_settings(
     return _normalize_kindle_display_value(row.value)
 
 
+
+
+@router.get('/public-dashboard', response_model=PublicDashboardSettings)
+def get_public_dashboard_settings(_: User = Depends(require_admin), db: Session = Depends(get_db)) -> PublicDashboardSettings:
+    return get_public_dashboard_settings_from_db(db)
+
+
+@router.put('/public-dashboard', response_model=PublicDashboardSettings)
+def update_public_dashboard_settings(
+    payload: PublicDashboardSettings,
+    actor: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> PublicDashboardSettings:
+    normalized = _normalize_public_dashboard_value(payload.model_dump())
+    row = db.get(AppSetting, PUBLIC_DASHBOARD_SETTINGS_KEY)
+    value = normalized.model_dump()
+    if row is None:
+        row = AppSetting(key=PUBLIC_DASHBOARD_SETTINGS_KEY, value=value)
+        db.add(row)
+    else:
+        row.value = value
+    db.add(AuditLog(actor_user_id=actor.id, action='settings.public_dashboard.update', details=value))
+    db.commit()
+    db.refresh(row)
+    return _normalize_public_dashboard_value(row.value)
 
 
 @router.get('/current-values-api', response_model=CurrentValuesApiSettings)

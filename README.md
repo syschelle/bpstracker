@@ -452,6 +452,47 @@ Many older Kindle devices have problems with modern HTTPS/TLS. For local Kindle 
 
 ---
 
+## Public dashboard
+
+BPSTracker can expose a separate dashboard-only page without requiring a login.
+
+The feature can be enabled in Setup:
+
+```text
+Setup → Public dashboard / Öffentliches Dashboard
+```
+
+When enabled, the public page is available at:
+
+```text
+/public/dashboard
+```
+
+For example:
+
+```text
+http://<ip-address>:5173/public/dashboard
+```
+
+The public dashboard shows:
+
+- dashboard energy cards
+- device status
+- latest measurements
+
+It does not expose:
+
+- Setup
+- History
+- Account / 2FA
+- user management
+- backup actions
+- reset actions
+- admin functions
+
+Only enable this feature when these dashboard values may be visible to visitors on your network or via your reverse proxy.
+
+
 ## JSON API
 
 BPSTracker provides an optional JSON API for external tools, scripts, home automation systems or dashboards.

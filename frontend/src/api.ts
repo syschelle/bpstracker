@@ -1,4 +1,4 @@
-import type { AirSensorCurrent, AirSensorSettings, BackupCreateResponse, BackupInfo, CurrentValuesApiSettings, Device, FinanceSettings, KindleDisplaySettings, Measurement, RetentionSettings, ResetValuesResponse, SimulationSettings, Summary, UiSettings, User } from './types';
+import type { AirSensorCurrent, AirSensorSettings, BackupCreateResponse, BackupInfo, CurrentValuesApiSettings, Device, FinanceSettings, KindleDisplaySettings, Measurement, PublicDashboardSettings, RetentionSettings, ResetValuesResponse, SimulationSettings, Summary, UiSettings, User } from './types';
 
 type RuntimeConfig = {
   API_BASE_URL?: string;
@@ -103,6 +103,8 @@ export const api = {
   updateRetentionSettings: (payload: RetentionSettings) => request<RetentionSettings>('/api/settings/retention', { method: 'PUT', body: JSON.stringify(payload) }),
   kindleDisplaySettings: () => request<KindleDisplaySettings>('/api/settings/kindle-display'),
   updateKindleDisplaySettings: (payload: KindleDisplaySettings) => request<KindleDisplaySettings>('/api/settings/kindle-display', { method: 'PUT', body: JSON.stringify(payload) }),
+  publicDashboardSettings: () => request<PublicDashboardSettings>('/api/settings/public-dashboard'),
+  updatePublicDashboardSettings: (settings: PublicDashboardSettings) => request<PublicDashboardSettings>('/api/settings/public-dashboard', { method: 'PUT', body: JSON.stringify(settings) }),
   currentValuesApiSettings: () => request<CurrentValuesApiSettings>('/api/settings/current-values-api'),
   updateCurrentValuesApiSettings: (payload: CurrentValuesApiSettings) => request<CurrentValuesApiSettings>('/api/settings/current-values-api', { method: 'PUT', body: JSON.stringify(payload) }),
   simulationSettings: () => request<SimulationSettings>('/api/settings/simulation'),
@@ -118,6 +120,9 @@ export const api = {
   pollNow: (id: number) => request<Device>(`/api/devices/${id}/poll`, { method: 'POST' }),
   latest: () => request<Measurement[]>('/api/measurements/latest'),
   summary: () => request<Summary>('/api/measurements/summary'),
+  publicSummary: () => request<Summary>('/api/measurements/public/summary'),
+  publicLatest: () => request<Measurement[]>('/api/measurements/public/latest'),
+  publicDevices: () => request<Device[]>('/api/devices/public/status'),
   currentValues: () => request<Record<string, unknown>>('/api/current-values'),
   history: (hours: number) => {
     const end = new Date();

@@ -3,7 +3,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Activity, Euro, Globe2, History, LogOut, Menu, Moon, Plus, RefreshCcw, Settings, ShieldCheck, Sun, Droplets, Thermometer, Trash2, UserCog, Wind, Zap } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api, setToken, getToken } from './api';
-import type { AirSensorCurrent, AirSensorSettings, BackupInfo, CurrencyCode, CurrentValuesApiSettings, Device, DevicePurpose, DeviceType, FinanceSettings, KindleDisplaySettings, Language, Measurement, RetentionSettings, SimulationSettings, Summary, UiSettings, User } from './types';
+import type { AirSensorCurrent, AirSensorSettings, BackupInfo, CurrencyCode, CurrentValuesApiSettings, Device, DevicePurpose, DeviceType, FinanceSettings, KindleDisplaySettings, Language, Measurement, PublicDashboardSettings, RetentionSettings, SimulationSettings, Summary, UiSettings, User } from './types';
 
 type Tab = 'dashboard' | 'history' | 'setup' | 'account';
 type TranslationKey = keyof typeof translations.de;
@@ -200,6 +200,15 @@ const translations = {
     resetValuesButton: 'Alle Werte löschen',
     resetValuesDone: 'Alle Werte wurden gelöscht.',
     resetValuesConfirmPlaceholder: 'reset',
+    publicDashboardSettings: 'Öffentliches Dashboard',
+    publicDashboardHint: 'Aktiviert eine separate Dashboard-Seite ohne Login. Besucher sehen nur Dashboard-Werte, Gerätestatus und aktuelle Messwerte.',
+    enablePublicDashboard: 'Öffentliches Dashboard aktivieren',
+    publicDashboardSaved: 'Öffentliches Dashboard wurde gespeichert.',
+    publicDashboardLink: 'Öffentlicher Dashboard-Link',
+    openPublicDashboard: 'Öffentliches Dashboard öffnen',
+    publicDashboardDisabledHint: 'Nur aktivieren, wenn Besucher diese Werte ohne Anmeldung sehen dürfen.',
+    publicDashboardTitle: 'Öffentliches Dashboard',
+    publicDashboardLoadFailed: 'Öffentliches Dashboard konnte nicht geladen werden',
     currentValuesApiSettings: 'JSON-API',
     currentValuesApiHint: 'Stellt aktuelle BPSTracker-Werte als JSON unter /api/current-values bereit. Deaktiviere diese Option, wenn du die Schnittstelle nicht nutzt.',
     enableCurrentValuesApi: 'JSON-API aktivieren',
@@ -465,6 +474,15 @@ const translations = {
     resetValuesButton: 'Delete all values',
     resetValuesDone: 'All values have been deleted.',
     resetValuesConfirmPlaceholder: 'reset',
+    publicDashboardSettings: 'Public dashboard',
+    publicDashboardHint: 'Enables a separate dashboard page without login. Visitors only see dashboard values, device status and latest measurements.',
+    enablePublicDashboard: 'Enable public dashboard',
+    publicDashboardSaved: 'Public dashboard has been saved.',
+    publicDashboardLink: 'Public dashboard link',
+    openPublicDashboard: 'Open public dashboard',
+    publicDashboardDisabledHint: 'Only enable this if visitors may see these values without signing in.',
+    publicDashboardTitle: 'Public dashboard',
+    publicDashboardLoadFailed: 'Public dashboard could not be loaded',
     currentValuesApiSettings: 'JSON API',
     currentValuesApiHint: 'Provides current BPSTracker values as JSON at /api/current-values. Disable this option if you do not use the endpoint.',
     enableCurrentValuesApi: 'Enable JSON API',
@@ -750,6 +768,7 @@ function SimulationBanner() {
 }
 
 export default function App() {
+  const isPublicDashboardRoute = typeof window !== 'undefined' && window.location.pathname.replace(/\/$/, '') === '/public/dashboard';
   const [language, setLanguageState] = useState<Language>(readStoredLanguage);
   const [theme, setTheme] = useState<Theme>(readStoredTheme);
   const [user, setUser] = useState<User | null>(null);
@@ -771,6 +790,30 @@ export default function App() {
 
   const t = useCallback<Translator>((key, vars) => translate(language, key, vars), [language]);
   const i18n = useMemo<I18nContextValue>(() => ({ language, setLanguage, t }), [language, setLanguage, t]);
+
+  if (isPublicDashboardRoute) {
+    return (
+      <I18nContext.Provider value={i18n}>
+        <div className="public-dashboard-page">
+          <header className="public-dashboard-header">
+            <div>
+              <h1>{t('publicDashboardTitle')}</h1>
+              <p>BPSTracker</p>
+            </div>
+            <button
+              className="language-switch"
+              onClick={() => setLanguage(language === 'de' ? 'en' : 'de')}
+              aria-label={t('switchLanguage')}
+              title={t('switchLanguage')}
+            >
+              {language === 'de' ? 'EN' : 'DE'}
+            </button>
+          </header>
+          <PublicDashboard />
+        </div>
+      </I18nContext.Provider>
+    );
+  }
 
   const toggleTheme = useCallback(() => {
     setTheme(current => current === 'dark' ? 'light' : 'dark');
@@ -990,6 +1033,76 @@ function tabTitle(tab: Tab, t: Translator): string {
     setup: t('setup'),
     account: t('account2fa')
   }[tab];
+}
+
+
+function PublicDashboard() {
+  const { language, t } = useI18n();
+  const [summary, setSummary] = useState<Summary | null>(null);
+  const [latest, setLatest] = useState<Measurement[]>([]);
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  async function load() {
+    try {
+      const [summaryData, latestData, deviceData] = await Promise.all([api.publicSummary(), api.publicLatest(), api.publicDevices()]);
+      setSummary(summaryData);
+      setLatest(latestData);
+      setDevices(deviceData);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('publicDashboardLoadFailed'));
+    }
+  }
+
+  useEffect(() => {
+    void load();
+    const timer = window.setInterval(() => void load(), 10000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="grid gap public-dashboard-content">
+      {error && <div className="error">{error}</div>}
+      <div className="cards dashboard-cards">
+        <GridPowerMetric summary={summary} />
+        <DailyBalanceMetric summary={summary} />
+        <TotalBalanceMetric summary={summary} />
+        <CostBalanceMetric summary={summary} mode="daily" />
+        <CostBalanceMetric summary={summary} mode="total" />
+      </div>
+      <div className="dashboard-detail-grid">
+        <section className="panel dashboard-device-status">
+          <div className="panel-head"><h2>{t('deviceStatus')}</h2><button onClick={() => void load()}><RefreshCcw size={16} /> {t('refresh')}</button></div>
+          <div className="table-wrap compact-table-wrap">
+            <table className="compact-dashboard-table">
+              <thead><tr><th>{t('name')}</th><th>{t('status')}</th><th>{t('lastPoll')}</th></tr></thead>
+              <tbody>
+                {devices.map(device => <tr key={device.id}>
+                  <td>{device.name}</td>
+                  <td><span className={device.status?.online ? 'badge ok' : 'badge'}>{device.status?.online ? t('online') : t('offline')}</span></td>
+                  <td>{fmtDate(device.status?.last_success_at, language)}</td>
+                </tr>)}
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <section className="panel dashboard-latest-measurements">
+          <h2>{t('latestMeasurements')}</h2>
+          <div className="table-wrap compact-table-wrap">
+            <table className="compact-dashboard-table">
+              <thead><tr><th>{t('time')}</th><th>{t('channel')}</th><th>{t('phase')}</th><th>{t('power')}</th><th>{t('voltage')}</th></tr></thead>
+              <tbody>
+                {latest.map(row => <tr key={row.id}>
+                  <td>{fmtDate(row.timestamp, language)}</td><td>{row.channel ?? t('none')}</td><td>{row.phase ?? t('none')}</td><td>{fmtW(row.power_w, language)}</td><td>{row.voltage_v ?? t('none')}</td>
+                </tr>)}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
 }
 
 function Dashboard() {
@@ -1391,6 +1504,7 @@ function SetupView({ onCurrentUserChange }: { onCurrentUserChange: (user: User) 
       <GithubRepositoryPanel />
       <KindleDisplaySettingsPanel />
       <SimulationSettingsPanel />
+      <PublicDashboardSettingsPanel />
       <CurrentValuesApiSettingsPanel />
       <UserCredentialsPanel onCurrentUserChange={onCurrentUserChange} />
       <FinanceSettingsPanel />
@@ -1823,6 +1937,47 @@ function SimulationSettingsPanel() {
       </div>
       <p className="hint">{t('simulationWarning')}</p>
       <button onClick={() => void save()}>{t('saveSimulation')}</button>
+    </section>
+  );
+}
+
+
+function PublicDashboardSettingsPanel() {
+  const { t } = useI18n();
+  const [settings, setSettings] = useState<PublicDashboardSettings>({ enabled: false });
+  const [message, setMessage] = useState<string | null>(null);
+  const publicUrl = typeof window === 'undefined' ? '/public/dashboard' : `${window.location.origin}/public/dashboard`;
+
+  async function load() {
+    setSettings(await api.publicDashboardSettings());
+  }
+
+  useEffect(() => { void load(); }, []);
+
+  async function save() {
+    setMessage(null);
+    const saved = await api.updatePublicDashboardSettings({ enabled: settings.enabled });
+    setSettings(saved);
+    setMessage(t('publicDashboardSaved'));
+  }
+
+  return (
+    <section className="panel">
+      <div className="panel-head"><h2><Activity size={20} /> {t('publicDashboardSettings')}</h2></div>
+      <p className="hint">{t('publicDashboardHint')}</p>
+      {message && <div className="info">{message}</div>}
+      <div className="form-grid finance-form">
+        <label className="check"><input type="checkbox" checked={settings.enabled} onChange={e => setSettings({ enabled: e.target.checked })} /> {t('enablePublicDashboard')}</label>
+      </div>
+      <p className="hint">{t('publicDashboardDisabledHint')}</p>
+      {settings.enabled && (
+        <div className="api-preview">
+          <p className="hint">{t('publicDashboardLink')}</p>
+          <pre>{publicUrl}</pre>
+          <a className="button" href="/public/dashboard" target="_blank" rel="noreferrer">{t('openPublicDashboard')}</a>
+        </div>
+      )}
+      <button onClick={() => void save()}>{t('saveChanges')}</button>
     </section>
   );
 }

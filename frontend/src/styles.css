@@ -825,3 +825,36 @@ html[data-theme='dark'] .metric .home-import-value.zero {
 html[data-theme='dark'] .metric .home-import-value.positive {
   color: #e5e7eb !important;
 }
+
+
+.public-dashboard-page {
+  min-height: 100vh;
+  padding: 1.25rem;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.public-dashboard-header {
+  max-width: 1180px;
+  margin: 0 auto 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.public-dashboard-header h1 {
+  margin: 0;
+  font-size: clamp(1.35rem, 3vw, 2.1rem);
+}
+
+.public-dashboard-header p {
+  margin: 0.15rem 0 0;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.public-dashboard-content {
+  max-width: 1180px;
+  margin: 0 auto;
+}
