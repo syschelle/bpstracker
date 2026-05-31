@@ -44,6 +44,7 @@ const translations = {
     themeLight: 'Helles Theme',
     themeDark: 'Dunkles Theme',
     toggleTheme: 'Theme wechseln',
+    switchLanguage: 'Sprache wechseln',
     roleAdmin: 'Admin',
     roleViewer: 'Viewer',
     gridPower: 'Hausbezug',
@@ -308,6 +309,7 @@ const translations = {
     themeLight: 'Light theme',
     themeDark: 'Dark theme',
     toggleTheme: 'Toggle theme',
+    switchLanguage: 'Change language',
     roleAdmin: 'Admin',
     roleViewer: 'Viewer',
     gridPower: 'Home import',
@@ -921,6 +923,14 @@ export default function App() {
               </div>
               <div className="header-actions">
                 <AirSensorHeader />
+                <button
+                  className="language-switch"
+                  onClick={() => setLanguage(language === 'de' ? 'en' : 'de')}
+                  aria-label={t('switchLanguage')}
+                  title={t('switchLanguage')}
+                >
+                  {language === 'de' ? 'EN' : 'DE'}
+                </button>
                 <button className="icon-button theme-toggle" onClick={toggleTheme} aria-label={t('toggleTheme')} title={theme === 'dark' ? t('themeLight') : t('themeDark')}>
                   {theme === 'dark' ? <Sun size={19} /> : <Moon size={19} />}
                 </button>

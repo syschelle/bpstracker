@@ -780,3 +780,29 @@ html[data-theme='dark'] .simulation-banner {
   background: linear-gradient(135deg, rgba(20, 184, 166, 0.22), rgba(245, 158, 11, 0.18));
   border-color: rgba(20, 184, 166, 0.38);
 }
+
+
+.language-switch {
+  min-width: 2.75rem;
+  height: 2.35rem;
+  padding: 0 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(100, 116, 139, 0.28);
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--text);
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+.language-switch:hover {
+  transform: translateY(-1px);
+  border-color: rgba(13, 148, 136, 0.5);
+}
+
+html[data-theme='dark'] .language-switch {
+  background: rgba(15, 23, 42, 0.72);
+  border-color: rgba(148, 163, 184, 0.24);
+  color: #e5e7eb;
+}
