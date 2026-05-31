@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { QRCodeSVG } from 'qrcode.react';
 import { Activity, Euro, Globe2, History, LogOut, Menu, Moon, Plus, RefreshCcw, Settings, ShieldCheck, Sun, Droplets, Thermometer, Trash2, UserCog, Wind, Zap } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { api, setToken, getToken } from './api';
+import { api, setToken } from './api';
 import packageJson from '../package.json';
 import type { AirSensorCurrent, AirSensorSettings, BackupInfo, CurrencyCode, CurrentValuesApiSettings, Device, DevicePurpose, DeviceType, FinanceSettings, KindleDisplaySettings, Language, Measurement, PublicDashboardSettings, RetentionSettings, SimulationSettings, Summary, UiSettings, User } from './types';
 
@@ -980,7 +980,6 @@ export default function App() {
 
   useEffect(() => {
     if (installRequired !== false) return;
-    if (!getToken()) return;
     loadCurrentUserAndLanguage().catch(() => setToken(null));
   }, [installRequired, loadCurrentUserAndLanguage]);
 
@@ -1019,8 +1018,8 @@ export default function App() {
       const response = await api.login(loginUsername, loginPassword);
       if (response.requires_2fa && response.challenge_token) {
         setChallenge(response.challenge_token);
-      } else if (response.access_token) {
-        setToken(response.access_token);
+      } else {
+        setToken(null);
         await loadCurrentUserAndLanguage();
       }
     } catch (err) {
@@ -1035,8 +1034,8 @@ export default function App() {
     setError(null);
     setLoading(true);
     try {
-      const response = await api.verify2fa(challenge, twoFaCode);
-      setToken(response.access_token);
+      await api.verify2fa(challenge, twoFaCode);
+      setToken(null);
       await loadCurrentUserAndLanguage();
       setChallenge(null);
       setTwoFaCode('');
@@ -1048,6 +1047,7 @@ export default function App() {
   }
 
   function logout() {
+    void api.logout().catch(() => undefined);
     setToken(null);
     setUser(null);
     setChallenge(null);

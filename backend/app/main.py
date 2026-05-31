@@ -248,7 +248,7 @@ async def lifespan(app: FastAPI):
 
 
 settings = get_settings()
-app = FastAPI(title=settings.app_name, version='0.7.2', lifespan=lifespan)
+app = FastAPI(title=settings.app_name, version='0.7.3', lifespan=lifespan)
 
 configured_origins = [origin.strip() for origin in settings.frontend_origin.split(',') if origin.strip()]
 loopback_hosts = {'localhost', '127.0.0.1', '::1', '0.0.0.0'}
@@ -260,9 +260,10 @@ allow_all_origins = not configured_origins or '*' in configured_origins or only_
 app.add_middleware(
     CORSMiddleware,
     allow_origins=['*'] if allow_all_origins else configured_origins,
-    # BPSTracker uses Bearer tokens, not browser cookies. With allow_credentials=False we can safely
-    # support LAN deployments where the frontend may be opened via hostname or IP address. Old .env
-    # files with FRONTEND_ORIGIN=http://localhost:5173 are treated as local/LAN mode as well.
+    # Default deployments use same-origin /api/ proxying, so CORS is not involved.
+    # Cross-origin development setups must set FRONTEND_ORIGIN to explicit origins so
+    # browser cookies can be sent with credentials. Wildcard mode intentionally keeps
+    # credentials disabled because browsers reject credentialed '*' CORS responses.
     allow_credentials=False if allow_all_origins else True,
     allow_methods=['*'],
     allow_headers=['*'],

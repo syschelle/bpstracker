@@ -9,6 +9,13 @@ if [ ! -f .env ]; then
 fi
 
 mkdir -p /opt/bpstracker/data/postgres /opt/bpstracker/data/backend
+BACKEND_UID=10001
+BACKEND_GID=10001
+if command -v sudo >/dev/null 2>&1; then
+  sudo chown -R "${BACKEND_UID}:${BACKEND_GID}" /opt/bpstracker/data/backend
+else
+  chown -R "${BACKEND_UID}:${BACKEND_GID}" /opt/bpstracker/data/backend 2>/dev/null || true
+fi
 
 echo "Pulling BPSTracker images from GHCR..."
 docker compose -f docker-compose.images.yml pull

@@ -47,21 +47,30 @@ export class ApiError extends Error {
   }
 }
 
-export function getToken(): string | null {
-  return localStorage.getItem('bpstracker-token');
+function clearLegacyTokenStorage(): void {
+  try {
+    localStorage.removeItem('bpstracker-token');
+  } catch {
+    // ignore unavailable storage
+  }
 }
 
-export function setToken(token: string | null): void {
-  if (token) localStorage.setItem('bpstracker-token', token);
-  else localStorage.removeItem('bpstracker-token');
+clearLegacyTokenStorage();
+
+export function getToken(): string | null {
+  // Access tokens are stored in an HttpOnly cookie and are intentionally not readable by JavaScript.
+  return null;
+}
+
+export function setToken(_token: string | null): void {
+  // Kept as a compatibility shim for older call sites while clearing any pre-v0.7.3 localStorage JWT.
+  clearLegacyTokenStorage();
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers = new Headers(options.headers || {});
   if (!headers.has('Content-Type') && options.body) headers.set('Content-Type', 'application/json');
-  const token = getToken();
-  if (token) headers.set('Authorization', `Bearer ${token}`);
-  const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  const response = await fetch(`${API_BASE}${path}`, { ...options, headers, credentials: 'include' });
   if (!response.ok) {
     let message = response.statusText;
     try {
@@ -77,10 +86,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 async function download(path: string): Promise<Blob> {
-  const token = getToken();
-  const headers = new Headers();
-  if (token) headers.set('Authorization', `Bearer ${token}`);
-  const response = await fetch(`${API_BASE}${path}`, { headers });
+  const response = await fetch(`${API_BASE}${path}`, { credentials: 'include' });
   if (!response.ok) throw new ApiError(response.status, response.statusText);
   return response.blob();
 }
@@ -89,7 +95,8 @@ export const api = {
   installStatus: () => request<{ install_required: boolean }>('/api/install/status'),
   installAdmin: (username: string, password: string, confirm_password: string) => request<{ ok: boolean }>('/api/install/admin', { method: 'POST', body: JSON.stringify({ username, password, confirm_password }) }),
   login: (username: string, password: string) => request<{ access_token?: string; requires_2fa: boolean; challenge_token?: string }>('/api/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
-  verify2fa: (challenge_token: string, code: string) => request<{ access_token: string }>('/api/auth/2fa/verify', { method: 'POST', body: JSON.stringify({ challenge_token, code }) }),
+  verify2fa: (challenge_token: string, code: string) => request<{ access_token?: string; requires_2fa?: boolean }>('/api/auth/2fa/verify', { method: 'POST', body: JSON.stringify({ challenge_token, code }) }),
+  logout: () => request<void>('/api/auth/logout', { method: 'POST' }),
   me: () => request<User>('/api/auth/me'),
   setup2fa: () => request<{ secret: string; provisioning_uri: string }>('/api/auth/2fa/setup', { method: 'POST' }),
   enable2fa: (code: string) => request<User & { recovery_codes?: string[] }>('/api/auth/2fa/enable', { method: 'POST', body: JSON.stringify({ code }) }),

@@ -16,7 +16,7 @@ async def kindle_display_png() -> FileResponse:
 
     This endpoint intentionally remains unauthenticated when Kindle display
     generation is enabled, because Kindle cron/image fetch workflows generally
-    cannot attach bearer tokens. It does not trigger sensor reads or rendering
+    cannot attach authentication cookies or bearer tokens. It does not trigger sensor reads or rendering
     work except for the initial missing-file bootstrap. Control endpoints below
     are admin-only.
     """

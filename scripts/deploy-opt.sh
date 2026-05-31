@@ -27,6 +27,9 @@ fi
 sudo mkdir -p "$APP_DIR"
 sudo chown -R "$USER:$USER" "$APP_DIR"
 mkdir -p "$APP_DIR/data/postgres" "$APP_DIR/data/backend" "$APP_DIR/backups"
+BACKEND_UID=10001
+BACKEND_GID=10001
+sudo chown -R "${BACKEND_UID}:${BACKEND_GID}" "$APP_DIR/data/backend"
 
 if [ "$SRC_DIR_REAL" != "$APP_DIR_REAL" ]; then
   echo "Deploye BPSTracker von $SRC_DIR nach $APP_DIR ..."
@@ -42,6 +45,7 @@ else
 fi
 
 mkdir -p "$APP_DIR/data/postgres" "$APP_DIR/data/backend" "$APP_DIR/backups"
+sudo chown -R "${BACKEND_UID}:${BACKEND_GID}" "$APP_DIR/data/backend"
 
 if [ ! -f "$APP_DIR/.env" ]; then
   cp "$APP_DIR/.env.example" "$APP_DIR/.env"

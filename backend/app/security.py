@@ -14,8 +14,7 @@ from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
 from argon2.low_level import Type
 from cryptography.fernet import Fernet, InvalidToken
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends, HTTPException, Request, Response, status
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
@@ -35,7 +34,6 @@ argon2_hasher = PasswordHasher(
     type=Type.ID,
 )
 legacy_pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/api/auth/login')
 
 
 _ARGON2ID_PREFIX = '$argon2id$'
@@ -61,9 +59,10 @@ def verify_password(password: str, hashed: str) -> bool:
         except (VerifyMismatchError, VerificationError, InvalidHashError):
             return False
 
-    # Very early local test builds and the Growtent reference used plain SHA-256
-    # hex hashes. This is kept only as a one-way migration path so users are not
+    # DEPRECATED COMPATIBILITY: very early local test builds and the Growtent reference used
+    # plain SHA-256 hex hashes. Keep this only for the v0.7 migration window so users are not
     # locked out; successful logins are re-hashed as Argon2id by the auth router.
+    # TODO(security): remove SHA-256 verification after the announced deprecation window.
     normalized_hash = hashed.strip()
     if re.fullmatch(r'[A-Fa-f0-9]{64}', normalized_hash):
         digest = hashlib.sha256(password.encode('utf-8')).hexdigest()
@@ -116,7 +115,54 @@ def decode_token(token: str, expected_type: str = 'access') -> dict[str, Any]:
     return payload
 
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
+
+
+def _auth_cookie_settings() -> tuple[str, bool, str]:
+    settings = get_settings()
+    same_site = (settings.auth_cookie_samesite or 'lax').lower()
+    if same_site not in {'lax', 'strict', 'none'}:
+        same_site = 'lax'
+    secure = bool(settings.auth_cookie_secure or same_site == 'none')
+    return settings.auth_cookie_name or 'bpstracker_access_token', secure, same_site
+
+
+def set_auth_cookie(response: Response, token: str) -> None:
+    name, secure, same_site = _auth_cookie_settings()
+    max_age = int(get_settings().access_token_expire_minutes * 60)
+    response.set_cookie(
+        key=name,
+        value=token,
+        max_age=max_age,
+        expires=max_age,
+        path='/api',
+        secure=secure,
+        httponly=True,
+        samesite=same_site,
+    )
+
+
+def clear_auth_cookie(response: Response) -> None:
+    name, secure, same_site = _auth_cookie_settings()
+    response.delete_cookie(key=name, path='/api', secure=secure, httponly=True, samesite=same_site)
+
+
+def _bearer_token_from_header(request: Request) -> str | None:
+    authorization = request.headers.get('authorization') or ''
+    scheme, _, value = authorization.partition(' ')
+    if scheme.lower() != 'bearer' or not value.strip():
+        return None
+    return value.strip()
+
+
+def _access_token_from_request(request: Request) -> str | None:
+    name, _, _ = _auth_cookie_settings()
+    return request.cookies.get(name) or _bearer_token_from_header(request)
+
+
+def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
+    token = _access_token_from_request(request)
+    if not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Not authenticated')
     payload = decode_token(token, expected_type='access')
     subject = payload.get('sub')
     try:
@@ -173,11 +219,12 @@ def set_user_totp_secret(user: User, plain_secret: str | None) -> None:
 
 
 def get_user_totp_secret(user: User, db: Session | None = None) -> str | None:
-    """Return the plain TOTP secret.
+    """Return the decrypted TOTP secret.
 
-    Old test builds stored the secret in clear text. If such a value is found,
-    it is returned and, when a db session is supplied, immediately encrypted in
-    place so the migration is automatic.
+    DEPRECATED COMPATIBILITY: old test builds stored the secret in clear text. If such a
+    value is found, it is returned and, when a db session is supplied, immediately encrypted
+    in place so the migration is automatic. Remove this fallback after the announced
+    migration window.
     """
     if not user.totp_secret:
         return None
@@ -185,6 +232,7 @@ def get_user_totp_secret(user: User, db: Session | None = None) -> str | None:
     if decrypted:
         return decrypted
 
+    # TODO(security): remove this clear-text TOTP migration after the announced deprecation window.
     # Best-effort legacy migration: pyotp base32 secrets are normally uppercase
     # base32 values. Validate by constructing TOTP; don't log the value.
     candidate = user.totp_secret.strip()

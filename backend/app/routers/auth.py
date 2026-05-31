@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -23,6 +23,7 @@ from ..security import (
     consume_recovery_code,
     create_2fa_challenge_token,
     create_access_token,
+    clear_auth_cookie,
     decode_token,
     delete_recovery_codes,
     generate_totp_secret,
@@ -32,6 +33,7 @@ from ..security import (
     password_needs_rehash,
     replace_recovery_codes,
     require_admin,
+    set_auth_cookie,
     set_user_totp_secret,
     verify_password,
     verify_totp,
@@ -63,7 +65,7 @@ def _user_payload(user: User, recovery_codes: list[str] | None = None) -> dict:
 
 
 @router.post('/login', response_model=TokenResponse)
-def login(payload: LoginRequest, request: Request, db: Session = Depends(get_db)) -> TokenResponse:
+def login(payload: LoginRequest, request: Request, response: Response, db: Session = Depends(get_db)) -> TokenResponse:
     # Usernames are stored readable, but login should be forgiving about leading/trailing
     # whitespace and letter case. This prevents lockouts after manual setup edits.
     username = payload.username.strip()
@@ -100,11 +102,13 @@ def login(payload: LoginRequest, request: Request, db: Session = Depends(get_db)
 
     if user.role == UserRole.admin and user.totp_enabled:
         return TokenResponse(requires_2fa=True, challenge_token=create_2fa_challenge_token(str(user.id)))
-    return TokenResponse(access_token=create_access_token(str(user.id)), requires_2fa=False)
+
+    set_auth_cookie(response, create_access_token(str(user.id)))
+    return TokenResponse(requires_2fa=False)
 
 
 @router.post('/2fa/verify', response_model=TokenResponse)
-def verify_2fa(payload: TwoFaVerifyRequest, request: Request, db: Session = Depends(get_db)) -> TokenResponse:
+def verify_2fa(payload: TwoFaVerifyRequest, request: Request, response: Response, db: Session = Depends(get_db)) -> TokenResponse:
     client_key = client_rate_limit_key(request)
     challenge_key = _hash_key(payload.challenge_token)
     _enforce_limiter(TWO_FA_IP_LIMIT, client_key)
@@ -133,7 +137,15 @@ def verify_2fa(payload: TwoFaVerifyRequest, request: Request, db: Session = Depe
         db.add(AuditLog(actor_user_id=user.id, action='auth.2fa.recovery_code.used', details={}))
         db.commit()
 
-    return TokenResponse(access_token=create_access_token(str(user.id)), requires_2fa=False)
+    set_auth_cookie(response, create_access_token(str(user.id)))
+    return TokenResponse(requires_2fa=False)
+
+
+@router.post('/logout')
+def logout(response: Response) -> Response:
+    clear_auth_cookie(response)
+    response.status_code = status.HTTP_204_NO_CONTENT
+    return response
 
 
 @router.get('/me', response_model=UserRead)

@@ -146,7 +146,7 @@ Typischer Betrieb:
 Browser / Kindle / API-Client
         |
         v
-Frontend / nginx :5173
+Frontend / nginx Host-Port :5173 → Container :8080
         |
         v
 Backend / FastAPI :8000
@@ -221,7 +221,7 @@ Start mit lokalem Build:
 bash ./deploy.sh
 ```
 
-Bei einer frischen Datenbank öffnet sich in der Weboberfläche zuerst die Ersteinrichtung. Dort legt der erste Anwender den Admin-Benutzernamen und das Admin-Passwort fest. In `.env` werden keine Admin- oder Viewer-Zugangsdaten ausgeliefert.
+Bei einer frischen Datenbank öffnet sich in der Weboberfläche zuerst die Ersteinrichtung. Dort legt der erste Anwender den Admin-Benutzernamen und das Admin-Passwort fest. In `.env` werden keine Admin- oder Viewer-Zugangsdaten ausgeliefert. Vor Produktivbetrieb müssen `POSTGRES_PASSWORD`, `DATABASE_URL` und `SECRET_KEY` auf starke Werte gesetzt werden; Docker Compose verweigert den Start, wenn erforderliche Secrets fehlen.
 
 Die Weboberfläche ist anschließend erreichbar unter:
 
@@ -388,7 +388,7 @@ BPSTracker kann ein Kindle-kompatibles PNG erzeugen:
 http://<ip-adresse>:5173/api/kindle/display.png
 ```
 
-Die Datei wird im Hintergrund erzeugt und kann regelmäßig vom Kindle abgeholt werden. `display.png` bleibt bewusst als optional öffentlicher Cache-Endpunkt verfügbar, weil viele Kindle-/E-Ink-Abrufe keine Bearer-Token mitsenden können. Metadaten und manuelles Refresh sind davon getrennt und nur für Admins erreichbar.
+Die Datei wird im Hintergrund erzeugt und kann regelmäßig vom Kindle abgeholt werden. `display.png` bleibt bewusst als optional öffentlicher Cache-Endpunkt verfügbar, weil viele Kindle-/E-Ink-Abrufe keine Auth-Cookies oder Bearer-Token mitsenden können. Metadaten und manuelles Refresh sind davon getrennt und nur für Admins erreichbar.
 
 Angezeigt werden unter anderem:
 
@@ -704,12 +704,20 @@ Empfehlungen:
 - den initialen Admin nur über die Ersteinrichtung beim ersten Start anlegen
 - starke Passwörter verwenden
 - 2FA aktivieren
+- den HttpOnly-Cookie-Auth-Modus beibehalten und keine Browser-Token-Speicherung in `localStorage` wieder einführen
+- bei reinem HTTPS-Betrieb `AUTH_COOKIE_SECURE=true` setzen
 - Shelly- und Luftdaten-Hosts nur als LAN-Host/IP konfigurieren; öffentliche, Loopback- und Metadata-IP-Adressen werden blockiert
 - fehlgeschlagene Login- und 2FA-Versuche werden serverseitig begrenzt
+- Container-Hardening aktiviert lassen: non-root Backend/Frontend, read-only Dateisysteme, gedroppte Linux-Capabilities und `no-new-privileges`
+- Backend- und Datenbank-Port nicht veröffentlichen; Browser-Zugriffe über den nginx-Same-Origin-Proxy `/api/` führen
 - regelmäßige verschlüsselte Backups erstellen
 - Backup-Passwort sicher verwahren
 - öffentliche Exponierung nur über Reverse Proxy mit HTTPS
 - GitHub Container Registry Images bevorzugt mit festen Release-Tags verwenden
+
+Die Anmeldung verwendet standardmäßig ein HttpOnly-Cookie `bpstracker_access_token`. Das Frontend speichert den JWT nicht mehr in `localStorage`; alte `bpstracker-token`-Einträge aus Versionen vor v0.7.3 werden beim Laden der UI gelöscht. Cross-Origin-Entwicklungsumgebungen müssen explizite `FRONTEND_ORIGIN`-Werte setzen, weil credentialed Wildcard-CORS absichtlich deaktiviert bleibt.
+
+Die SHA-256-Passwortmigration und die Migration alter Klartext-TOTP-Secrets bleiben nur noch für das v0.7-Migrationsfenster erhalten. Betreiber sollten alle Benutzer einmal anmelden lassen, damit Passwörter auf Argon2id aktualisiert werden, und 2FA neu einrichten, falls noch ein alter Klartext-TOTP-Wert genutzt wird. Beide Kompatibilitätspfade sind für ein späteres Security-Release zur Entfernung vorgesehen.
 
 ---
 

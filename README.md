@@ -282,7 +282,7 @@ Browser / Kindle / local integration
       |
       | HTTP
       v
-Frontend container :5173
+Frontend/nginx host port :5173 → container :8080
       |
       | internal Docker network
       v
@@ -440,7 +440,7 @@ Example:
 http://192.168.178.211:5173/api/kindle/display.png
 ```
 
-The URL is intentionally fixed and does not require query parameters. `display.png` intentionally remains an optional public, cache-only image endpoint for Kindle/e-ink fetch jobs that cannot attach bearer tokens. It does not expose metadata and does not provide a manual refresh API.
+The URL is intentionally fixed and does not require query parameters. `display.png` intentionally remains an optional public, cache-only image endpoint for Kindle/e-ink fetch jobs that cannot attach authentication cookies or bearer tokens. It does not expose metadata and does not provide a manual refresh API.
 
 ### Kindle display activation
 
@@ -487,7 +487,7 @@ A metadata endpoint is available for authenticated administrators only:
 GET /api/kindle/meta
 ```
 
-It can be used in the setup UI or with an admin bearer token to verify:
+It can be used in the setup UI or with an authenticated admin session or API bearer token to verify:
 
 - whether the Kindle display is enabled
 - when the last image was generated
@@ -830,7 +830,7 @@ Deploy the application:
 bash ./deploy.sh
 ```
 
-On a fresh database, open the web interface and complete the initial setup screen. The first user sets the admin username and password there. No admin or viewer credentials are shipped in `.env`.
+On a fresh database, open the web interface and complete the initial setup screen. The first user sets the admin username and password there. No admin or viewer credentials are shipped in `.env`. Before production use, replace `POSTGRES_PASSWORD`, `DATABASE_URL` and `SECRET_KEY` with strong values; Docker Compose now refuses to start when required secrets are missing.
 
 The deployment is designed to install and run the application below:
 
@@ -1370,12 +1370,20 @@ Recommendations:
 - create the initial admin only through the install screen on first start
 - use strong admin and optional viewer passwords
 - enable admin 2FA
+- keep the default HttpOnly cookie auth mode; do not reintroduce browser localStorage token storage
+- set `AUTH_COOKIE_SECURE=true` when the app is served exclusively through HTTPS
 - access remotely only through VPN or another trusted private network
 - enable optional APIs only when they are needed
 - configure Shelly and Luftdaten hosts as LAN hosts/IPs only; public, loopback and metadata IPs are rejected
 - failed login and 2FA verification attempts are rate-limited in-process
+- keep container hardening enabled: non-root backend/frontend images, read-only filesystems, dropped Linux capabilities and `no-new-privileges`
+- leave the backend and database ports unexposed; route browser traffic through the nginx same-origin `/api/` proxy
 
-The Kindle display image and JSON API are designed for simple local access and should not be exposed publicly. Kindle `refresh` and `meta` endpoints require an admin bearer token.
+Authentication uses an HttpOnly `bpstracker_access_token` cookie by default. The frontend no longer stores the JWT in `localStorage`; stale pre-v0.7.3 `bpstracker-token` values are cleared by the UI. Cross-origin development setups must configure explicit `FRONTEND_ORIGIN` values because credentialed wildcard CORS is intentionally disabled.
+
+The Kindle display image and JSON API are designed for simple local access and should not be exposed publicly. Kindle `refresh` and `meta` endpoints require an authenticated admin session.
+
+Legacy SHA-256 password verification and clear-text TOTP secret migration remain only for the v0.7 migration window. Operators should ensure all users log in once so password hashes are upgraded to Argon2id and should re-create 2FA if they still depend on an old clear-text TOTP value; both compatibility paths are scheduled for removal in a later security release.
 
 ---
 
