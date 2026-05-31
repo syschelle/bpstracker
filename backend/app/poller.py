@@ -7,11 +7,11 @@ from sqlalchemy.orm import Session
 
 from .config import get_settings
 from .database import SessionLocal
-from .models import Device, DeviceStatus, Measurement, utcnow
+from .models import Device, DeviceStatus, DeviceType, Measurement, utcnow
 from .energy_retention import cleanup_old_raw_measurements, ensure_completed_daily_summaries
 from .routers.settings import get_retention_settings_from_db
 from .security import decrypt_secret
-from .shelly import ShellyClient, ShellyCredentials, ShellyDeviceConfig, ShellyClientError
+from .shelly import ShellyClient, ShellyCredentials, ShellyDeviceConfig, ShellyClientError, detected_device_type
 
 
 class Poller:
@@ -91,6 +91,10 @@ async def poll_and_store_device(db: Session, device: Device, client: ShellyClien
     status = get_or_create_status(db, device.id)
     try:
         result = await client.poll(config)
+        if device.device_type == DeviceType.auto:
+            persisted_type = detected_device_type(result.detected_type, result.generation)
+            if persisted_type is not None and persisted_type != DeviceType.auto:
+                device.device_type = persisted_type
         for measurement in result.measurements:
             db.add(
                 Measurement(

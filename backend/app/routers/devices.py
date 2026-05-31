@@ -5,12 +5,12 @@ from sqlalchemy.orm import Session, joinedload
 
 from ..config import get_settings
 from ..database import get_db
-from ..models import AuditLog, Device, User
+from ..models import AuditLog, Device, DeviceType, User
 from ..poller import poll_and_store_device
 from ..schemas import DeviceCreate, DeviceRead, DeviceUpdate, TestDeviceResponse
 from ..security import decrypt_secret, encrypt_secret, get_current_user, require_admin
 from ..network_security import OutboundHostError
-from ..shelly import ShellyClient, ShellyCredentials, ShellyDeviceConfig, ShellyClientError, normalize_shelly_host
+from ..shelly import ShellyClient, ShellyCredentials, ShellyDeviceConfig, ShellyClientError, detected_device_type, normalize_shelly_host
 
 router = APIRouter(prefix='/api/devices', tags=['devices'])
 
@@ -30,11 +30,32 @@ def list_devices(_: User = Depends(get_current_user), db: Session = Depends(get_
 
 
 @router.post('', response_model=DeviceRead)
-def create_device(payload: DeviceCreate, user: User = Depends(require_admin), db: Session = Depends(get_db)) -> Device:
+async def create_device(payload: DeviceCreate, user: User = Depends(require_admin), db: Session = Depends(get_db)) -> Device:
     host = _normalize_device_host_or_400(payload.host)
+    device_type = payload.device_type
+    detected_type_value: str | None = None
+    if payload.device_type == DeviceType.auto:
+        client = ShellyClient(timeout_seconds=get_settings().shelly_timeout_seconds)
+        config = ShellyDeviceConfig(
+            host=host,
+            device_type=DeviceType.auto,
+            channel=payload.channel,
+            credentials=ShellyCredentials(username=payload.username, password=payload.password),
+        )
+        try:
+            result = await client.poll(config)
+            detected_type_value = result.detected_type
+            detected = detected_device_type(result.detected_type, result.generation)
+            if detected is not None:
+                device_type = detected
+        except ShellyClientError:
+            # Keep manual recovery possible for temporarily unreachable devices.
+            # Successful background/manual polls will persist the detected type later.
+            pass
+
     device = Device(
         name=payload.name,
-        device_type=payload.device_type,
+        device_type=device_type,
         purpose=payload.purpose.value if hasattr(payload.purpose, 'value') else payload.purpose,
         host=host,
         username=payload.username,
@@ -44,7 +65,11 @@ def create_device(payload: DeviceCreate, user: User = Depends(require_admin), db
         channel=payload.channel,
     )
     db.add(device)
-    db.add(AuditLog(actor_user_id=user.id, action='device.create', details={'name': payload.name, 'host': host}))
+    details = {'name': payload.name, 'host': host}
+    if detected_type_value:
+        details['detected_type'] = detected_type_value
+        details['persisted_type'] = device_type.value if hasattr(device_type, 'value') else str(device_type)
+    db.add(AuditLog(actor_user_id=user.id, action='device.create', details=details))
     db.commit()
     db.refresh(device)
     return db.query(Device).options(joinedload(Device.status)).filter(Device.id == device.id).one()

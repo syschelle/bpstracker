@@ -58,6 +58,29 @@ def normalize_shelly_host(host: str | None) -> str | None:
     return normalize_outbound_http_host(host)
 
 
+def detected_device_type(detected_type: str | None, generation: str | None = None) -> DeviceType | None:
+    """Map a runtime Shelly detection result to a persisted configuration type.
+
+    Runtime detection can be more specific than the user-facing DeviceType enum
+    (for example ``shelly_ng_switch_pm``). Persist the closest supported enum so
+    an auto-created device does not remain in the ambiguous ``auto`` mode after
+    a successful detection.
+    """
+    value = str(detected_type or '').strip().lower()
+    gen = str(generation or '').strip().lower()
+    if value == DeviceType.shelly_3em_gen1.value:
+        return DeviceType.shelly_3em_gen1
+    if value == DeviceType.shelly_pro_3em_gen2.value:
+        return DeviceType.shelly_pro_3em_gen2
+    if value == DeviceType.shelly_2pm_gen4.value:
+        return DeviceType.shelly_2pm_gen4
+    if value == 'shelly_ng_switch_pm':
+        return DeviceType.shelly_2pm_gen4 if gen in {'4', 'gen4'} else DeviceType.shelly_ng_generic
+    if value == DeviceType.shelly_ng_generic.value:
+        return DeviceType.shelly_ng_generic
+    return None
+
+
 def _auth(credentials: ShellyCredentials | None) -> httpx.Auth | None:
     if credentials and credentials.username and credentials.password:
         return httpx.DigestAuth(credentials.username, credentials.password)

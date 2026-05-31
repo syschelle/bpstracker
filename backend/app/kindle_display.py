@@ -59,7 +59,7 @@ def _is_grid_row(row: Measurement, purposes: dict[int, str]) -> bool:
         return False
     if purpose == DEVICE_PURPOSE_GRID:
         return True
-    return purpose == DEVICE_PURPOSE_AUTO and row.source_type in GRID_POWER_SOURCES
+    return purpose == DEVICE_PURPOSE_AUTO and row.source_type in (GRID_POWER_SOURCES | GRID_ENERGY_SOURCES)
 
 KINDLE_OUTPUT_PATH = Path('/app/data/kindle-display.png')
 KINDLE_TMP_PATH = Path('/app/data/kindle-display.tmp.png')

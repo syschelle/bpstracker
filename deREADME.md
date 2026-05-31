@@ -790,3 +790,7 @@ curl -fsS "http://127.0.0.1:${FRONTEND_PORT:-5173}/health"
 ```
 
 Die Port-Ausgabe soll `8080/tcp -> 0.0.0.0:5173` enthalten, nicht `80/tcp -> 0.0.0.0:5173`.
+
+### v0.7.6 Dashboard-Bilanzen und Shelly-Autoerkennung
+
+v0.7.6 behebt zwei Regressionen nach Neuinstallationen und den letzten Hardening-Schritten. Die Tages-/Gesamtenergie und Kostenbilanzen im Dashboard berücksichtigen jetzt Shelly-Netzbezugs-Energiezähler auch dann, wenn das Gerät noch auf automatischer Zweck-Erkennung steht. Außerdem wird bei erfolgreicher Shelly-Autoerkennung der erkannte Gerätetyp gespeichert, damit neu angelegte oder erfolgreich gepollte Geräte nicht dauerhaft auf `auto` bleiben.

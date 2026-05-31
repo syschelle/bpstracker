@@ -63,7 +63,7 @@ def _is_grid_row(row: Measurement | MeasurementRead, purposes: dict[int, str]) -
         return False
     if purpose == DEVICE_PURPOSE_GRID:
         return True
-    return purpose == DEVICE_PURPOSE_AUTO and row.source_type in GRID_POWER_SOURCES
+    return purpose == DEVICE_PURPOSE_AUTO and row.source_type in (GRID_POWER_SOURCES | GRID_ENERGY_SOURCES)
 
 
 def _solar_power_value(row: Measurement | MeasurementRead) -> float | None:

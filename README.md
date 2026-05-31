@@ -1533,3 +1533,7 @@ curl -fsS "http://127.0.0.1:${FRONTEND_PORT:-5173}/health"
 ```
 
 Expected port output contains `8080/tcp -> 0.0.0.0:5173`, not `80/tcp -> 0.0.0.0:5173`.
+
+### v0.7.6 dashboard balances and Shelly auto-detection fix
+
+v0.7.6 fixes two regressions after fresh installations and recent hardening work. Dashboard day/total energy and cost balances now include Shelly grid energy counter rows while a device is still in automatic purpose mode. Successful Shelly auto-detection also persists the detected device type so newly added or successfully polled devices do not remain configured as `auto`.
