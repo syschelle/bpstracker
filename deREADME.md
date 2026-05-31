@@ -758,4 +758,35 @@ docker compose ps
 curl -fsS "http://127.0.0.1:${FRONTEND_PORT:-5173}/health"
 ```
 
-Der Frontend-Healthcheck hängt nicht mehr von `wget` oder `curl` im nginx-Image ab. Er prüft die erzeugte Runtime-Konfiguration, den statischen App-Einstiegspunkt und den laufenden nginx-Prozess.
+v0.7.5 stellt wieder einen expliziten HTTP-Healthcheck gegen den gehärteten internen nginx-Port `8080` her, damit der Containerstatus den tatsächlich ausgelieferten `/health`-Endpunkt prüft.
+
+
+### v0.7.5 Frontend-Port-Mapping-Fix
+
+Dieses Release macht den bestätigten v0.7.3/v0.7.4-Deployment-Fix in beiden Compose-Dateien und den Deployment-Skripten eindeutig: Der Host-Port bleibt über `${FRONTEND_PORT:-5173}` konfigurierbar, muss aber auf den internen nginx-Port `8080` des Frontend-Containers zeigen.
+
+Richtiges Mapping:
+
+```yaml
+ports:
+  - "${FRONTEND_PORT:-5173}:8080"
+```
+
+Altes falsches Mapping:
+
+```yaml
+ports:
+  - "${FRONTEND_PORT:-5173}:80"
+```
+
+Der Frontend-Healthcheck prüft jetzt `http://127.0.0.1:8080/health` im Container. `deploy-images.sh` erstellt Container mit `--force-recreate --remove-orphans` neu, damit alte `5173:80`-Mappings bei Image-Deployments entfernt werden.
+
+Upgrade-Prüfung auf dem Server:
+
+```bash
+docker compose ps
+docker port bpstracker-frontend
+curl -fsS "http://127.0.0.1:${FRONTEND_PORT:-5173}/health"
+```
+
+Die Port-Ausgabe soll `8080/tcp -> 0.0.0.0:5173` enthalten, nicht `80/tcp -> 0.0.0.0:5173`.

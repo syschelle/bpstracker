@@ -21,7 +21,8 @@ echo "Pulling BPSTracker images from GHCR..."
 docker compose -f docker-compose.images.yml pull
 
 echo "Starting BPSTracker..."
-docker compose -f docker-compose.images.yml up -d
+echo "Recreating containers so old frontend port mappings such as 5173:80 are removed..."
+docker compose -f docker-compose.images.yml up -d --remove-orphans --force-recreate
 
 echo
 echo "Container status:"
