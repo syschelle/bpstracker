@@ -1329,9 +1329,9 @@ function HistoryView() {
             type="monotone"
             dataKey="gridImport"
             name={t('gridImportShare')}
-            stroke="#172033"
-            fill="#172033"
-            fillOpacity={0.16}
+            stroke="#2563eb"
+            fill="#2563eb"
+            fillOpacity={0.20}
             strokeWidth={2}
             dot={false}
             activeDot={{ r: 4 }}

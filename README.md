@@ -1333,3 +1333,6 @@ BPSTracker is a private monitoring tool for local energy visualization. It is no
 
 
 In simulation mode, configured devices are also simulated according to their purpose. You can create planned Shelly devices before they physically exist and assign purposes such as `Solar/feed-in` or `Home/grid import`.
+
+
+<!-- UI: grid import history color has stronger contrast in dark theme. -->
