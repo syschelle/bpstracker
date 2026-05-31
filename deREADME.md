@@ -744,3 +744,18 @@ https://github.com/syschelle/bpstracker
 
 
 <!-- API: Öffentliche Gerätestatus- und Einzelmesswerte-Endpunkte entfernt; öffentliches Dashboard nutzt nur aggregierte Übersicht und Luftsensorwerte. -->
+
+
+### v0.7.4 Frontend-Healthcheck-Hotfix
+
+Der Frontend-Container nutzt das unprivileged-nginx-Image und lauscht im Container auf Port `8080`. Die URL am Host bleibt unverändert, zum Beispiel `http://<server-ip>:5173`, weil Docker `${FRONTEND_PORT:-5173}` auf den Container-Port `8080` abbildet.
+
+Nach einem Upgrade von einem Image vor v0.7.3 muss der Frontend-Container neu erstellt werden; ein bloßer Restart reicht nicht zuverlässig. Sonst kann noch ein alter Container auf Port `80` lauschen, während die gehärtete Compose-Datei bereits auf `8080` mapped:
+
+```bash
+docker compose up -d --build --force-recreate frontend
+docker compose ps
+curl -fsS "http://127.0.0.1:${FRONTEND_PORT:-5173}/health"
+```
+
+Der Frontend-Healthcheck hängt nicht mehr von `wget` oder `curl` im nginx-Image ab. Er prüft die erzeugte Runtime-Konfiguration, den statischen App-Einstiegspunkt und den laufenden nginx-Prozess.

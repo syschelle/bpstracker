@@ -19,5 +19,13 @@ echo "=== PostgreSQL logs ==="
 docker compose -p "$PROJECT_NAME" logs --tail=120 postgres || true
 
 echo
+echo "=== Frontend health state ==="
+docker inspect --format='{{json .State.Health}}' bpstracker-frontend 2>/dev/null || true
+
+echo
+echo "=== Frontend port mapping ==="
+docker port bpstracker-frontend 2>/dev/null || true
+
+echo
 echo "=== Frontend logs ==="
 docker compose -p "$PROJECT_NAME" logs --tail=120 frontend || true

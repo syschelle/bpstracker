@@ -81,7 +81,7 @@ services:
       - /var/cache/nginx:size=32m,noexec,nosuid,nodev
       - /var/run:size=8m,noexec,nosuid,nodev
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health >/dev/null || exit 1"]
+      test: ["CMD-SHELL", 'test -s /usr/share/nginx/html/index.html && test -s /tmp/bpstracker-config/config.js && [ "$$(cat /proc/1/comm 2>/dev/null)" = nginx ]']
       interval: 30s
       timeout: 5s
       retries: 5

@@ -1487,3 +1487,18 @@ In simulation mode, configured devices are also simulated according to their pur
 
 
 <!-- API: Removed public device status and latest measurement endpoints; public dashboard only uses aggregate summary and air sensor values. -->
+
+
+### v0.7.4 frontend healthcheck hotfix
+
+The frontend container uses the unprivileged nginx image and listens on container port `8080`. The host-facing URL stays unchanged, for example `http://<server-ip>:5173`, because Docker maps `${FRONTEND_PORT:-5173}` to container port `8080`.
+
+After upgrading from a pre-v0.7.3 image, recreate the frontend container instead of only restarting it. Otherwise an old image/container may still listen on port `80` while the hardened compose file maps to `8080`:
+
+```bash
+docker compose up -d --build --force-recreate frontend
+docker compose ps
+curl -fsS "http://127.0.0.1:${FRONTEND_PORT:-5173}/health"
+```
+
+The frontend healthcheck no longer depends on `wget` or `curl` being present in the nginx image. It validates the generated runtime config, the static app entrypoint, and the running nginx process.
