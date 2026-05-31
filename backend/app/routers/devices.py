@@ -7,24 +7,11 @@ from ..config import get_settings
 from ..database import get_db
 from ..models import AuditLog, Device, User
 from ..poller import poll_and_store_device
-from ..routers.settings import get_public_dashboard_settings_from_db
 from ..schemas import DeviceCreate, DeviceRead, DeviceUpdate, TestDeviceResponse
 from ..security import decrypt_secret, encrypt_secret, get_current_user, require_admin
 from ..shelly import ShellyClient, ShellyCredentials, ShellyDeviceConfig, ShellyClientError
 
 router = APIRouter(prefix='/api/devices', tags=['devices'])
-
-
-def _require_public_dashboard(db: Session) -> None:
-    if not get_public_dashboard_settings_from_db(db).enabled:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Public dashboard is disabled')
-
-
-@router.get('/public/status', response_model=list[DeviceRead])
-def public_device_status(db: Session = Depends(get_db)) -> list[Device]:
-    _require_public_dashboard(db)
-    return db.query(Device).options(joinedload(Device.status)).order_by(Device.name).all()
-
 
 @router.get('', response_model=list[DeviceRead])
 def list_devices(_: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[Device]:

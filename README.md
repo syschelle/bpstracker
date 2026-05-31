@@ -1475,3 +1475,6 @@ In simulation mode, configured devices are also simulated according to their pur
 
 
 <!-- Version: The displayed app version is maintained in `frontend/package.json`. -->
+
+
+<!-- API: Removed public device status and latest measurement endpoints; public dashboard only uses aggregate summary and air sensor values. -->

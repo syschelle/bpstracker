@@ -479,8 +479,3 @@ def public_summary(db: Session = Depends(get_db)) -> SummaryResponse:
     _require_public_dashboard(db)
     return summary(None, db)  # type: ignore[arg-type]
 
-
-@router.get('/public/latest', response_model=list[MeasurementRead])
-def public_latest_measurements(db: Session = Depends(get_db)) -> list[Measurement | MeasurementRead]:
-    _require_public_dashboard(db)
-    return latest_measurements(None, db)  # type: ignore[arg-type]

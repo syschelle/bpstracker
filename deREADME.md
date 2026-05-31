@@ -448,12 +448,13 @@ http://<ip-adresse>:5173/public/dashboard
 
 Die öffentliche Seite zeigt:
 
-- Dashboard-Kacheln
-- Gerätestatus
-- aktuelle Messwerte
+- Dashboard-Kacheln mit aggregierten Energiewerten
+- aktuelle Luftsensorwerte, falls der Luftsensor eingerichtet ist
 
 Sie zeigt **nicht**:
 
+- Gerätestatus
+- aktuelle Einzelmesswerte
 - Setup
 - Historie
 - Account / 2FA
@@ -462,7 +463,7 @@ Sie zeigt **nicht**:
 - Reset-Funktionen
 - Admin-Funktionen
 
-Die öffentlichen Backend-Endpunkte funktionieren nur, wenn die Freigabe im Setup aktiv ist. Ist die Freigabe deaktiviert, ist das öffentliche Dashboard nicht verfügbar.
+Die öffentlichen Backend-Endpunkte liefern nur die für diese Seite nötigen aggregierten Werte, wenn die Freigabe im Setup aktiv ist. Ist die Freigabe deaktiviert, ist das öffentliche Dashboard nicht verfügbar.
 
 Aktiviere diese Funktion nur, wenn diese Werte für Besucher in deinem Netzwerk oder über deinen Reverse Proxy sichtbar sein dürfen.
 
@@ -730,3 +731,6 @@ https://github.com/syschelle/bpstracker
 
 
 <!-- Version: Die angezeigte App-Version wird in `frontend/package.json` gepflegt. -->
+
+
+<!-- API: Öffentliche Gerätestatus- und Einzelmesswerte-Endpunkte entfernt; öffentliches Dashboard nutzt nur aggregierte Übersicht und Luftsensorwerte. -->
