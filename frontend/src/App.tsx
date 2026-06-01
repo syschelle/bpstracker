@@ -1234,10 +1234,11 @@ function AchievementHeader() {
   const definition = achievementDefinition(achievement.id);
   if (!definition) return null;
 
+  const achievementText = t(definition.translationKey);
+
   return (
-    <div className="achievement-header-widget" title={t('achievementTitle')}>
+    <div className="achievement-header-widget" title={achievementText} aria-label={achievementText}>
       <img src={definition.image} alt="" aria-hidden="true" />
-      <span>{t(definition.translationKey)}</span>
     </div>
   );
 }

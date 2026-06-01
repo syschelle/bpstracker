@@ -1561,6 +1561,10 @@ v0.7.9 keeps the merged dashboard table but restores one latest measurement row 
 
 v0.7.6 fixes two regressions after fresh installations and recent hardening work. Dashboard day/total energy and cost balances now include Shelly grid energy counter rows while a device is still in automatic purpose mode. Successful Shelly auto-detection also persists the detected device type so newly added or successfully polled devices do not remain configured as `auto`.
 
+### v0.7.12 header achievement badge tooltip
+
+v0.7.12 keeps the dashboard achievement in the header compact: only the badge icon is shown. The localized achievement text is now exposed as the hover tooltip and accessibility label, so German and English users see the text according to the active language selection without the header growing wider.
+
 ### v0.7.11 achievement progression update
 
 v0.7.11 refreshes the dashboard achievement flow. A new GoLive badge is unlocked after the system summary loads successfully, while the first solar badge is only unlocked after the configured balcony PV system has actually produced solar energy (`solar_total_kwh > 0`). Savings-based achievements continue up to 120 currency units; later progress achievements now use the configured investment amortization percentage at 25%, 50%, 75% and 100% instead of raw saved money. The English first-solar text now matches the German "electricity empire" wording more closely.

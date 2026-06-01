@@ -892,25 +892,17 @@ html[data-theme='dark'] .metric .home-import-value.positive {
 
 
 .achievement-header-widget {
-  max-width: min(28rem, 42vw);
+  width: 2.75rem;
+  height: 2.75rem;
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.55rem 0.8rem;
+  justify-content: center;
+  padding: 0.35rem;
   border-radius: 999px;
   background: linear-gradient(135deg, rgba(250, 204, 21, 0.22), rgba(34, 197, 94, 0.16));
   border: 1px solid rgba(234, 179, 8, 0.34);
-  color: var(--text);
-  font-weight: 900;
-  font-size: 0.78rem;
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.09);
-  overflow: hidden;
-}
-
-.achievement-header-widget span {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  cursor: help;
 }
 
 html[data-theme='dark'] .achievement-header-widget {
@@ -920,22 +912,25 @@ html[data-theme='dark'] .achievement-header-widget {
 
 @media (max-width: 980px) {
   .achievement-header-widget {
-    max-width: 100%;
     order: 4;
   }
 }
 
-
 .achievement-header-widget img {
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 2rem;
+  height: 2rem;
   flex: 0 0 auto;
   border-radius: 999px;
 }
 
 @media (max-width: 560px) {
+  .achievement-header-widget {
+    width: 2.4rem;
+    height: 2.4rem;
+  }
+
   .achievement-header-widget img {
-    width: 1.5rem;
-    height: 1.5rem;
+    width: 1.65rem;
+    height: 1.65rem;
   }
 }
