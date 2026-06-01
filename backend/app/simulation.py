@@ -156,8 +156,20 @@ def simulated_values_at(utc_dt: datetime, timezone_name: str | None = DEFAULT_TI
 
 
 
+def _enum_value(value: Any) -> str:
+    return str(getattr(value, 'value', value) or '')
+
+
 def _purpose_of(device: Any) -> str:
-    return str(getattr(device, 'purpose', None) or 'auto')
+    return _enum_value(getattr(device, 'purpose', None) or 'auto')
+
+
+def _device_type_of(device: Any) -> str:
+    return _enum_value(getattr(device, 'device_type', None) or 'auto')
+
+
+def _is_three_phase_grid_device(device: Any) -> bool:
+    return _device_type_of(device) in {'auto', 'shelly_3em_gen1', 'shelly_pro_3em_gen2'}
 
 
 def _active_devices(devices: list[Any] | None) -> list[Any]:
@@ -181,6 +193,71 @@ def _split_value(total: float, count: int, index: int) -> float:
     weights = [1.0 + 0.08 * math.sin((i + 1) * 1.7) for i in range(count)]
     total_weight = sum(weights)
     return total * weights[index] / total_weight
+
+
+def _three_phase_grid_values(total_power_w: float) -> list[tuple[int, str, float, float]]:
+    # Keep the simulated 3EM close to real Shelly 3EM rows: three phase rows
+    # plus a separate total row. The deterministic skew makes the phases look
+    # realistic while preserving the exact aggregate power.
+    base_voltages = [230.7, 229.9, 229.6]
+    weights = [0.18, 0.16, 0.66]
+    phase_powers = [round(total_power_w * weight, 1) for weight in weights]
+    phase_powers[-1] = round(total_power_w - sum(phase_powers[:-1]), 1)
+    return [
+        (index, f'L{index + 1}', phase_powers[index], base_voltages[index])
+        for index in range(3)
+    ]
+
+
+def _append_simulated_3em_rows(
+    rows: list[MeasurementRead],
+    *,
+    row_id: int,
+    device: Any,
+    values: SimulatedValues,
+    grid_w: float,
+) -> int:
+    configured_channel = getattr(device, 'channel', None)
+    phase_rows = _three_phase_grid_values(grid_w)
+    for channel, phase, power_w, voltage_v in phase_rows:
+        if configured_channel is not None and channel != configured_channel:
+            continue
+        rows.append(MeasurementRead(
+            id=row_id,
+            timestamp=values.timestamp,
+            device_id=int(getattr(device, 'id', row_id)),
+            source_type='shelly_3em_gen1_emeter',
+            channel=channel,
+            phase=phase,
+            power_w=power_w,
+            voltage_v=voltage_v,
+            current_a=round(abs(power_w) / voltage_v, 2),
+            power_factor=0.98,
+            energy_import_wh=round(values.import_today_kwh * 1000 / 3.0, 1),
+            energy_export_wh=round(values.export_today_kwh * 1000 / 3.0, 1),
+            total_power_w=grid_w,
+        ))
+        row_id -= 1
+
+    if configured_channel is None:
+        rows.append(MeasurementRead(
+            id=row_id,
+            timestamp=values.timestamp,
+            device_id=int(getattr(device, 'id', row_id)),
+            source_type='shelly_3em_gen1_total',
+            channel=None,
+            phase='total',
+            power_w=grid_w,
+            voltage_v=None,
+            current_a=None,
+            power_factor=None,
+            energy_import_wh=None,
+            energy_export_wh=None,
+            total_power_w=grid_w,
+        ))
+        row_id -= 1
+
+    return row_id
 
 
 def simulated_summary(timezone_name: str, *, kwh_price: float, investment: float, currency_code: str, devices: list[Any] | None = None) -> SummaryResponse:
@@ -279,6 +356,9 @@ def simulated_latest(timezone_name: str, devices: list[Any] | None = None) -> li
 
     for index, device in enumerate(grid_devices):
         grid_w = _split_value(values.grid_w, len(grid_devices), index)
+        if _is_three_phase_grid_device(device):
+            row_id = _append_simulated_3em_rows(rows, row_id=row_id, device=device, values=values, grid_w=grid_w)
+            continue
         rows.append(MeasurementRead(
             id=row_id,
             timestamp=values.timestamp,
