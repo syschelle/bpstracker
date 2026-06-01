@@ -171,6 +171,9 @@ const translations = {
     feedInNotPaidHint: 'Einspeisung wird mit 0 vergütet. Die Akku-Bewertung nutzt den eingespeisten Überschuss als möglichen Speicher-Nutzen.',
     enableBatteryAnalysis: 'Akku-Amortisationsberechnung aktivieren',
     batteryAnalysisDisabled: 'Akku-Amortisationsberechnung ist deaktiviert.',
+    batteryDetails: 'Berechnungsdetails',
+    copyBatteryDetails: 'Details kopieren',
+    batteryDetailsCopied: 'Kopiert',
     batteryCost: 'Akku-Kosten',
     batteryCapacity: 'Akku-Kapazität',
     batteryAnalysis: 'Akku-Bewertung',
@@ -474,6 +477,9 @@ const translations = {
     feedInNotPaidHint: 'Grid export is valued at 0. The battery analysis uses exported surplus as potential battery benefit.',
     enableBatteryAnalysis: 'Enable battery amortization calculation',
     batteryAnalysisDisabled: 'Battery amortization calculation is disabled.',
+    batteryDetails: 'Calculation details',
+    copyBatteryDetails: 'Copy details',
+    batteryDetailsCopied: 'Copied',
     batteryCost: 'Battery cost',
     batteryCapacity: 'Battery capacity',
     batteryAnalysis: 'Battery analysis',
@@ -1864,6 +1870,7 @@ function CostBalanceMetric({ summary, mode }: { summary: Summary | null; mode: '
 
 function AmortizationMetric({ summary }: { summary: Summary | null }) {
   const { language, t } = useI18n();
+  const [batteryDetailsCopied, setBatteryDetailsCopied] = useState(false);
   const currency = summary?.currency_code;
   const investment = summary?.investment_cost_eur ?? 0;
   const progress = summary?.breakeven_progress_percent;
@@ -1878,6 +1885,30 @@ function AmortizationMetric({ summary }: { summary: Summary | null }) {
   const batteryConfigured = batteryEnabled && batteryCost > 0 && batteryCapacity > 0;
   const batteryPaybackDays = summary?.battery_payback_days;
   const batteryWorthwhile = summary?.battery_worthwhile;
+  const batteryDetailRows = batteryConfigured ? [
+    [t('batteryUsableSurplusToday'), fmtKwh(summary?.battery_usable_surplus_today_kwh, language)],
+    [t('batterySavingsToday'), fmtCurrency(summary?.battery_savings_today_eur, language, currency)],
+    [t('batteryPayback'), batteryPaybackDays === null || batteryPaybackDays === undefined ? '∞' : fmtDays(batteryPaybackDays, language, t)],
+    [t('batteryOpenBps'), fmtCurrency(summary?.battery_remaining_bps_investment_eur, language, currency)],
+    [t('batteryCombinedInvestment'), fmtCurrency(summary?.battery_combined_investment_eur, language, currency)],
+    [t('batteryCombinedPayback'), summary?.battery_combined_payback_days === null || summary?.battery_combined_payback_days === undefined ? '∞' : fmtDays(summary.battery_combined_payback_days, language, t)],
+  ] : [];
+  const batteryDetailCopyText = batteryConfigured
+    ? `${batteryDetailRows.map(([label, value]) => `${label}: ${value}`).join('\n')}\n${t('batteryAssumption')}`
+    : '';
+
+  async function copyBatteryDetails() {
+    if (!batteryDetailCopyText) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(batteryDetailCopyText);
+      setBatteryDetailsCopied(true);
+      window.setTimeout(() => setBatteryDetailsCopied(false), 1800);
+    } catch {
+      setBatteryDetailsCopied(false);
+    }
+  }
 
   return (
     <div className="metric amortization-metric">
@@ -1901,22 +1932,25 @@ function AmortizationMetric({ summary }: { summary: Summary | null }) {
       <div className="battery-analysis">
         <p>{t('batteryAnalysis')}</p>
         {!batteryEnabled ? (
-          <small>{t('batteryAnalysisDisabled')}</small>
+          <small className="battery-analysis-status">{t('batteryAnalysisDisabled')}</small>
         ) : batteryConfigured ? (
           <>
-            <div className="daily-balance-list">
-              <div><span>{t('batteryUsableSurplusToday')}</span><strong>{fmtKwh(summary?.battery_usable_surplus_today_kwh, language)}</strong></div>
-              <div><span>{t('batterySavingsToday')}</span><strong>{fmtCurrency(summary?.battery_savings_today_eur, language, currency)}</strong></div>
-              <div><span>{t('batteryPayback')}</span><strong>{batteryPaybackDays === null || batteryPaybackDays === undefined ? '∞' : fmtDays(batteryPaybackDays, language, t)}</strong></div>
-              <div><span>{t('batteryOpenBps')}</span><strong>{fmtCurrency(summary?.battery_remaining_bps_investment_eur, language, currency)}</strong></div>
-              <div><span>{t('batteryCombinedInvestment')}</span><strong>{fmtCurrency(summary?.battery_combined_investment_eur, language, currency)}</strong></div>
-              <div><span>{t('batteryCombinedPayback')}</span><strong>{summary?.battery_combined_payback_days === null || summary?.battery_combined_payback_days === undefined ? '∞' : fmtDays(summary.battery_combined_payback_days, language, t)}</strong></div>
+            <small className="battery-analysis-status">{batteryWorthwhile ? t('batteryWorthwhile') : t('batteryNotWorthwhile')}</small>
+            <div className="embedded-copy-box battery-detail-box">
+              <div className="embedded-copy-head">
+                <span>{t('batteryDetails')}</span>
+                <button type="button" onClick={() => void copyBatteryDetails()}>{batteryDetailsCopied ? t('batteryDetailsCopied') : t('copyBatteryDetails')}</button>
+              </div>
+              <div className="daily-balance-list">
+                {batteryDetailRows.map(([label, value]) => (
+                  <div key={label}><span>{label}</span><strong>{value}</strong></div>
+                ))}
+              </div>
+              <small>{t('batteryAssumption')}</small>
             </div>
-            <small>{batteryWorthwhile ? t('batteryWorthwhile') : t('batteryNotWorthwhile')}</small>
-            <small>{t('batteryAssumption')}</small>
           </>
         ) : (
-          <small>{t('batteryMissing')}</small>
+          <small className="battery-analysis-status">{t('batteryMissing')}</small>
         )}
       </div>
     </div>
