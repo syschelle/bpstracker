@@ -265,6 +265,10 @@ Only the frontend port needs to be exposed to the local network. Backend and dat
 
 ## Architecture
 
+A possible BPSTracker setup separates grid import measurement from balcony solar generation measurement:
+
+![Possible BPSTracker system setup](docs/images/bpstracker-system-setup.png)
+
 BPSTracker consists of three main services:
 
 ```text
@@ -1568,3 +1572,8 @@ v0.7.12 keeps the dashboard achievement in the header compact: only the badge ic
 ### v0.7.11 achievement progression update
 
 v0.7.11 refreshes the dashboard achievement flow. A new GoLive badge is unlocked after the system summary loads successfully, while the first solar badge is only unlocked after the configured balcony PV system has actually produced solar energy (`solar_total_kwh > 0`). Savings-based achievements continue up to 120 currency units; later progress achievements now use the configured investment amortization percentage at 25%, 50%, 75% and 100% instead of raw saved money. The English first-solar text now matches the German "electricity empire" wording more closely.
+
+
+### v0.7.13 README architecture diagram
+
+v0.7.13 adds the BPSTracker system setup schematic to the README files. The diagram documents the typical deployment with separate grid import and balcony solar measurement, Shelly-based metering, the BPSTracker server stack, browser/mobile clients, the public dashboard and Kindle display retrieval via `display.png`.

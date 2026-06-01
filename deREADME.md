@@ -131,6 +131,10 @@ Nur der Frontend-Port muss im lokalen Netzwerk erreichbar sein. Backend und Date
 
 ## Architektur
 
+Das folgende Schema zeigt einen möglichen BPSTracker-Aufbau mit getrenntem Netzbezug und separat gemessener Balkonsolar-Erzeugung:
+
+![Possible BPSTracker system setup](docs/images/bpstracker-system-setup.png)
+
 BPSTracker besteht aus mehreren Komponenten:
 
 ```text
@@ -835,3 +839,8 @@ v0.7.12 hält den Header kompakter: Im Header wird nur noch das Achievement-Badg
 ### v0.7.11 Achievement-Fortschritt überarbeitet
 
 v0.7.11 überarbeitet die Dashboard-Achievements. Ein neues GoLive-Badge wird vergeben, sobald die System-Summary erfolgreich geladen wurde. Das Badge „Erster Sonnenstrom“ wird erst vergeben, wenn das konfigurierte Balkonkraftwerk tatsächlich Solarenergie produziert hat (`solar_total_kwh > 0`). Die Ersparnis-Badges bleiben bis 120 Währungseinheiten erhalten; danach werden weitere Achievements über den Amortisationsfortschritt bei 25 %, 50 %, 75 % und 100 % ausgelöst, nicht mehr über die reine Geldersparnis. Der englische Text für den ersten Sonnenstrom entspricht jetzt sinngemäß der deutschen Stromimperium-Formulierung.
+
+
+### v0.7.13 README-Architekturbild
+
+v0.7.13 ergänzt die README-Dateien um das BPSTracker-Systemschema. Das Bild zeigt den typischen Aufbau mit getrenntem Netzbezug, separat gemessener Balkonsolar-Erzeugung, Shelly-Messgeräten, BPSTracker-Server, Browser-/Mobile-Clients, öffentlichem Dashboard und Kindle-Abruf von `display.png`.
