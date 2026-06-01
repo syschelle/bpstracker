@@ -317,7 +317,7 @@ The backend remains private inside the Docker network.
 The screenshots show the dashboard, the color-coded history view and the setup page with simulation mode and optional integrations.
 
 
-The screenshot above shows the desktop dashboard with live energy cards, air sensor values, device status and latest measurements.
+The screenshot above shows the desktop dashboard with live energy cards, air sensor values and a combined device status/current measurements table. Optional details such as channel, phase, voltage or current are hidden when they are not configured or not present in the latest data.
 
 
 BPSTracker is optimized for desktop and mobile browsers.
@@ -1543,6 +1543,11 @@ curl -fsS "http://127.0.0.1:${FRONTEND_PORT:-5173}/health"
 ```
 
 Expected port output contains `8080/tcp -> 0.0.0.0:5173`, not `80/tcp -> 0.0.0.0:5173`.
+
+
+### v0.7.8 dashboard device measurements cleanup
+
+v0.7.8 merges the separate device status and latest measurements panels into one compact dashboard table. The table keeps one row per device and hides optional columns such as channel, phase, voltage and current unless at least one configured device or latest measurement actually contains that value.
 
 ### v0.7.6 dashboard balances and Shelly auto-detection fix
 

@@ -315,8 +315,8 @@ Das Dashboard zeigt unter anderem:
 - Gesamtkostenbilanz
 - Amortisation
 - Akku-Bewertung, falls aktiviert
-- Gerätestatus
-- aktuelle Messwerte
+- zusammengeführter Gerätestatus mit aktuellen Messwerten
+- automatisch ausgeblendete optionale Messwertspalten, wenn sie nicht konfiguriert oder nicht vorhanden sind
 - Luftdaten im Header, falls aktiviert
 - Simulationshinweis, falls der Demo-Modus aktiv ist
 
@@ -810,6 +810,11 @@ curl -fsS "http://127.0.0.1:${FRONTEND_PORT:-5173}/health"
 ```
 
 Die Port-Ausgabe soll `8080/tcp -> 0.0.0.0:5173` enthalten, nicht `80/tcp -> 0.0.0.0:5173`.
+
+
+### v0.7.8 Dashboard-Geräteansicht bereinigt
+
+v0.7.8 führt die bisherigen Dashboard-Kacheln **Gerätestatus** und **Aktuelle Messwerte** zu einer kompakten Tabelle zusammen. Die Tabelle zeigt eine Zeile pro Gerät und blendet optionale Spalten wie Kanal, Phase, Spannung und Strom automatisch aus, wenn sie nicht konfiguriert sind oder in den aktuellen Messwerten nicht vorkommen.
 
 ### v0.7.6 Dashboard-Bilanzen und Shelly-Autoerkennung
 

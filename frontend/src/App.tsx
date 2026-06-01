@@ -99,6 +99,7 @@ const translations = {
     basedOnToday: 'auf Basis der heutigen Einsparung',
     financeCalculationHint: 'Berechnung: Verbrauchskosten = Bezug × kWh-Preis. Einsparung = Solarproduktion × kWh-Preis. Tageswerte nutzen die Tagesbilanz, Gesamtwerte nutzen dauerhaft gespeicherte Tagesaggregate und aktuelle Zählerstände.',
     deviceStatus: 'Gerätestatus',
+    dashboardDeviceMeasurements: 'Gerätestatus & aktuelle Messwerte',
     refresh: 'Aktualisieren',
     name: 'Name',
     host: 'Host',
@@ -109,6 +110,7 @@ const translations = {
     online: 'online',
     offline: 'offline',
     latestMeasurements: 'Aktuelle Messwerte',
+    noLatestMeasurement: 'Noch keine Messung',
     time: 'Zeit',
     device: 'Gerät',
     source: 'Quelle',
@@ -390,6 +392,7 @@ const translations = {
     basedOnToday: 'based on today’s savings',
     financeCalculationHint: 'Calculation: consumption cost = import × kWh price. Savings = solar production × kWh price. Daily values use the daily balance; total values use permanently stored daily aggregates and current counters.',
     deviceStatus: 'Device status',
+    dashboardDeviceMeasurements: 'Device status & latest measurements',
     refresh: 'Refresh',
     name: 'Name',
     host: 'Host',
@@ -400,6 +403,7 @@ const translations = {
     online: 'online',
     offline: 'offline',
     latestMeasurements: 'Latest measurements',
+    noLatestMeasurement: 'No measurement yet',
     time: 'Time',
     device: 'Device',
     source: 'Source',
@@ -1334,37 +1338,68 @@ function Dashboard() {
         <CostBalanceMetric summary={summary} mode="daily" />
         <CostBalanceMetric summary={summary} mode="total" />
       </div>
-      <div className="dashboard-detail-grid">
-        <section className="panel dashboard-device-status">
-          <div className="panel-head"><h2>{t('deviceStatus')}</h2><button onClick={() => void load()}><RefreshCcw size={16} /> {t('refresh')}</button></div>
-          <div className="table-wrap compact-table-wrap">
-            <table className="compact-dashboard-table">
-              <thead><tr><th>{t('name')}</th><th>{t('status')}</th><th>{t('lastPoll')}</th></tr></thead>
-              <tbody>
-                {devices.map(device => <tr key={device.id}>
-                  <td>{device.name}</td>
-                  <td><span className={device.status?.online ? 'badge ok' : 'badge'}>{device.status?.online ? t('online') : t('offline')}</span></td>
-                  <td>{fmtDate(device.status?.last_success_at, language)}</td>
-                </tr>)}
-              </tbody>
-            </table>
-          </div>
-        </section>
-        <section className="panel dashboard-latest-measurements">
-          <h2>{t('latestMeasurements')}</h2>
-          <div className="table-wrap compact-table-wrap">
-            <table className="compact-dashboard-table">
-              <thead><tr><th>{t('time')}</th><th>{t('channel')}</th><th>{t('phase')}</th><th>{t('power')}</th><th>{t('voltage')}</th></tr></thead>
-              <tbody>
-                {latest.map(row => <tr key={row.id}>
-                  <td>{fmtDate(row.timestamp, language)}</td><td>{row.channel ?? t('none')}</td><td>{row.phase ?? t('none')}</td><td>{fmtW(row.power_w, language)}</td><td>{row.voltage_v ?? t('none')}</td>
-                </tr>)}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </div>
+      <DashboardDeviceMeasurements devices={devices} latest={latest} onRefresh={load} />
     </div>
+  );
+}
+
+function DashboardDeviceMeasurements({ devices, latest, onRefresh }: { devices: Device[]; latest: Measurement[]; onRefresh: () => Promise<void> }) {
+  const { language, t } = useI18n();
+  const latestByDevice = new Map<number, Measurement>();
+
+  latest.forEach(row => {
+    const current = latestByDevice.get(row.device_id);
+    if (!current || new Date(row.timestamp).getTime() > new Date(current.timestamp).getTime()) {
+      latestByDevice.set(row.device_id, row);
+    }
+  });
+
+  const rows = devices.map(device => ({ device, measurement: latestByDevice.get(device.id) ?? null }));
+  const measurementRows = rows.map(row => row.measurement).filter((row): row is Measurement => row !== null);
+  const hasChannel = rows.some(row => row.device.channel !== null && row.device.channel !== undefined) || measurementRows.some(row => row.channel !== null && row.channel !== undefined);
+  const hasPhase = measurementRows.some(row => Boolean(row.phase));
+  const hasVoltage = measurementRows.some(row => row.voltage_v !== null && row.voltage_v !== undefined);
+  const hasCurrent = measurementRows.some(row => row.current_a !== null && row.current_a !== undefined);
+
+  return (
+    <section className="panel dashboard-device-measurements">
+      <div className="panel-head">
+        <h2>{t('dashboardDeviceMeasurements')}</h2>
+        <button onClick={() => void onRefresh()}><RefreshCcw size={16} /> {t('refresh')}</button>
+      </div>
+      <div className="table-wrap compact-table-wrap">
+        <table className="compact-dashboard-table">
+          <thead>
+            <tr>
+              <th>{t('name')}</th>
+              <th>{t('status')}</th>
+              <th>{t('lastPoll')}</th>
+              <th>{t('time')}</th>
+              {hasChannel && <th>{t('channel')}</th>}
+              {hasPhase && <th>{t('phase')}</th>}
+              <th>{t('power')}</th>
+              {hasVoltage && <th>{t('voltage')}</th>}
+              {hasCurrent && <th>{t('current')}</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(({ device, measurement }) => (
+              <tr key={device.id}>
+                <td>{device.name}</td>
+                <td><span className={device.status?.online ? 'badge ok' : 'badge'}>{device.status?.online ? t('online') : t('offline')}</span></td>
+                <td>{fmtDate(device.status?.last_success_at, language)}</td>
+                <td>{measurement ? fmtDate(measurement.timestamp, language) : t('noLatestMeasurement')}</td>
+                {hasChannel && <td>{measurement?.channel ?? device.channel ?? t('none')}</td>}
+                {hasPhase && <td>{measurement?.phase || t('none')}</td>}
+                <td>{measurement ? fmtW(measurement.power_w ?? measurement.total_power_w ?? measurement.grid_power_w ?? measurement.solar_power_w, language) : t('none')}</td>
+                {hasVoltage && <td>{measurement?.voltage_v ?? t('none')}</td>}
+                {hasCurrent && <td>{measurement?.current_a ?? t('none')}</td>}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
 
