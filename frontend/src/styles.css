@@ -954,3 +954,38 @@ html[data-theme='dark'] .achievement-header-widget {
 .help-document hr { width: 100%; border: 0; border-top: 1px solid #e7ebf5; margin: 0.75rem 0; }
 .help-document .table-wrap { margin: 0.25rem 0 0.75rem; }
 .help-document table { min-width: 0; }
+
+html[data-theme='dark'] .help-document {
+  color: #dbe4f0;
+}
+html[data-theme='dark'] .help-document h2,
+html[data-theme='dark'] .help-document h3,
+html[data-theme='dark'] .help-document h4,
+html[data-theme='dark'] .help-document h5 {
+  color: #f8fafc;
+}
+html[data-theme='dark'] .help-document h2,
+html[data-theme='dark'] .help-document hr,
+html[data-theme='dark'] .help-document figure img {
+  border-color: #334155;
+}
+html[data-theme='dark'] .help-document a {
+  color: #5eead4;
+}
+html[data-theme='dark'] .help-document blockquote {
+  background: #0f2f2e;
+  color: #d1fae5;
+  border-left-color: #2dd4bf;
+}
+html[data-theme='dark'] .help-document figure img {
+  background: #f8fafc;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.32);
+}
+html[data-theme='dark'] .help-document .table-wrap {
+  border-color: #253149;
+}
+html[data-theme='dark'] .help-document table,
+html[data-theme='dark'] .help-document td,
+html[data-theme='dark'] .help-document th {
+  color: #dbe4f0;
+}
