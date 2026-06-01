@@ -827,3 +827,7 @@ v0.7.9 behält die zusammengeführte Dashboard-Tabelle bei, zeigt aber wieder ei
 ### v0.7.6 Dashboard-Bilanzen und Shelly-Autoerkennung
 
 v0.7.6 behebt zwei Regressionen nach Neuinstallationen und den letzten Hardening-Schritten. Die Tages-/Gesamtenergie und Kostenbilanzen im Dashboard berücksichtigen jetzt Shelly-Netzbezugs-Energiezähler auch dann, wenn das Gerät noch auf automatischer Zweck-Erkennung steht. Außerdem wird bei erfolgreicher Shelly-Autoerkennung der erkannte Gerätetyp gespeichert, damit neu angelegte oder erfolgreich gepollte Geräte nicht dauerhaft auf `auto` bleiben.
+
+### v0.7.11 Achievement-Fortschritt überarbeitet
+
+v0.7.11 überarbeitet die Dashboard-Achievements. Ein neues GoLive-Badge wird vergeben, sobald die System-Summary erfolgreich geladen wurde. Das Badge „Erster Sonnenstrom“ wird erst vergeben, wenn das konfigurierte Balkonkraftwerk tatsächlich Solarenergie produziert hat (`solar_total_kwh > 0`). Die Ersparnis-Badges bleiben bis 120 Währungseinheiten erhalten; danach werden weitere Achievements über den Amortisationsfortschritt bei 25 %, 50 %, 75 % und 100 % ausgelöst, nicht mehr über die reine Geldersparnis. Der englische Text für den ersten Sonnenstrom entspricht jetzt sinngemäß der deutschen Stromimperium-Formulierung.

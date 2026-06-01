@@ -56,6 +56,7 @@ const translations = {
     toggleTheme: 'Theme wechseln',
     switchLanguage: 'Sprache wechseln',
     achievementTitle: 'Energiespar-Erfolg',
+    achievementGoLive: '🪖 GoLive: Super, es läuft – aber du bist noch auf der dunklen Seite der Macht!',
     achievementFirstSolar: '☀️ Erster Sonnenstrom: Auf dem Weg zum Stromimperium!',
     achievementCoffee: '☕ Kaffee-Kasse geladen: Du hast schon Geld für einen Kaffee gespart!',
     achievementCake: '🍰 Kuchen-Level erreicht: Die Sonne spendiert dir ein Stück Kuchen.',
@@ -64,7 +65,10 @@ const translations = {
     achievementPlant: '🌱 Pflanzenfreund: Deine Ersparnis fühlt sich schon ziemlich grün an.',
     achievementGadget: '🔌 Technik-Bonus: Das reicht schon für ein kleines Smart-Home-Gadget.',
     achievementDinner: '🍽️ Sonnen-Dinner: Deine PV spart sich Richtung Abendessen.',
-    achievementLegend: '🏆 Solar-Legende: Deine Anlage arbeitet sich ernsthaft in Richtung Gewinnzone.',
+    achievementAmortization25: '🚀 Viertel geschafft: 25 % deiner Investition sind wieder drin.',
+    achievementAmortization50: '⚡ Halbe Macht: 50 % Amortisation erreicht.',
+    achievementAmortization75: '🛡️ Fast durch: 75 % der Investition sind zurück.',
+    achievementAmortization100: '🏆 Breakeven: Deine Anlage hat sich amortisiert!',
     roleAdmin: 'Admin',
     roleViewer: 'Viewer',
     gridPower: 'Hausbezug',
@@ -350,7 +354,8 @@ const translations = {
     toggleTheme: 'Toggle theme',
     switchLanguage: 'Change language',
     achievementTitle: 'Solar saving achievement',
-    achievementFirstSolar: '☀️ First solar power: your system generated electricity for the first time!',
+    achievementGoLive: '🪖 Go-live: great, it runs — but you are still on the dark side of the power!',
+    achievementFirstSolar: '☀️ First solar power: on the way to your electricity empire!',
     achievementCoffee: '☕ Coffee fund unlocked: you have already saved enough for a coffee!',
     achievementCake: '🍰 Cake level reached: the sun is buying you a slice of cake.',
     achievementPizza: '🍕 Pizza power: your system has earned a pizza.',
@@ -358,7 +363,10 @@ const translations = {
     achievementPlant: '🌱 Plant friend: your savings are looking nicely green.',
     achievementGadget: '🔌 Gadget bonus: enough for a small smart-home gadget.',
     achievementDinner: '🍽️ Solar dinner: your PV is saving its way toward dinner.',
-    achievementLegend: '🏆 Solar legend: your system is seriously moving toward profit.',
+    achievementAmortization25: '🚀 Quarter complete: 25% of your investment is back.',
+    achievementAmortization50: '⚡ Half power: 50% amortization reached.',
+    achievementAmortization75: '🛡️ Almost there: 75% of the investment is back.',
+    achievementAmortization100: '🏆 Break-even: your system has paid for itself!',
     roleAdmin: 'Admin',
     roleViewer: 'Viewer',
     gridPower: 'Home import',
@@ -773,23 +781,30 @@ function clampPercent(value: number): number {
 }
 
 
+type AchievementMetric = 'system_online' | 'solar_total_kwh' | 'savings_total_eur' | 'breakeven_progress_percent';
+
 type AchievementDefinition = {
   id: string;
+  metric: AchievementMetric;
   threshold: number;
   translationKey: TranslationKey;
   image: string;
 };
 
 const ACHIEVEMENTS: AchievementDefinition[] = [
-  { id: 'first-solar', image: '/achievement-badges/first-solar.svg', threshold: 0, translationKey: 'achievementFirstSolar' },
-  { id: 'coffee', image: '/achievement-badges/coffee.svg', threshold: 3, translationKey: 'achievementCoffee' },
-  { id: 'cake', image: '/achievement-badges/cake.svg', threshold: 8, translationKey: 'achievementCake' },
-  { id: 'pizza', image: '/achievement-badges/pizza.svg', threshold: 15, translationKey: 'achievementPizza' },
-  { id: 'movie', image: '/achievement-badges/movie.svg', threshold: 25, translationKey: 'achievementMovie' },
-  { id: 'plant', image: '/achievement-badges/plant.svg', threshold: 40, translationKey: 'achievementPlant' },
-  { id: 'gadget', image: '/achievement-badges/gadget.svg', threshold: 75, translationKey: 'achievementGadget' },
-  { id: 'dinner', image: '/achievement-badges/dinner.svg', threshold: 120, translationKey: 'achievementDinner' },
-  { id: 'legend', image: '/achievement-badges/legend.svg', threshold: 250, translationKey: 'achievementLegend' },
+  { id: 'go-live', image: '/achievement-badges/go-live.svg', metric: 'system_online', threshold: 1, translationKey: 'achievementGoLive' },
+  { id: 'first-solar', image: '/achievement-badges/first-solar.svg', metric: 'solar_total_kwh', threshold: 0, translationKey: 'achievementFirstSolar' },
+  { id: 'coffee', image: '/achievement-badges/coffee.svg', metric: 'savings_total_eur', threshold: 3, translationKey: 'achievementCoffee' },
+  { id: 'cake', image: '/achievement-badges/cake.svg', metric: 'savings_total_eur', threshold: 8, translationKey: 'achievementCake' },
+  { id: 'pizza', image: '/achievement-badges/pizza.svg', metric: 'savings_total_eur', threshold: 15, translationKey: 'achievementPizza' },
+  { id: 'movie', image: '/achievement-badges/movie.svg', metric: 'savings_total_eur', threshold: 25, translationKey: 'achievementMovie' },
+  { id: 'plant', image: '/achievement-badges/plant.svg', metric: 'savings_total_eur', threshold: 40, translationKey: 'achievementPlant' },
+  { id: 'gadget', image: '/achievement-badges/gadget.svg', metric: 'savings_total_eur', threshold: 75, translationKey: 'achievementGadget' },
+  { id: 'dinner', image: '/achievement-badges/dinner.svg', metric: 'savings_total_eur', threshold: 120, translationKey: 'achievementDinner' },
+  { id: 'amortization-25', image: '/achievement-badges/amortization-25.svg', metric: 'breakeven_progress_percent', threshold: 25, translationKey: 'achievementAmortization25' },
+  { id: 'amortization-50', image: '/achievement-badges/amortization-50.svg', metric: 'breakeven_progress_percent', threshold: 50, translationKey: 'achievementAmortization50' },
+  { id: 'amortization-75', image: '/achievement-badges/amortization-75.svg', metric: 'breakeven_progress_percent', threshold: 75, translationKey: 'achievementAmortization75' },
+  { id: 'amortization-100', image: '/achievement-badges/amortization-100.svg', metric: 'breakeven_progress_percent', threshold: 100, translationKey: 'achievementAmortization100' },
 ];
 
 const ACHIEVEMENT_VISIBLE_DAYS = 7;
@@ -798,6 +813,13 @@ const ACHIEVEMENT_STORAGE_KEY = 'bpstracker-achievements';
 type StoredAchievement = {
   id: string;
   unlockedAt: string;
+};
+
+type AchievementInput = {
+  systemOnline?: boolean;
+  totalSavings?: number | null;
+  totalSolarKwh?: number | null;
+  breakevenProgressPercent?: number | null;
 };
 
 function readStoredAchievements(): StoredAchievement[] {
@@ -814,18 +836,28 @@ function writeStoredAchievements(items: StoredAchievement[]): void {
   localStorage.setItem(ACHIEVEMENT_STORAGE_KEY, JSON.stringify(items));
 }
 
-function updateAchievements(totalSavings: number | null | undefined, totalSolarKwh?: number | null): StoredAchievement[] {
+function achievementMetricReached(achievement: AchievementDefinition, input: AchievementInput): boolean {
+  switch (achievement.metric) {
+    case 'system_online':
+      return input.systemOnline === true;
+    case 'solar_total_kwh':
+      // Das erste Solar-Badge darf erst erscheinen, wenn das konfigurierte Balkonkraftwerk
+      // tatsächlich Solarenergie geliefert hat. Ein frisches System mit 0 kWh bekommt nur GoLive.
+      return typeof input.totalSolarKwh === 'number' && Number.isFinite(input.totalSolarKwh) && input.totalSolarKwh > achievement.threshold;
+    case 'savings_total_eur':
+      return typeof input.totalSavings === 'number' && Number.isFinite(input.totalSavings) && input.totalSavings >= achievement.threshold;
+    case 'breakeven_progress_percent':
+      return typeof input.breakevenProgressPercent === 'number' && Number.isFinite(input.breakevenProgressPercent) && input.breakevenProgressPercent >= achievement.threshold;
+  }
+}
+
+function updateAchievements(input: AchievementInput): StoredAchievement[] {
   const now = new Date();
   const existing = readStoredAchievements();
   const byId = new Map(existing.map(item => [item.id, item]));
-  if (typeof totalSolarKwh === 'number' && Number.isFinite(totalSolarKwh) && totalSolarKwh > 0 && !byId.has('first-solar')) {
-    byId.set('first-solar', { id: 'first-solar', unlockedAt: now.toISOString() });
-  }
-  if (typeof totalSavings === 'number' && Number.isFinite(totalSavings)) {
-    for (const achievement of ACHIEVEMENTS.filter(item => item.id !== 'first-solar')) {
-      if (totalSavings >= achievement.threshold && !byId.has(achievement.id)) {
-        byId.set(achievement.id, { id: achievement.id, unlockedAt: now.toISOString() });
-      }
+  for (const achievement of ACHIEVEMENTS) {
+    if (!byId.has(achievement.id) && achievementMetricReached(achievement, input)) {
+      byId.set(achievement.id, { id: achievement.id, unlockedAt: now.toISOString() });
     }
   }
   const next = Array.from(byId.values()).filter(item => {
@@ -1179,10 +1211,15 @@ function AchievementHeader() {
   async function load() {
     try {
       const summary = await api.summary();
-      const visible = updateAchievements(summary.savings_total_eur, summary.solar_total_kwh);
+      const visible = updateAchievements({
+        systemOnline: true,
+        totalSavings: summary.savings_total_eur,
+        totalSolarKwh: summary.solar_total_kwh,
+        breakevenProgressPercent: summary.breakeven_progress_percent,
+      });
       setAchievement(visible.length ? visible[visible.length - 1] : null);
     } catch {
-      const visible = updateAchievements(null);
+      const visible = updateAchievements({ systemOnline: false });
       setAchievement(visible.length ? visible[visible.length - 1] : null);
     }
   }
