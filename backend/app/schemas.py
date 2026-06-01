@@ -142,6 +142,7 @@ class FinanceSettings(BaseModel):
     battery_analysis_enabled: bool = False
     battery_cost_eur: float = Field(default=0.0, ge=0, le=1_000_000)
     battery_capacity_kwh: float = Field(default=0.0, ge=0, le=1000)
+    battery_roundtrip_efficiency: float = Field(default=0.85, ge=0.5, le=1.0)
     currency_code: str = Field(default='EUR', pattern=r'^(EUR|USD|GBP)$')
 
 
@@ -219,7 +220,7 @@ class SummaryResponse(BaseModel):
     battery_analysis_enabled: bool = False
     battery_cost_eur: float = 0.0
     battery_capacity_kwh: float = 0.0
-    battery_roundtrip_efficiency: float = 0.90
+    battery_roundtrip_efficiency: float = 0.85
     battery_remaining_bps_investment_eur: float | None = None
     battery_combined_investment_eur: float | None = None
     battery_combined_payback_days: float | None = None

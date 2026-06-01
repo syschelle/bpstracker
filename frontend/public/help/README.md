@@ -748,6 +748,7 @@ The Setup page allows entering optional battery values:
 ```text
 Battery cost
 Battery capacity in kWh
+Battery round-trip efficiency in percent
 ```
 
 The dashboard then estimates whether a battery could be worthwhile based on the surplus energy that would otherwise be exported.
@@ -756,7 +757,7 @@ The current calculation uses these assumptions:
 
 - grid export is not compensated
 - exported surplus could be stored and later replace grid import
-- battery round-trip efficiency is 90%
+- battery round-trip efficiency defaults to a conservative 85% and can be adjusted in Setup
 - maximum one usable charge/discharge cycle per day
 - today's usable surplus is capped by the configured battery capacity
 

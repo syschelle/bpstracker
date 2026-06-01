@@ -30,6 +30,7 @@ AIR_SENSOR_SUCCESS_POLL_SECONDS = 180
 AIR_SENSOR_RETRY_SECONDS = 30
 DEFAULT_KWH_PRICE_EUR = 0.30
 DEFAULT_INVESTMENT_COST_EUR = 0.0
+DEFAULT_BATTERY_ROUNDTRIP_EFFICIENCY = 0.85
 DEFAULT_LANGUAGE = 'de'
 DEFAULT_CURRENCY_CODE = 'EUR'
 DEFAULT_TIMEZONE = 'Europe/Berlin'
@@ -52,6 +53,17 @@ def _normalize_host_or_400(value: str | None) -> str | None:
     except OutboundHostError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
+
+
+
+def _normalize_battery_efficiency(value: object) -> float:
+    try:
+        efficiency = float(value)
+    except (TypeError, ValueError):
+        return DEFAULT_BATTERY_ROUNDTRIP_EFFICIENCY
+    if efficiency <= 0:
+        return DEFAULT_BATTERY_ROUNDTRIP_EFFICIENCY
+    return min(1.0, max(0.5, efficiency))
 
 def _normalize_timezone(value: object) -> str:
     timezone_name = str(value or DEFAULT_TIMEZONE).strip() or DEFAULT_TIMEZONE
@@ -87,6 +99,7 @@ def _normalize_finance_value(value: dict | None) -> FinanceSettings:
         battery_analysis_enabled=bool(value.get('battery_analysis_enabled', False)),
         battery_cost_eur=float(value.get('battery_cost_eur', 0.0) or 0.0),
         battery_capacity_kwh=float(value.get('battery_capacity_kwh', 0.0) or 0.0),
+        battery_roundtrip_efficiency=_normalize_battery_efficiency(value.get('battery_roundtrip_efficiency', DEFAULT_BATTERY_ROUNDTRIP_EFFICIENCY)),
         currency_code=currency_code,
     )
 

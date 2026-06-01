@@ -73,6 +73,7 @@ export interface FinanceSettings {
   battery_analysis_enabled: boolean;
   battery_cost_eur: number;
   battery_capacity_kwh: number;
+  battery_roundtrip_efficiency: number;
   currency_code: CurrencyCode;
 }
 

@@ -573,6 +573,7 @@ Im Setup können eingetragen werden:
 ```text
 Akku-Kosten
 Akku-Kapazität in kWh
+Akku-Wirkungsgrad in Prozent
 ```
 
 Die Berechnung basiert auf dem Überschuss, der sonst eingespeist würde.
@@ -582,7 +583,7 @@ Wichtig: Einspeisung wird mit `0` vergütet. Der mögliche Nutzen eines Akkus en
 Annahmen:
 
 - Einspeisung wird nicht vergütet
-- Akku-Wirkungsgrad: 90 %
+- Akku-Wirkungsgrad: konservativer Standardwert 85 %, im Setup anpassbar
 - maximal ein Lade-/Entladezyklus pro Tag
 - nutzbarer Tagesüberschuss wird durch die Akku-Kapazität begrenzt
 - wenn das Balkonkraftwerk noch nicht amortisiert ist, wird die offene Rest-Amortisation mit berücksichtigt

@@ -176,6 +176,8 @@ const translations = {
     batteryDetailsCopied: 'Kopiert',
     batteryCost: 'Akku-Kosten',
     batteryCapacity: 'Akku-Kapazität',
+    batteryEfficiency: 'Akku-Wirkungsgrad',
+    batteryEfficiencyHint: 'Konservativer Standardwert: 85 %. Passe ihn an den realen Roundtrip-Wirkungsgrad deines Akkus an.',
     batteryAnalysis: 'Akku-Bewertung',
     batterySavingsToday: 'Potentielle Akku-Ersparnis heute',
     batteryUsableSurplusToday: 'Nutzbarer Überschuss heute',
@@ -186,7 +188,7 @@ const translations = {
     batteryWorthwhile: 'Akku lohnt sich rechnerisch',
     batteryNotWorthwhile: 'Akku lohnt sich rechnerisch noch nicht',
     batteryMissing: 'Akku-Preis und Kapazität im Setup eintragen.',
-    batteryAssumption: 'Annahme: Einspeisung wird nicht vergütet, Akku-Wirkungsgrad 90 %, maximal ein Lade-/Entladezyklus pro Tag. Wenn das Balkonkraftwerk noch nicht amortisiert ist, werden die offenen Restkosten mit berücksichtigt.',
+    batteryAssumption: 'Annahme: Einspeisung wird nicht vergütet, der im Setup hinterlegte Akku-Wirkungsgrad wird berücksichtigt, maximal ein Lade-/Entladezyklus pro Tag. Wenn das Balkonkraftwerk noch nicht amortisiert ist, werden die offenen Restkosten mit berücksichtigt.',
     financeSaved: 'Finanzwerte wurden gespeichert.',
     currency: 'Währung',
     currencyHint: 'Die Währung gilt für kWh-Preis, Investitionskosten, Einsparung und Amortisation. Es findet keine automatische Umrechnung statt.',
@@ -482,6 +484,8 @@ const translations = {
     batteryDetailsCopied: 'Copied',
     batteryCost: 'Battery cost',
     batteryCapacity: 'Battery capacity',
+    batteryEfficiency: 'Battery efficiency',
+    batteryEfficiencyHint: "Conservative default: 85%. Adjust it to your battery's real round-trip efficiency.",
     batteryAnalysis: 'Battery analysis',
     batterySavingsToday: 'Potential battery savings today',
     batteryUsableSurplusToday: 'Usable surplus today',
@@ -492,7 +496,7 @@ const translations = {
     batteryWorthwhile: 'Battery appears worthwhile',
     batteryNotWorthwhile: 'Battery does not appear worthwhile yet',
     batteryMissing: 'Enter battery price and capacity in setup.',
-    batteryAssumption: 'Assumption: grid export is unpaid, battery round-trip efficiency 90%, maximum one charge/discharge cycle per day. If the balcony PV system has not paid for itself yet, the open remainder is included.',
+    batteryAssumption: 'Assumption: grid export is unpaid, the battery round-trip efficiency configured in Setup is used, maximum one charge/discharge cycle per day. If the balcony PV system has not paid for itself yet, the open remainder is included.',
     financeSaved: 'Financial values have been saved.',
     currency: 'Currency',
     currencyHint: 'The currency is used for kWh price, investment costs, savings and amortization. No automatic conversion is performed.',
@@ -2263,7 +2267,7 @@ function UserCredentialsPanel({ onCurrentUserChange }: { onCurrentUserChange: (u
 
 function FinanceSettingsPanel() {
   const { t } = useI18n();
-  const [settings, setSettings] = useState<FinanceSettings>({ kwh_price_eur: 0.3, investment_cost_eur: 0, battery_analysis_enabled: false, battery_cost_eur: 0, battery_capacity_kwh: 0, currency_code: 'EUR' });
+  const [settings, setSettings] = useState<FinanceSettings>({ kwh_price_eur: 0.3, investment_cost_eur: 0, battery_analysis_enabled: false, battery_cost_eur: 0, battery_capacity_kwh: 0, battery_roundtrip_efficiency: 0.85, currency_code: 'EUR' });
   const [message, setMessage] = useState<string | null>(null);
 
   async function load() {
@@ -2280,6 +2284,7 @@ function FinanceSettingsPanel() {
       battery_analysis_enabled: Boolean(settings.battery_analysis_enabled),
       battery_cost_eur: Number(settings.battery_cost_eur) || 0,
       battery_capacity_kwh: Number(settings.battery_capacity_kwh) || 0,
+      battery_roundtrip_efficiency: Math.min(1, Math.max(0.5, Number(settings.battery_roundtrip_efficiency) || 0.85)),
       currency_code: normalizeCurrency(settings.currency_code),
     });
     setSettings(saved);
@@ -2304,8 +2309,10 @@ function FinanceSettingsPanel() {
         <label className="check"><input type="checkbox" checked={Boolean(settings.battery_analysis_enabled)} onChange={e => setSettings({ ...settings, battery_analysis_enabled: e.target.checked })} /> {t('enableBatteryAnalysis')}</label>
         <label>{t('batteryCost')} ({currencySymbol(settings.currency_code)})<input type="number" min={0} step="0.01" value={settings.battery_cost_eur ?? 0} onChange={e => setSettings({ ...settings, battery_cost_eur: Number(e.target.value) })} placeholder="1200" /></label>
         <label>{t('batteryCapacity')} (kWh)<input type="number" min={0} step="0.1" value={settings.battery_capacity_kwh ?? 0} onChange={e => setSettings({ ...settings, battery_capacity_kwh: Number(e.target.value) })} placeholder="2.0" /></label>
+        <label>{t('batteryEfficiency')} (%)<input type="number" min={50} max={100} step="1" value={Math.round((settings.battery_roundtrip_efficiency ?? 0.85) * 100)} onChange={e => setSettings({ ...settings, battery_roundtrip_efficiency: (Number(e.target.value) || 85) / 100 })} placeholder="85" /></label>
       </div>
       <p className="hint">{t('feedInNotPaidHint')}</p>
+      <p className="hint">{t('batteryEfficiencyHint')}</p>
       <p className="hint">{t('currencyHint')}</p>
       <button onClick={() => void save()}>{t('saveFinance')}</button>
     </section>

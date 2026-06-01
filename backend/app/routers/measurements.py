@@ -104,7 +104,7 @@ def _grid_power_value(row: Measurement | MeasurementRead) -> float | None:
         return row.total_power_w
     return row.power_w
 
-BATTERY_ROUNDTRIP_EFFICIENCY = 0.90
+DEFAULT_BATTERY_ROUNDTRIP_EFFICIENCY = 0.85
 
 
 def battery_analysis(
@@ -114,6 +114,7 @@ def battery_analysis(
     kwh_price: float,
     battery_cost: float,
     battery_capacity_kwh: float,
+    battery_roundtrip_efficiency: float,
     remaining_bps_investment: float | None,
 ) -> dict[str, float | bool | None]:
     """Estimate battery payback while respecting open BPS amortization.
@@ -136,6 +137,7 @@ def battery_analysis(
         'battery_payback_years': None,
         'battery_worthwhile': None,
     }
+    efficiency = min(1.0, max(0.5, battery_roundtrip_efficiency or DEFAULT_BATTERY_ROUNDTRIP_EFFICIENCY))
     if battery_cost <= 0 or battery_capacity_kwh <= 0 or kwh_price <= 0:
         return empty
 
@@ -143,8 +145,8 @@ def battery_analysis(
     export_today = max(0.0, exported_today_kwh or 0.0)
     export_total = max(0.0, exported_total_kwh or 0.0)
     usable_today = min(export_today, max(0.0, battery_capacity_kwh))
-    daily_battery_savings = usable_today * BATTERY_ROUNDTRIP_EFFICIENCY * kwh_price
-    total_potential = export_total * BATTERY_ROUNDTRIP_EFFICIENCY * kwh_price
+    daily_battery_savings = usable_today * efficiency * kwh_price
+    total_potential = export_total * efficiency * kwh_price
 
     battery_payback_days = battery_cost / daily_battery_savings if daily_battery_savings > 0 else None
     battery_payback_years = battery_payback_days / 365.25 if battery_payback_days is not None else None
@@ -459,6 +461,7 @@ def summary(_: User = Depends(get_current_user), db: Session = Depends(get_db)) 
             kwh_price=finance.kwh_price_eur,
             battery_cost=finance.battery_cost_eur if finance.battery_analysis_enabled else 0.0,
             battery_capacity_kwh=finance.battery_capacity_kwh if finance.battery_analysis_enabled else 0.0,
+            battery_roundtrip_efficiency=finance.battery_roundtrip_efficiency,
             remaining_bps_investment=simulated.remaining_to_breakeven_eur,
         )
         for key, value in battery.items():
@@ -466,7 +469,7 @@ def summary(_: User = Depends(get_current_user), db: Session = Depends(get_db)) 
         simulated.battery_analysis_enabled = finance.battery_analysis_enabled
         simulated.battery_cost_eur = finance.battery_cost_eur
         simulated.battery_capacity_kwh = finance.battery_capacity_kwh
-        simulated.battery_roundtrip_efficiency = BATTERY_ROUNDTRIP_EFFICIENCY
+        simulated.battery_roundtrip_efficiency = finance.battery_roundtrip_efficiency
         simulated.raw_retention_days = retention.raw_retention_days
         return simulated
 
@@ -549,6 +552,7 @@ def summary(_: User = Depends(get_current_user), db: Session = Depends(get_db)) 
         kwh_price=price,
         battery_cost=battery_cost if battery_enabled else 0.0,
         battery_capacity_kwh=battery_capacity if battery_enabled else 0.0,
+        battery_roundtrip_efficiency=finance.battery_roundtrip_efficiency,
         remaining_bps_investment=remaining,
     )
 
@@ -567,7 +571,7 @@ def summary(_: User = Depends(get_current_user), db: Session = Depends(get_db)) 
         battery_analysis_enabled=battery_enabled,
         battery_cost_eur=battery_cost,
         battery_capacity_kwh=battery_capacity,
-        battery_roundtrip_efficiency=BATTERY_ROUNDTRIP_EFFICIENCY,
+        battery_roundtrip_efficiency=finance.battery_roundtrip_efficiency,
         battery_remaining_bps_investment_eur=battery['battery_remaining_bps_investment_eur'],
         battery_combined_investment_eur=battery['battery_combined_investment_eur'],
         battery_combined_payback_days=battery['battery_combined_payback_days'],
