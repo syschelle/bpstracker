@@ -162,6 +162,8 @@ class ShellyClient:
         total_power = _number(status.get('total_power'))
         measurements: list[NormalizedMeasurement] = []
         for idx, em in enumerate(emeters):
+            if config.channel is not None and idx != config.channel:
+                continue
             if not isinstance(em, dict):
                 continue
             measurements.append(
@@ -181,7 +183,7 @@ class ShellyClient:
                 )
             )
 
-        if total_power is not None:
+        if total_power is not None and config.channel is None:
             measurements.append(
                 NormalizedMeasurement(
                     timestamp=now,

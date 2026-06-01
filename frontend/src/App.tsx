@@ -1365,6 +1365,16 @@ function formatMeasurementPhase(phase: string | null | undefined, t: (key: Trans
   return phase === 'total' ? t('total') : phase;
 }
 
+function measurementMatchesDeviceConfig(device: Device, measurement: Measurement): boolean {
+  if (device.channel === null || device.channel === undefined) {
+    return true;
+  }
+  if (device.device_type === 'shelly_3em_gen1' && measurement.source_type === 'shelly_3em_gen1_total') {
+    return false;
+  }
+  return measurement.channel === device.channel;
+}
+
 function shouldShowChannelColumn(rows: DashboardMeasurementRow[]): boolean {
   const configuredChannel = rows.some(({ device }) => device.channel !== null && device.channel !== undefined);
   const measurementChannelWithoutPhase = rows.some(({ measurement }) => measurement?.channel !== null && measurement?.channel !== undefined && !measurement.phase);
@@ -1393,7 +1403,7 @@ function DashboardDeviceMeasurements({ devices, latest, onRefresh }: { devices: 
   latestByDevice.forEach(list => list.sort((a, b) => measurementSortKey(a).localeCompare(measurementSortKey(b))));
 
   const rows: DashboardMeasurementRow[] = devices.flatMap<DashboardMeasurementRow>(device => {
-    const measurements = latestByDevice.get(device.id) ?? [];
+    const measurements = (latestByDevice.get(device.id) ?? []).filter(measurement => measurementMatchesDeviceConfig(device, measurement));
     if (!measurements.length) {
       return [{ device, measurement: null }];
     }

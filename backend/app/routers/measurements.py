@@ -44,6 +44,31 @@ def _device_purposes(db: Session) -> dict[int, str]:
     return {int(device_id): str(purpose or DEVICE_PURPOSE_AUTO) for device_id, purpose in rows}
 
 
+def _device_configs(db: Session) -> dict[int, tuple[str, int | None]]:
+    rows = db.query(Device.id, Device.device_type, Device.channel).all()
+    configs: dict[int, tuple[str, int | None]] = {}
+    for device_id, device_type, channel in rows:
+        type_value = getattr(device_type, 'value', device_type)
+        configs[int(device_id)] = (str(type_value), channel)
+    return configs
+
+
+def _measurement_matches_device_config(row: Measurement | MeasurementRead, configs: dict[int, tuple[str, int | None]]) -> bool:
+    config = configs.get(int(row.device_id))
+    if config is None:
+        return True
+    device_type, configured_channel = config
+    if configured_channel is None:
+        return True
+    # Shelly 3EM Gen1 exposes L1/L2/L3 as channels 0/1/2 and exposes a separate
+    # device-wide total row without a channel. When a phase/channel is configured
+    # explicitly in setup, dashboard/latest/summary views must not show or count
+    # the unconfigured total row.
+    if device_type == 'shelly_3em_gen1' and row.source_type == 'shelly_3em_gen1_total':
+        return False
+    return row.channel == configured_channel
+
+
 def _purpose_for(row: Measurement | MeasurementRead, purposes: dict[int, str]) -> str:
     return purposes.get(int(row.device_id), DEVICE_PURPOSE_AUTO)
 
@@ -216,7 +241,8 @@ def latest_measurements(_: User = Depends(get_current_user), db: Session = Depen
         .order_by(Measurement.device_id, Measurement.source_type, Measurement.channel, Measurement.phase)
         .all()
     )
-    return rows
+    configs = _device_configs(db)
+    return [row for row in rows if _measurement_matches_device_config(row, configs)]
 
 
 @router.get('/history', response_model=list[HistoryPoint])
@@ -247,6 +273,7 @@ def history(
 
     rows = _raw_history_rows(db, start, end, device_id=device_id, source_type=source_type, limit=limit)
     purposes = _device_purposes(db)
+    configs = _device_configs(db)
 
     buckets: dict[datetime, dict] = defaultdict(lambda: {
         'solar_by_key': defaultdict(list),
@@ -255,6 +282,8 @@ def history(
     })
 
     for row in rows:
+        if not _measurement_matches_device_config(row, configs):
+            continue
         bucket = _floor_to_bucket(row.timestamp, bucket_seconds)
         value = row.power_w if row.power_w is not None else row.total_power_w
         if value is None:
@@ -336,6 +365,7 @@ def summary(_: User = Depends(get_current_user), db: Session = Depends(get_db)) 
 
     latest = latest_measurements(_, db)
     purposes = _device_purposes(db)
+    configs = _device_configs(db)
     device_count = db.query(Device).count()
     online_count = db.query(DeviceStatus).filter(DeviceStatus.online.is_(True)).count()
     current_total_power = None
@@ -364,6 +394,7 @@ def summary(_: User = Depends(get_current_user), db: Session = Depends(get_db)) 
     ensure_completed_daily_summaries(db, now)
 
     today_rows = db.query(Measurement).filter(Measurement.timestamp >= today).order_by(Measurement.timestamp.asc()).all()
+    today_rows = [row for row in today_rows if _measurement_matches_device_config(row, configs)]
     grid_today_rows = [row for row in today_rows if _is_grid_row(row, purposes)]
     solar_today_rows = [row for row in today_rows if _is_solar_row(row, purposes)]
 

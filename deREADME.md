@@ -816,6 +816,10 @@ Die Port-Ausgabe soll `8080/tcp -> 0.0.0.0:5173` enthalten, nicht `80/tcp -> 0.0
 
 v0.7.8 führt die bisherigen Dashboard-Kacheln **Gerätestatus** und **Aktuelle Messwerte** zu einer kompakten Tabelle zusammen. Die Tabelle blendet optionale Spalten wie Kanal, Phase, Spannung und Strom automatisch aus, wenn sie nicht konfiguriert sind oder in den aktuellen Messwerten nicht vorkommen.
 
+### v0.7.10 Dashboard-Messwerte nach Device-Setup filtern
+
+v0.7.10 behält die zusammengeführte Dashboard-Tabelle für Gerätestatus und aktuelle Messwerte bei, filtert die angezeigten Messwertzeilen aber nach der im Setup gespeicherten Shelly-Konfiguration. Wenn für ein Gerät ein bestimmter Kanal gesetzt ist, werden nur Messwerte dieses Kanals angezeigt und in aktuellen Dashboard-Werten berücksichtigt. Shelly 3EM Gen1-Geräte ohne gesetzten Kanal zeigen weiterhin L1, L2, L3 und Gesamt; bei gesetztem Gen1-Phasenkanal wird nur die ausgewählte Phase angezeigt und die nicht konfigurierte Gesamtzeile ausgeblendet.
+
 ### v0.7.9 Mehrzeilige Dashboard-Messwerte
 
 v0.7.9 behält die zusammengeführte Dashboard-Tabelle bei, zeigt aber wieder eine aktuelle Messwertzeile pro Gerät/Quelle/Kanal/Phase. Mehrphasige Shelly-Geräte wie der Shelly 3EM Gen1 zeigen dadurch wieder L1, L2, L3 und Gesamt, während optionale Spalten wie Kanal ausgeblendet bleiben, wenn sie für die dargestellten Daten nicht aussagekräftig sind.
