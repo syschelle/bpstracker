@@ -133,7 +133,7 @@ Nur der Frontend-Port muss im lokalen Netzwerk erreichbar sein. Backend und Date
 
 Das folgende Schema zeigt einen möglichen BPSTracker-Aufbau mit getrenntem Netzbezug und separat gemessener Balkonsolar-Erzeugung:
 
-![Possible BPSTracker system setup](docs/images/bpstracker-system-setup.png)
+![Möglicher Aufbau des BPSTracker-Systems](docs/images/bpstracker-system-setup-de.png)
 
 BPSTracker besteht aus mehreren Komponenten:
 
