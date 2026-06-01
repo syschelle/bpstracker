@@ -724,7 +724,6 @@ bash ./deploy.sh
 
 Empfehlungen:
 
-- `.env` niemals in GitHub hochladen
 - den initialen Admin nur über die Ersteinrichtung beim ersten Start anlegen
 - starke Passwörter verwenden
 - 2FA aktivieren
