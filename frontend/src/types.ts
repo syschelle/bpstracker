@@ -56,6 +56,12 @@ export interface Measurement {
   grid_power_w?: number | null;
 }
 
+export interface HistoryTotals {
+  imported_kwh?: number | null;
+  exported_kwh?: number | null;
+  solar_kwh?: number | null;
+}
+
 export interface UiSettings {
   language: Language;
   timezone: string;

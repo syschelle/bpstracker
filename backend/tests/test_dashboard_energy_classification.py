@@ -62,3 +62,21 @@ def test_unconfigured_device_channel_keeps_all_shelly_3em_rows() -> None:
     from app.routers.measurements import _measurement_matches_device_config
 
     assert [row for row in rows if _measurement_matches_device_config(row, configs)] == rows
+
+
+def test_history_power_totals_integrate_displayed_range() -> None:
+    from app.routers.measurements import _history_power_totals
+    from app.schemas import HistoryPoint
+
+    start = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
+    points = [
+        HistoryPoint(timestamp=start, grid_power_w=500, solar_power_w=200, power_w=200),
+        HistoryPoint(timestamp=start.replace(hour=13), grid_power_w=-100, solar_power_w=300, power_w=300),
+        HistoryPoint(timestamp=start.replace(hour=14), grid_power_w=250, solar_power_w=400, power_w=400),
+    ]
+
+    totals = _history_power_totals(points)
+
+    assert totals.imported_kwh == 0.75
+    assert totals.exported_kwh == 0.1
+    assert totals.solar_kwh == 0.9

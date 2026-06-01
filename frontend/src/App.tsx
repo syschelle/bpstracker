@@ -4,7 +4,7 @@ import { Activity, Euro, Globe2, HelpCircle, History, LogOut, Menu, Moon, Plus, 
 import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api, setToken } from './api';
 import packageJson from '../package.json';
-import type { AirSensorCurrent, AirSensorSettings, BackupInfo, CurrencyCode, CurrentValuesApiSettings, Device, DevicePurpose, DeviceType, FinanceSettings, KindleDisplaySettings, Language, Measurement, PublicDashboardSettings, RetentionSettings, SimulationSettings, Summary, UiSettings, User } from './types';
+import type { AirSensorCurrent, AirSensorSettings, BackupInfo, CurrencyCode, CurrentValuesApiSettings, Device, DevicePurpose, DeviceType, FinanceSettings, KindleDisplaySettings, Language, Measurement, HistoryTotals, PublicDashboardSettings, RetentionSettings, SimulationSettings, Summary, UiSettings, User } from './types';
 
 type Tab = 'dashboard' | 'history' | 'setup' | 'account' | 'help';
 type TranslationKey = keyof typeof translations.de;
@@ -1925,10 +1925,13 @@ function HistoryView() {
   const { language, t } = useI18n();
   const [hours, setHours] = useState(24);
   const [history, setHistory] = useState<Measurement[]>([]);
+  const [historyTotals, setHistoryTotals] = useState<HistoryTotals | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   async function load() {
-    setHistory(await api.history(hours));
+    const [nextHistory, nextTotals] = await Promise.all([api.history(hours), api.historyTotals(hours)]);
+    setHistory(nextHistory);
+    setHistoryTotals(nextTotals);
   }
 
   async function exportCsv() {
@@ -1943,6 +1946,12 @@ function HistoryView() {
   }
 
   useEffect(() => { void load(); }, [hours]);
+
+  const historySeriesNames = useMemo(() => ({
+    solar: `${t('solarShare')} (${fmtKwh(historyTotals?.solar_kwh, language)})`,
+    gridImport: `${t('gridImportShare')} (${fmtKwh(historyTotals?.imported_kwh, language)})`,
+    gridExport: `${t('exportedToday')} (${fmtKwh(historyTotals?.exported_kwh, language)})`,
+  }), [historyTotals, language, t]);
 
   const chartData = useMemo(() => history.map(row => {
     const gridPower = row.grid_power_w ?? row.total_power_w ?? null;
@@ -1980,7 +1989,7 @@ function HistoryView() {
           <Area
             type="monotone"
             dataKey="solar"
-            name={t('solarShare')}
+            name={historySeriesNames.solar}
             stroke="#16a34a"
             fill="#16a34a"
             fillOpacity={0.22}
@@ -1991,7 +2000,7 @@ function HistoryView() {
           <Area
             type="monotone"
             dataKey="gridImport"
-            name={t('gridImportShare')}
+            name={historySeriesNames.gridImport}
             stroke="#2563eb"
             fill="#2563eb"
             fillOpacity={0.20}
@@ -2002,7 +2011,7 @@ function HistoryView() {
           <Area
             type="monotone"
             dataKey="gridExport"
-            name={t('exportedToday')}
+            name={historySeriesNames.gridExport}
             stroke="#dc2626"
             fill="#dc2626"
             fillOpacity={0.18}

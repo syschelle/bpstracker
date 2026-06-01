@@ -256,6 +256,11 @@ class HistoryPoint(BaseModel):
     grid_power_w: float | None = None
 
 
+class HistoryTotalsResponse(BaseModel):
+    imported_kwh: float | None = None
+    exported_kwh: float | None = None
+    solar_kwh: float | None = None
+
 
 class BackupCreateRequest(BaseModel):
     password: str = Field(min_length=12, max_length=1024)

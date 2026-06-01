@@ -19,7 +19,7 @@ from ..energy_retention import (
     get_stored_total_kwh,
 )
 from ..routers.settings import get_finance_settings_from_db, get_public_dashboard_settings_from_db, get_retention_settings_from_db, get_simulation_settings_from_db, get_ui_settings_from_db
-from ..schemas import HistoryPoint, MeasurementRead, SummaryResponse
+from ..schemas import HistoryPoint, HistoryTotalsResponse, MeasurementRead, SummaryResponse
 from ..simulation import simulated_history, simulated_latest, simulated_summary
 from ..security import get_current_user
 
@@ -243,6 +243,102 @@ def latest_measurements(_: User = Depends(get_current_user), db: Session = Depen
     )
     configs = _device_configs(db)
     return [row for row in rows if _measurement_matches_device_config(row, configs)]
+
+
+
+def _integrated_kwh_from_history(points: list[HistoryPoint], selector) -> float | None:
+    if not points:
+        return None
+    sorted_points = sorted(points, key=lambda point: point.timestamp)
+    intervals: list[float] = []
+    for index, point in enumerate(sorted_points):
+        if index < len(sorted_points) - 1:
+            seconds = (sorted_points[index + 1].timestamp - point.timestamp).total_seconds()
+        elif intervals:
+            seconds = intervals[-1]
+        else:
+            seconds = 0.0
+        intervals.append(max(0.0, seconds))
+
+    total_wh = 0.0
+    used = False
+    for point, seconds in zip(sorted_points, intervals):
+        value = selector(point)
+        if value is None or seconds <= 0:
+            continue
+        total_wh += value * (seconds / 3600.0)
+        used = True
+    return total_wh / 1000.0 if used else None
+
+
+def _history_power_totals(points: list[HistoryPoint]) -> HistoryTotalsResponse:
+    return HistoryTotalsResponse(
+        imported_kwh=_integrated_kwh_from_history(
+            points,
+            lambda point: max(0.0, point.grid_power_w) if point.grid_power_w is not None else None,
+        ),
+        exported_kwh=_integrated_kwh_from_history(
+            points,
+            lambda point: abs(min(0.0, point.grid_power_w)) if point.grid_power_w is not None else None,
+        ),
+        solar_kwh=_integrated_kwh_from_history(
+            points,
+            lambda point: abs(point.solar_power_w) if point.solar_power_w is not None else None,
+        ),
+    )
+
+
+@router.get('/history/totals', response_model=HistoryTotalsResponse)
+def history_totals(
+    _: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    start: datetime | None = None,
+    end: datetime | None = None,
+    device_id: int | None = None,
+    source_type: str | None = None,
+    limit: int = Query(default=50000, ge=1, le=50000),
+) -> HistoryTotalsResponse:
+    """Return energy totals for the currently selected history range.
+
+    The chart itself shows aggregated power points. The totals use cumulative
+    energy counter deltas where available, matching dashboard/summary semantics.
+    For simulations or legacy rows without energy counters, they fall back to
+    integrating the charted power values over the selected range.
+    """
+    end = end or datetime.now(timezone.utc)
+    start = start or (end - timedelta(hours=24))
+    simulation = get_simulation_settings_from_db(db)
+    if simulation.enabled:
+        ui = get_ui_settings_from_db(db)
+        return _history_power_totals(simulated_history(start, end, ui.timezone, _bucket_seconds(start, end)))
+
+    rows = _raw_history_rows(db, start, end, device_id=device_id, source_type=source_type, limit=limit)
+    purposes = _device_purposes(db)
+    configs = _device_configs(db)
+    rows = [row for row in rows if _measurement_matches_device_config(row, configs)]
+    grid_rows = [row for row in rows if _is_grid_row(row, purposes)]
+    solar_rows = [row for row in rows if _is_solar_row(row, purposes)]
+
+    imported_wh = delta_energy(grid_rows, 'energy_import_wh', None)
+    exported_wh = delta_energy(grid_rows, 'energy_export_wh', None)
+    solar_wh = delta_energy(solar_rows, 'energy_import_wh', None)
+
+    totals = HistoryTotalsResponse(
+        imported_kwh=imported_wh / 1000.0 if imported_wh is not None else None,
+        exported_kwh=exported_wh / 1000.0 if exported_wh is not None else None,
+        solar_kwh=solar_wh / 1000.0 if solar_wh is not None else None,
+    )
+
+    if totals.imported_kwh is None or totals.exported_kwh is None or totals.solar_kwh is None:
+        fallback = _history_power_totals(history(_, db, start, end, device_id, source_type, limit))
+        if totals.imported_kwh is None:
+            totals.imported_kwh = fallback.imported_kwh
+        if totals.exported_kwh is None:
+            totals.exported_kwh = fallback.exported_kwh
+        if totals.solar_kwh is None:
+            totals.solar_kwh = fallback.solar_kwh
+
+    return totals
 
 
 @router.get('/history', response_model=list[HistoryPoint])

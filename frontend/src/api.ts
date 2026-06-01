@@ -1,4 +1,4 @@
-import type { AirSensorCurrent, AirSensorSettings, BackupCreateResponse, BackupInfo, CurrentValuesApiSettings, Device, FinanceSettings, KindleDisplaySettings, Measurement, PublicDashboardSettings, RetentionSettings, ResetValuesResponse, SimulationSettings, Summary, UiSettings, User } from './types';
+import type { AirSensorCurrent, AirSensorSettings, BackupCreateResponse, BackupInfo, CurrentValuesApiSettings, Device, FinanceSettings, KindleDisplaySettings, Measurement, HistoryTotals, PublicDashboardSettings, RetentionSettings, ResetValuesResponse, SimulationSettings, Summary, UiSettings, User } from './types';
 
 type RuntimeConfig = {
   API_BASE_URL?: string;
@@ -136,6 +136,11 @@ export const api = {
     const end = new Date();
     const start = new Date(end.getTime() - hours * 60 * 60 * 1000);
     return request<Measurement[]>(`/api/measurements/history?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}&limit=5000`);
+  },
+  historyTotals: (hours: number) => {
+    const end = new Date();
+    const start = new Date(end.getTime() - hours * 60 * 60 * 1000);
+    return request<HistoryTotals>(`/api/measurements/history/totals?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}&limit=50000`);
   },
   exportCsv: () => download('/api/measurements/export.csv'),
   backups: () => request<BackupInfo[]>('/api/backups'),
