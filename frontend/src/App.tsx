@@ -1,12 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Activity, Euro, Globe2, History, LogOut, Menu, Moon, Plus, RefreshCcw, Settings, ShieldCheck, Sun, Droplets, Thermometer, Trash2, UserCog, Wind, Zap } from 'lucide-react';
+import { Activity, Euro, Globe2, HelpCircle, History, LogOut, Menu, Moon, Plus, RefreshCcw, Settings, ShieldCheck, Sun, Droplets, Thermometer, Trash2, UserCog, Wind, Zap } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api, setToken } from './api';
 import packageJson from '../package.json';
 import type { AirSensorCurrent, AirSensorSettings, BackupInfo, CurrencyCode, CurrentValuesApiSettings, Device, DevicePurpose, DeviceType, FinanceSettings, KindleDisplaySettings, Language, Measurement, PublicDashboardSettings, RetentionSettings, SimulationSettings, Summary, UiSettings, User } from './types';
 
-type Tab = 'dashboard' | 'history' | 'setup' | 'account';
+type Tab = 'dashboard' | 'history' | 'setup' | 'account' | 'help';
 type TranslationKey = keyof typeof translations.de;
 type Translator = (key: TranslationKey, vars?: Record<string, string | number>) => string;
 type Theme = 'light' | 'dark';
@@ -46,6 +46,10 @@ const translations = {
     githubRepository: 'GitHub-Repository',
     githubRepositoryHint: 'Projektseite, Quellcode und Updates findest du im GitHub-Repository.',
     openGithubRepository: 'GitHub-Repository öffnen',
+    help: 'Hilfe',
+    helpTitle: 'Hilfe & Dokumentation',
+    helpHint: 'Diese Hilfeseite zeigt die README-Dokumentation direkt in der Anwendung. Die Sprache folgt der aktuellen Sprachwahl im Header.',
+    helpLoadFailed: 'Hilfedokumentation konnte nicht geladen werden.',
     account2fa: 'Admin 2FA',
     logout: 'Logout',
     menu: 'Menü',
@@ -344,6 +348,10 @@ const translations = {
     githubRepository: 'GitHub repository',
     githubRepositoryHint: 'Project page, source code and updates are available in the GitHub repository.',
     openGithubRepository: 'Open GitHub repository',
+    help: 'Help',
+    helpTitle: 'Help & documentation',
+    helpHint: 'This help page shows the README documentation directly inside the application. The language follows the current language selection in the header.',
+    helpLoadFailed: 'Help documentation could not be loaded.',
     account2fa: 'Admin 2FA',
     logout: 'Logout',
     menu: 'Menu',
@@ -1157,6 +1165,7 @@ export default function App() {
             <button className={tab === 'history' ? 'active' : ''} onClick={() => goTo('history')}><History /> {t('history')}</button>
             {isAdmin(user) && <button className={tab === 'setup' ? 'active' : ''} onClick={() => goTo('setup')}><Settings /> {t('setup')}</button>}
             {isAdmin(user) && <button className={tab === 'account' ? 'active' : ''} onClick={() => goTo('account')}><ShieldCheck /> {t('account2fa')}</button>}
+            <button className={tab === 'help' ? 'active' : ''} onClick={() => goTo('help')}><HelpCircle /> {t('help')}</button>
             <button onClick={logout}><LogOut /> {t('logout')}</button>
             <div className="side-nav-version">BPSTracker {APP_VERSION}</div>
           </aside>
@@ -1196,6 +1205,7 @@ export default function App() {
             {tab === 'history' && <HistoryView />}
             {tab === 'setup' && isAdmin(user) && <SetupView onCurrentUserChange={setUser} />}
             {tab === 'account' && isAdmin(user) && <AccountView user={user} onUser={setUser} />}
+            {tab === 'help' && <HelpView />}
           </section>
         </main>
       )}
@@ -1279,8 +1289,210 @@ function tabTitle(tab: Tab, t: Translator): string {
     dashboard: t('dashboard'),
     history: t('history'),
     setup: t('setup'),
-    account: t('account2fa')
+    account: t('account2fa'),
+    help: t('help')
   }[tab];
+}
+
+
+function HelpView() {
+  const { language, t } = useI18n();
+  const [html, setHtml] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fileName = language === 'de' ? 'deREADME.md' : 'README.md';
+    setError(null);
+    setHtml('');
+
+    fetch(`/help/${fileName}?version=${encodeURIComponent(APP_VERSION)}`, { cache: 'no-store' })
+      .then(response => {
+        if (!response.ok) throw new Error(t('helpLoadFailed'));
+        return response.text();
+      })
+      .then(markdown => {
+        if (!cancelled) setHtml(markdownToHtml(markdown));
+      })
+      .catch(err => {
+        if (!cancelled) setError(err instanceof Error ? err.message : t('helpLoadFailed'));
+      });
+
+    return () => { cancelled = true; };
+  }, [language, t]);
+
+  return (
+    <section className="panel help-panel">
+      <div className="panel-head">
+        <h2><HelpCircle size={20} /> {t('helpTitle')}</h2>
+      </div>
+      <p className="hint">{t('helpHint')}</p>
+      {error && <div className="error">{error}</div>}
+      {!error && !html && <p className="hint">{t('wait')}</p>}
+      {html && <article className="help-document" dangerouslySetInnerHTML={{ __html: html }} />}
+    </section>
+  );
+}
+
+function markdownToHtml(markdown: string): string {
+  const lines = markdown.replace(/\r\n/g, '\n').split('\n');
+  const html: string[] = [];
+  let inCode = false;
+  let codeLines: string[] = [];
+  let listType: 'ul' | 'ol' | null = null;
+
+  const closeList = () => {
+    if (listType) {
+      html.push(`</${listType}>`);
+      listType = null;
+    }
+  };
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    if (trimmed.startsWith('```')) {
+      if (inCode) {
+        html.push(`<pre><code>${escapeHtml(codeLines.join('\n'))}</code></pre>`);
+        codeLines = [];
+        inCode = false;
+      } else {
+        closeList();
+        inCode = true;
+      }
+      continue;
+    }
+
+    if (inCode) {
+      codeLines.push(line);
+      continue;
+    }
+
+    if (!trimmed) {
+      closeList();
+      continue;
+    }
+
+    if (/^[-*_]{3,}$/.test(trimmed)) {
+      closeList();
+      html.push('<hr />');
+      continue;
+    }
+
+    if (trimmed.includes('|') && i + 1 < lines.length && /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(lines[i + 1])) {
+      closeList();
+      const headers = splitMarkdownTableRow(trimmed);
+      i += 2;
+      const bodyRows: string[][] = [];
+      while (i < lines.length && lines[i].trim().includes('|')) {
+        bodyRows.push(splitMarkdownTableRow(lines[i].trim()));
+        i += 1;
+      }
+      i -= 1;
+      html.push('<div class="table-wrap"><table><thead><tr>');
+      html.push(headers.map(cell => `<th>${renderInlineMarkdown(cell)}</th>`).join(''));
+      html.push('</tr></thead><tbody>');
+      for (const row of bodyRows) {
+        html.push('<tr>');
+        html.push(row.map(cell => `<td>${renderInlineMarkdown(cell)}</td>`).join(''));
+        html.push('</tr>');
+      }
+      html.push('</tbody></table></div>');
+      continue;
+    }
+
+    const heading = /^(#{1,4})\s+(.+)$/.exec(trimmed);
+    if (heading) {
+      closeList();
+      const level = heading[1].length + 1;
+      html.push(`<h${level}>${renderInlineMarkdown(heading[2])}</h${level}>`);
+      continue;
+    }
+
+    const image = /^!\[([^\]]*)\]\(([^)]+)\)$/.exec(trimmed);
+    if (image) {
+      closeList();
+      html.push(`<figure><img src="${normalizeHelpHref(image[2])}" alt="${escapeHtml(image[1])}" loading="lazy" /></figure>`);
+      continue;
+    }
+
+    const unordered = /^[-*]\s+(.+)$/.exec(trimmed);
+    if (unordered) {
+      if (listType !== 'ul') {
+        closeList();
+        html.push('<ul>');
+        listType = 'ul';
+      }
+      html.push(`<li>${renderInlineMarkdown(unordered[1])}</li>`);
+      continue;
+    }
+
+    const ordered = /^\d+\.\s+(.+)$/.exec(trimmed);
+    if (ordered) {
+      if (listType !== 'ol') {
+        closeList();
+        html.push('<ol>');
+        listType = 'ol';
+      }
+      html.push(`<li>${renderInlineMarkdown(ordered[1])}</li>`);
+      continue;
+    }
+
+    if (trimmed.startsWith('>')) {
+      closeList();
+      html.push(`<blockquote>${renderInlineMarkdown(trimmed.replace(/^>\s?/, ''))}</blockquote>`);
+      continue;
+    }
+
+    closeList();
+    html.push(`<p>${renderInlineMarkdown(trimmed)}</p>`);
+  }
+
+  closeList();
+  if (inCode) html.push(`<pre><code>${escapeHtml(codeLines.join('\n'))}</code></pre>`);
+  return html.join('\n');
+}
+
+function splitMarkdownTableRow(row: string): string[] {
+  return row.replace(/^\|/, '').replace(/\|$/, '').split('|').map(cell => cell.trim());
+}
+
+function renderInlineMarkdown(text: string): string {
+  const parts = text.split(/(`[^`]*`)/g);
+  return parts.map(part => {
+    if (part.startsWith('`') && part.endsWith('`')) {
+      return `<code>${escapeHtml(part.slice(1, -1))}</code>`;
+    }
+    let rendered = escapeHtml(part);
+    rendered = rendered.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    rendered = rendered.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label: string, href: string) => {
+      const normalized = normalizeHelpHref(href);
+      const external = /^https?:\/\//i.test(href);
+      const target = external ? ' target="_blank" rel="noreferrer"' : '';
+      return `<a href="${normalized}"${target}>${label}</a>`;
+    });
+    return rendered;
+  }).join('');
+}
+
+function normalizeHelpHref(href: string): string {
+  const cleaned = href.trim();
+  if (/^(https?:|mailto:|#|\/)/i.test(cleaned)) return escapeHtmlAttribute(cleaned);
+  return escapeHtmlAttribute(`/help/${cleaned}`);
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function escapeHtmlAttribute(value: string): string {
+  return escapeHtml(value).replace(/`/g, '&#096;');
 }
 
 

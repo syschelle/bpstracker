@@ -934,3 +934,23 @@ html[data-theme='dark'] .achievement-header-widget {
     height: 1.65rem;
   }
 }
+
+.help-panel { max-width: 1120px; margin: 0 auto; }
+.help-document { display: grid; gap: 0.75rem; color: #263149; line-height: 1.62; }
+.help-document h2, .help-document h3, .help-document h4, .help-document h5 { margin: 1.1rem 0 0.15rem; color: #172033; line-height: 1.25; }
+.help-document h2 { font-size: 1.65rem; border-bottom: 1px solid #e7ebf5; padding-bottom: 0.45rem; }
+.help-document h3 { font-size: 1.28rem; }
+.help-document h4, .help-document h5 { font-size: 1.08rem; }
+.help-document p { margin: 0; }
+.help-document ul, .help-document ol { margin: 0; padding-left: 1.35rem; }
+.help-document li { margin: 0.2rem 0; }
+.help-document pre { margin: 0; overflow-x: auto; background: #111827; color: #e5e7eb; padding: 1rem; border-radius: 0.9rem; }
+.help-document pre code { background: transparent; color: inherit; padding: 0; }
+.help-document code { font-size: 0.9em; }
+.help-document a { color: #0d9488; font-weight: 750; }
+.help-document figure { margin: 0.5rem 0 1rem; }
+.help-document figure img { display: block; max-width: 100%; height: auto; border: 1px solid #e7ebf5; border-radius: 1rem; background: white; box-shadow: 0 8px 30px rgba(23, 32, 51, 0.06); }
+.help-document blockquote { margin: 0; padding: 0.8rem 1rem; border-left: 4px solid #0d9488; background: #f0fdfa; border-radius: 0.75rem; }
+.help-document hr { width: 100%; border: 0; border-top: 1px solid #e7ebf5; margin: 0.75rem 0; }
+.help-document .table-wrap { margin: 0.25rem 0 0.75rem; }
+.help-document table { min-width: 0; }
