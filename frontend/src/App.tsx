@@ -1634,18 +1634,13 @@ function measurementMatchesDeviceConfig(device: Device, measurement: Measurement
 }
 
 function shouldShowChannelColumn(rows: DashboardMeasurementRow[]): boolean {
-  const configuredChannel = rows.some(({ device }) => device.channel !== null && device.channel !== undefined);
-  const measurementChannelWithoutPhase = rows.some(({ measurement }) => measurement?.channel !== null && measurement?.channel !== undefined && !measurement.phase);
-  const hasAmbiguousMultiChannelPhases = rows.some(({ device, measurement }) => {
-    if (!measurement?.phase || measurement.channel === null || measurement.channel === undefined) {
-      return false;
-    }
-    if (device.device_type === 'shelly_3em_gen1' || device.device_type === 'shelly_pro_3em_gen2') {
-      return false;
-    }
-    return true;
-  });
-  return configuredChannel || measurementChannelWithoutPhase || hasAmbiguousMultiChannelPhases;
+  return rows.some(({ device, measurement }) => (
+    device.channel !== null
+    && device.channel !== undefined
+  ) || (
+    measurement?.channel !== null
+    && measurement?.channel !== undefined
+  ));
 }
 
 function DashboardDeviceMeasurements({ devices, latest, onRefresh }: { devices: Device[]; latest: Measurement[]; onRefresh: () => Promise<void> }) {
