@@ -1547,7 +1547,11 @@ Expected port output contains `8080/tcp -> 0.0.0.0:5173`, not `80/tcp -> 0.0.0.0
 
 ### v0.7.8 dashboard device measurements cleanup
 
-v0.7.8 merges the separate device status and latest measurements panels into one compact dashboard table. The table keeps one row per device and hides optional columns such as channel, phase, voltage and current unless at least one configured device or latest measurement actually contains that value.
+v0.7.8 merges the separate device status and latest measurements panels into one compact dashboard table. The table initially reduced the view to one row per device and hid optional columns such as channel, phase, voltage and current unless at least one configured device or latest measurement actually contained that value.
+
+### v0.7.9 multi-row dashboard measurements fix
+
+v0.7.9 keeps the merged dashboard table but restores one latest measurement row per device/source/channel/phase. Multi-phase Shelly devices such as Shelly 3EM Gen1 therefore show L1, L2, L3 and Total again, while optional columns like Channel remain hidden when they are not meaningful for the displayed data.
 
 ### v0.7.6 dashboard balances and Shelly auto-detection fix
 

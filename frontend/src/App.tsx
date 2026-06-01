@@ -117,6 +117,7 @@ const translations = {
     channel: 'Kanal',
     phase: 'Phase',
     power: 'Leistung',
+    total: 'Gesamt',
     voltage: 'Spannung',
     current: 'Strom',
     dashboardLoadFailed: 'Dashboard konnte nicht geladen werden',
@@ -410,6 +411,7 @@ const translations = {
     channel: 'Channel',
     phase: 'Phase',
     power: 'Power',
+    total: 'Total',
     voltage: 'Voltage',
     current: 'Current',
     dashboardLoadFailed: 'Dashboard could not be loaded',
@@ -1343,20 +1345,63 @@ function Dashboard() {
   );
 }
 
+type DashboardMeasurementRow = {
+  device: Device;
+  measurement: Measurement | null;
+};
+
+function measurementSortKey(measurement: Measurement): string {
+  const phaseOrder: Record<string, string> = { L1: '1', L2: '2', L3: '3', total: '9' };
+  const phase = measurement.phase || '';
+  const phaseKey = phaseOrder[phase] || phase;
+  const channelKey = measurement.channel === null || measurement.channel === undefined ? 'z' : String(measurement.channel).padStart(2, '0');
+  return `${measurement.source_type}|${channelKey}|${phaseKey}|${measurement.timestamp}`;
+}
+
+function formatMeasurementPhase(phase: string | null | undefined, t: (key: TranslationKey, vars?: Record<string, string | number>) => string): string {
+  if (!phase) {
+    return t('none');
+  }
+  return phase === 'total' ? t('total') : phase;
+}
+
+function shouldShowChannelColumn(rows: DashboardMeasurementRow[]): boolean {
+  const configuredChannel = rows.some(({ device }) => device.channel !== null && device.channel !== undefined);
+  const measurementChannelWithoutPhase = rows.some(({ measurement }) => measurement?.channel !== null && measurement?.channel !== undefined && !measurement.phase);
+  const hasAmbiguousMultiChannelPhases = rows.some(({ device, measurement }) => {
+    if (!measurement?.phase || measurement.channel === null || measurement.channel === undefined) {
+      return false;
+    }
+    if (device.device_type === 'shelly_3em_gen1' || device.device_type === 'shelly_pro_3em_gen2') {
+      return false;
+    }
+    return true;
+  });
+  return configuredChannel || measurementChannelWithoutPhase || hasAmbiguousMultiChannelPhases;
+}
+
 function DashboardDeviceMeasurements({ devices, latest, onRefresh }: { devices: Device[]; latest: Measurement[]; onRefresh: () => Promise<void> }) {
   const { language, t } = useI18n();
-  const latestByDevice = new Map<number, Measurement>();
+  const latestByDevice = new Map<number, Measurement[]>();
 
   latest.forEach(row => {
-    const current = latestByDevice.get(row.device_id);
-    if (!current || new Date(row.timestamp).getTime() > new Date(current.timestamp).getTime()) {
-      latestByDevice.set(row.device_id, row);
-    }
+    const list = latestByDevice.get(row.device_id) ?? [];
+    list.push(row);
+    latestByDevice.set(row.device_id, list);
   });
 
-  const rows = devices.map(device => ({ device, measurement: latestByDevice.get(device.id) ?? null }));
+  latestByDevice.forEach(list => list.sort((a, b) => measurementSortKey(a).localeCompare(measurementSortKey(b))));
+
+  const rows: DashboardMeasurementRow[] = devices.flatMap<DashboardMeasurementRow>(device => {
+    const measurements = latestByDevice.get(device.id) ?? [];
+    if (!measurements.length) {
+      return [{ device, measurement: null }];
+    }
+    return measurements.map(measurement => ({ device, measurement }));
+  });
+
   const measurementRows = rows.map(row => row.measurement).filter((row): row is Measurement => row !== null);
-  const hasChannel = rows.some(row => row.device.channel !== null && row.device.channel !== undefined) || measurementRows.some(row => row.channel !== null && row.channel !== undefined);
+  const hasChannel = shouldShowChannelColumn(rows);
   const hasPhase = measurementRows.some(row => Boolean(row.phase));
   const hasVoltage = measurementRows.some(row => row.voltage_v !== null && row.voltage_v !== undefined);
   const hasCurrent = measurementRows.some(row => row.current_a !== null && row.current_a !== undefined);
@@ -1383,14 +1428,14 @@ function DashboardDeviceMeasurements({ devices, latest, onRefresh }: { devices: 
             </tr>
           </thead>
           <tbody>
-            {rows.map(({ device, measurement }) => (
-              <tr key={device.id}>
+            {rows.map(({ device, measurement }, index) => (
+              <tr key={`${device.id}-${measurement?.id ?? `device-${index}`}`}>
                 <td>{device.name}</td>
                 <td><span className={device.status?.online ? 'badge ok' : 'badge'}>{device.status?.online ? t('online') : t('offline')}</span></td>
                 <td>{fmtDate(device.status?.last_success_at, language)}</td>
                 <td>{measurement ? fmtDate(measurement.timestamp, language) : t('noLatestMeasurement')}</td>
                 {hasChannel && <td>{measurement?.channel ?? device.channel ?? t('none')}</td>}
-                {hasPhase && <td>{measurement?.phase || t('none')}</td>}
+                {hasPhase && <td>{formatMeasurementPhase(measurement?.phase, t)}</td>}
                 <td>{measurement ? fmtW(measurement.power_w ?? measurement.total_power_w ?? measurement.grid_power_w ?? measurement.solar_power_w, language) : t('none')}</td>
                 {hasVoltage && <td>{measurement?.voltage_v ?? t('none')}</td>}
                 {hasCurrent && <td>{measurement?.current_a ?? t('none')}</td>}
