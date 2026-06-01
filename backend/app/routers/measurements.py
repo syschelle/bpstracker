@@ -25,6 +25,9 @@ from ..security import get_current_user
 
 router = APIRouter(prefix='/api/measurements', tags=['measurements'])
 
+HISTORY_ROW_LIMIT_DEFAULT = 500000
+HISTORY_ROW_LIMIT_MAX = 500000
+
 
 def _require_public_dashboard(db: Session) -> None:
     if not get_public_dashboard_settings_from_db(db).enabled:
@@ -205,14 +208,22 @@ def _raw_history_rows(
     end: datetime,
     device_id: int | None = None,
     source_type: str | None = None,
-    limit: int = 20000,
+    limit: int = HISTORY_ROW_LIMIT_DEFAULT,
 ) -> list[Measurement]:
     query = db.query(Measurement).filter(Measurement.timestamp >= start, Measurement.timestamp <= end)
     if device_id:
         query = query.filter(Measurement.device_id == device_id)
     if source_type:
         query = query.filter(Measurement.source_type == source_type)
-    return query.order_by(Measurement.timestamp.asc()).limit(limit).all()
+
+    # History is displayed as a recent time window (24h/7d/30d). With fast polling
+    # and multi-row Shelly devices, small ascending limits could return only the
+    # oldest rows of the selected window, making the chart stop at yesterday
+    # even though newer measurements exist. Read the most recent rows within the
+    # range first and sort them back ascending for chart rendering. The default
+    # limit is intentionally high enough for typical 30-second polling over 30 days.
+    rows = query.order_by(Measurement.timestamp.desc()).limit(limit).all()
+    return sorted(rows, key=lambda row: row.timestamp)
 
 
 @router.get('/latest', response_model=list[MeasurementRead])
@@ -296,7 +307,7 @@ def history_totals(
     end: datetime | None = None,
     device_id: int | None = None,
     source_type: str | None = None,
-    limit: int = Query(default=50000, ge=1, le=50000),
+    limit: int = Query(default=HISTORY_ROW_LIMIT_DEFAULT, ge=1, le=HISTORY_ROW_LIMIT_MAX),
 ) -> HistoryTotalsResponse:
     """Return energy totals for the currently selected history range.
 
@@ -349,7 +360,7 @@ def history(
     end: datetime | None = None,
     device_id: int | None = None,
     source_type: str | None = None,
-    limit: int = Query(default=20000, ge=1, le=50000),
+    limit: int = Query(default=HISTORY_ROW_LIMIT_DEFAULT, ge=1, le=HISTORY_ROW_LIMIT_MAX),
 ) -> list[HistoryPoint]:
     """Return chart-ready aggregated history points.
 

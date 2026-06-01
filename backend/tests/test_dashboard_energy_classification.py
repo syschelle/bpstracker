@@ -80,3 +80,42 @@ def test_history_power_totals_integrate_displayed_range() -> None:
     assert totals.imported_kwh == 0.75
     assert totals.exported_kwh == 0.1
     assert totals.solar_kwh == 0.9
+
+
+def test_raw_history_rows_keeps_newest_rows_when_limited() -> None:
+    from datetime import timedelta
+
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    from sqlalchemy.pool import StaticPool
+
+    from app.database import Base
+    from app.models import Device, DeviceType
+    from app.routers.measurements import _raw_history_rows
+
+    engine = create_engine('sqlite+pysqlite://', connect_args={'check_same_thread': False}, poolclass=StaticPool)
+    Base.metadata.create_all(bind=engine)
+    SessionLocal = sessionmaker(bind=engine)
+    start = datetime(2026, 1, 1, 0, 0, tzinfo=timezone.utc)
+
+    with SessionLocal() as db:
+        device = Device(name='Grid', host='192.168.1.10', device_type=DeviceType.shelly_3em_gen1, purpose='grid')
+        db.add(device)
+        db.flush()
+        for index in range(10):
+            db.add(Measurement(
+                timestamp=start + timedelta(minutes=index),
+                device_id=device.id,
+                source_type='shelly_3em_gen1_total',
+                total_power_w=float(index),
+            ))
+        db.commit()
+
+        rows = _raw_history_rows(db, start, start + timedelta(minutes=9), limit=3)
+
+    assert [row.total_power_w for row in rows] == [7.0, 8.0, 9.0]
+    assert [row.timestamp.replace(tzinfo=timezone.utc) if row.timestamp.tzinfo is None else row.timestamp for row in rows] == [
+        start + timedelta(minutes=7),
+        start + timedelta(minutes=8),
+        start + timedelta(minutes=9),
+    ]

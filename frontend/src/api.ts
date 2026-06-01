@@ -135,12 +135,12 @@ export const api = {
   history: (hours: number) => {
     const end = new Date();
     const start = new Date(end.getTime() - hours * 60 * 60 * 1000);
-    return request<Measurement[]>(`/api/measurements/history?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}&limit=5000`);
+    return request<Measurement[]>(`/api/measurements/history?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}&limit=500000`);
   },
   historyTotals: (hours: number) => {
     const end = new Date();
     const start = new Date(end.getTime() - hours * 60 * 60 * 1000);
-    return request<HistoryTotals>(`/api/measurements/history/totals?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}&limit=50000`);
+    return request<HistoryTotals>(`/api/measurements/history/totals?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}&limit=500000`);
   },
   exportCsv: () => download('/api/measurements/export.csv'),
   backups: () => request<BackupInfo[]>('/api/backups'),
