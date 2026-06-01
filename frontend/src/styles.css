@@ -1004,6 +1004,22 @@ html[data-theme='dark'] .help-document th {
 }
 .battery-analysis > p { margin-bottom: 0.55rem; }
 .battery-analysis-status { display: block; margin-bottom: 0.75rem; }
+.battery-analysis-toggle {
+  width: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #047857;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+.battery-analysis-toggle:hover,
+.battery-analysis-toggle:focus-visible { color: #065f46; }
 .embedded-copy-box {
   margin-top: 0.8rem;
   padding: 0.85rem;
@@ -1034,4 +1050,7 @@ html[data-theme='dark'] .embedded-copy-box {
   background: #0f172a;
   border-color: #334155;
 }
+html[data-theme='dark'] .battery-analysis-toggle { color: #6ee7b7; }
+html[data-theme='dark'] .battery-analysis-toggle:hover,
+html[data-theme='dark'] .battery-analysis-toggle:focus-visible { color: #a7f3d0; }
 html[data-theme='dark'] .embedded-copy-head { color: #e5e7eb; }

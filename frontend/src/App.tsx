@@ -1871,6 +1871,7 @@ function CostBalanceMetric({ summary, mode }: { summary: Summary | null; mode: '
 function AmortizationMetric({ summary }: { summary: Summary | null }) {
   const { language, t } = useI18n();
   const [batteryDetailsCopied, setBatteryDetailsCopied] = useState(false);
+  const [batteryDetailsOpen, setBatteryDetailsOpen] = useState(false);
   const currency = summary?.currency_code;
   const investment = summary?.investment_cost_eur ?? 0;
   const progress = summary?.breakeven_progress_percent;
@@ -1935,19 +1936,28 @@ function AmortizationMetric({ summary }: { summary: Summary | null }) {
           <small className="battery-analysis-status">{t('batteryAnalysisDisabled')}</small>
         ) : batteryConfigured ? (
           <>
-            <small className="battery-analysis-status">{batteryWorthwhile ? t('batteryWorthwhile') : t('batteryNotWorthwhile')}</small>
-            <div className="embedded-copy-box battery-detail-box">
-              <div className="embedded-copy-head">
-                <span>{t('batteryDetails')}</span>
-                <button type="button" onClick={() => void copyBatteryDetails()}>{batteryDetailsCopied ? t('batteryDetailsCopied') : t('copyBatteryDetails')}</button>
+            <button
+              type="button"
+              className="battery-analysis-status battery-analysis-toggle"
+              aria-expanded={batteryDetailsOpen}
+              onClick={() => setBatteryDetailsOpen(open => !open)}
+            >
+              {batteryWorthwhile ? t('batteryWorthwhile') : t('batteryNotWorthwhile')}
+            </button>
+            {batteryDetailsOpen && (
+              <div className="embedded-copy-box battery-detail-box">
+                <div className="embedded-copy-head">
+                  <span>{t('batteryDetails')}</span>
+                  <button type="button" onClick={() => void copyBatteryDetails()}>{batteryDetailsCopied ? t('batteryDetailsCopied') : t('copyBatteryDetails')}</button>
+                </div>
+                <div className="daily-balance-list">
+                  {batteryDetailRows.map(([label, value]) => (
+                    <div key={label}><span>{label}</span><strong>{value}</strong></div>
+                  ))}
+                </div>
+                <small>{t('batteryAssumption')}</small>
               </div>
-              <div className="daily-balance-list">
-                {batteryDetailRows.map(([label, value]) => (
-                  <div key={label}><span>{label}</span><strong>{value}</strong></div>
-                ))}
-              </div>
-              <small>{t('batteryAssumption')}</small>
-            </div>
+            )}
           </>
         ) : (
           <small className="battery-analysis-status">{t('batteryMissing')}</small>
