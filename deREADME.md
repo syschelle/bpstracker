@@ -388,7 +388,7 @@ BPSTracker kann ein Kindle-kompatibles PNG erzeugen:
 http://<ip-adresse>:5173/api/kindle/display.png
 ```
 
-Die Datei wird im Hintergrund erzeugt und kann regelmäßig vom Kindle abgeholt werden. `display.png` bleibt bewusst als optional öffentlicher Cache-Endpunkt verfügbar, weil viele Kindle-/E-Ink-Abrufe keine Auth-Cookies oder Bearer-Token mitsenden können. Metadaten und manuelles Refresh sind davon getrennt und nur für Admins erreichbar.
+Die Datei wird im Hintergrund erzeugt und kann regelmäßig vom Kindle abgeholt werden. `display.png` bleibt bewusst als optional öffentlicher Cache-Endpunkt verfügbar, weil viele Kindle-/E-Ink-Abrufe keine Auth-Cookies oder Bearer-Token mitsenden können. Metadaten und manuelles Refresh sind davon getrennt und nur für Admins erreichbar. Seit v0.7.7 liegt die automatisch erzeugte PNG standardmäßig unter `/tmp/bpstracker-kindle-display.png`, weil sie nur ein regenerierbarer Cache ist. Das verhindert stehende Bilder, wenn ältere Installationen nach dem Container-Hardening noch ein root-owned Backend-Datenverzeichnis haben.
 
 Angezeigt werden unter anderem:
 
@@ -403,6 +403,26 @@ Angezeigt werden unter anderem:
 - Tageskosten und Einsparung
 
 Die Sprache für das Kindle-Display kommt aus der gespeicherten Setup-Sprache. Der Header-Umschalter ändert nur die Sprache des aktuellen Browsers per Cookie.
+
+
+### Kindle-Bild aktualisiert sich nicht
+
+Prüfe zuerst im Setup, ob das Kindle-Display aktiviert ist. Die PNG wird einmal pro Minute im Hintergrund erzeugt und ändert sich nicht sekundengenau.
+
+Die Metadaten sind nur für Admins sichtbar:
+
+```text
+http://<ip-adresse>:5173/api/kindle/meta
+```
+
+Wenn Du `KINDLE_OUTPUT_PATH=/app/data/kindle-display.png` gesetzt hast, muss das Backend-Datenverzeichnis für den non-root Backend-User beschreibbar sein:
+
+```bash
+sudo chown -R 10001:10001 /opt/bpstracker/data/backend
+docker compose up -d --force-recreate backend
+```
+
+Bei Renderfehlern steht im Backend-Log ab v0.7.7 die Meldung `Failed to generate Kindle display PNG` inklusive Ursache.
 
 Das Kindle-Display berücksichtigt die eingestellte Sprache:
 

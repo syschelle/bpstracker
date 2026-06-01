@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import math
+import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -61,8 +63,19 @@ def _is_grid_row(row: Measurement, purposes: dict[int, str]) -> bool:
         return True
     return purpose == DEVICE_PURPOSE_AUTO and row.source_type in (GRID_POWER_SOURCES | GRID_ENERGY_SOURCES)
 
-KINDLE_OUTPUT_PATH = Path('/app/data/kindle-display.png')
-KINDLE_TMP_PATH = Path('/app/data/kindle-display.tmp.png')
+logger = logging.getLogger(__name__)
+
+
+def _kindle_output_path() -> Path:
+    # The Kindle PNG is a regeneratable cache artifact. Keeping the default in
+    # /tmp avoids stale images after the container hardening switched the backend
+    # to a non-root user: older installs may still have root-owned /app/data bind
+    # mounts, while /tmp is an explicit writable tmpfs in the hardened Compose files.
+    return Path(os.getenv('KINDLE_OUTPUT_PATH', '/tmp/bpstracker-kindle-display.png'))
+
+
+KINDLE_OUTPUT_PATH = _kindle_output_path()
+KINDLE_TMP_PATH = KINDLE_OUTPUT_PATH.with_suffix('.tmp.png')
 KINDLE_WIDTH = 600
 KINDLE_HEIGHT = 800
 KINDLE_GENERATE_SECOND = 10
@@ -151,6 +164,7 @@ class KindleDisplayService:
             self.last_error = None
         except Exception as exc:  # keep the previous PNG intact
             self.last_error = str(exc)
+            logger.exception('Failed to generate Kindle display PNG')
 
     def _generate_sync(self) -> None:
         self.output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -166,6 +180,7 @@ class KindleDisplayService:
             'ok': self.output_path.exists() and enabled,
             'enabled': enabled,
             'path': str(self.output_path),
+            'updated_at': datetime.fromtimestamp(stat.st_mtime, timezone.utc).isoformat() if stat else None,
             'size_bytes': stat.st_size if stat else None,
             'last_generated_at': self.last_generated_at.isoformat() if self.last_generated_at else None,
             'last_error': self.last_error,

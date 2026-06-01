@@ -472,6 +472,7 @@ Properties:
 - size: 600 × 800 px
 - grayscale-friendly design
 - generated inside the container
+- default cache path: `/tmp/bpstracker-kindle-display.png`
 - no external rendering tool required at runtime
 - generated once per minute
 - not generated exactly at second `00`
@@ -1249,13 +1250,22 @@ On small systems such as a Raspberry Pi Zero 2, avoid running npm builds locally
 
 Check whether the Kindle display is enabled in Setup.
 
-Then check:
+Then check the admin-only metadata endpoint while logged in as an admin:
 
 ```text
 http://<server-ip>:5173/api/kindle/meta
 ```
 
-The PNG is generated once per minute and may not change instantly.
+The PNG is generated once per minute and may not change instantly. Since v0.7.7 the generated PNG defaults to `/tmp/bpstracker-kindle-display.png` because it is a regeneratable cache artifact. This avoids stale images on hardened non-root containers when older installations still have a root-owned `/opt/bpstracker/data/backend` bind mount.
+
+If you explicitly set `KINDLE_OUTPUT_PATH=/app/data/kindle-display.png`, make sure the backend data directory is writable by UID/GID `10001`:
+
+```bash
+sudo chown -R 10001:10001 /opt/bpstracker/data/backend
+docker compose up -d --force-recreate backend
+```
+
+If rendering fails, the backend logs now include `Failed to generate Kindle display PNG` with the underlying error.
 
 ### JSON API does not return values
 
