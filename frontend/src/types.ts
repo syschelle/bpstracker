@@ -134,6 +134,7 @@ export interface Summary {
   device_count: number;
   online_device_count: number;
   raw_retention_days: number;
+  public_meter_number?: string | null;
 }
 
 
@@ -181,4 +182,5 @@ export interface ResetValuesResponse {
 
 export interface PublicDashboardSettings {
   enabled: boolean;
+  meter_number?: string | null;
 }

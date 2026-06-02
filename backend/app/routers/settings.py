@@ -35,6 +35,7 @@ DEFAULT_LANGUAGE = 'de'
 DEFAULT_CURRENCY_CODE = 'EUR'
 DEFAULT_TIMEZONE = 'Europe/Berlin'
 DEFAULT_RAW_RETENTION_DAYS = 30
+DEFAULT_PUBLIC_METER_NUMBER: str | None = None
 ALLOWED_CURRENCIES = {'EUR', 'USD', 'GBP'}
 
 
@@ -55,6 +56,14 @@ def _normalize_host_or_400(value: str | None) -> str | None:
 
 
 
+
+
+def _normalize_meter_number(value: object) -> str | None:
+    text = str(value or '').strip()
+    if not text:
+        return None
+    # Keep it printable and compact for the public smart-meter display.
+    return text[:80]
 
 def _normalize_battery_efficiency(value: object) -> float:
     try:
@@ -335,7 +344,10 @@ def _normalize_current_values_api_value(value: dict | None) -> CurrentValuesApiS
 
 def _normalize_public_dashboard_value(value: dict | None) -> PublicDashboardSettings:
     value = value or {}
-    return PublicDashboardSettings(enabled=bool(value.get('enabled', False)))
+    return PublicDashboardSettings(
+        enabled=bool(value.get('enabled', False)),
+        meter_number=_normalize_meter_number(value.get('meter_number', DEFAULT_PUBLIC_METER_NUMBER)),
+    )
 
 
 def get_public_dashboard_settings_from_db(db: Session) -> PublicDashboardSettings:

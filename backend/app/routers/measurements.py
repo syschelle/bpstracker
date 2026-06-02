@@ -447,6 +447,7 @@ def summary(_: User = Depends(get_current_user), db: Session = Depends(get_db)) 
         finance = get_finance_settings_from_db(db)
         ui = get_ui_settings_from_db(db)
         retention = get_retention_settings_from_db(db)
+        public_dashboard = get_public_dashboard_settings_from_db(db)
         devices = db.query(Device).order_by(Device.id).all()
         simulated = simulated_summary(
             ui.timezone,
@@ -471,6 +472,7 @@ def summary(_: User = Depends(get_current_user), db: Session = Depends(get_db)) 
         simulated.battery_capacity_kwh = finance.battery_capacity_kwh
         simulated.battery_roundtrip_efficiency = finance.battery_roundtrip_efficiency
         simulated.raw_retention_days = retention.raw_retention_days
+        simulated.public_meter_number = public_dashboard.meter_number
         return simulated
 
     latest = latest_measurements(_, db)
@@ -522,6 +524,7 @@ def summary(_: User = Depends(get_current_user), db: Session = Depends(get_db)) 
 
     finance = get_finance_settings_from_db(db)
     retention = get_retention_settings_from_db(db)
+    public_dashboard = get_public_dashboard_settings_from_db(db)
     price = finance.kwh_price_eur
     investment = finance.investment_cost_eur
     battery_enabled = finance.battery_analysis_enabled
@@ -594,6 +597,7 @@ def summary(_: User = Depends(get_current_user), db: Session = Depends(get_db)) 
         device_count=device_count,
         online_device_count=online_count,
         raw_retention_days=retention.raw_retention_days,
+        public_meter_number=public_dashboard.meter_number,
     )
 
 

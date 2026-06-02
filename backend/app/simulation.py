@@ -240,6 +240,7 @@ def _append_simulated_3em_rows(
         row_id -= 1
 
     if configured_channel is None:
+        aggregate_power_w = sum(power_w for _channel, _phase, power_w, _voltage_v in phase_rows)
         rows.append(MeasurementRead(
             id=row_id,
             timestamp=values.timestamp,
@@ -247,13 +248,13 @@ def _append_simulated_3em_rows(
             source_type='shelly_3em_gen1_total',
             channel=None,
             phase='total',
-            power_w=grid_w,
+            power_w=aggregate_power_w,
             voltage_v=None,
             current_a=None,
             power_factor=None,
             energy_import_wh=None,
             energy_export_wh=None,
-            total_power_w=grid_w,
+            total_power_w=aggregate_power_w,
         ))
         row_id -= 1
 

@@ -29,3 +29,21 @@ def test_kindle_display_png_remains_public_cache_only_endpoint() -> None:
     route = _route('/api/kindle/display.png', 'GET')
         
     assert not any(dependency.call is require_admin for dependency in route.dependant.dependencies)
+
+
+def test_public_dashboard_settings_normalizes_meter_number() -> None:
+    from app.routers.settings import _normalize_public_dashboard_value
+
+    settings = _normalize_public_dashboard_value({'enabled': True, 'meter_number': '  DE-2026-001337  '})
+
+    assert settings.enabled is True
+    assert settings.meter_number == 'DE-2026-001337'
+
+
+def test_public_dashboard_settings_allows_empty_meter_number() -> None:
+    from app.routers.settings import _normalize_public_dashboard_value
+
+    settings = _normalize_public_dashboard_value({'enabled': True, 'meter_number': '   '})
+
+    assert settings.enabled is True
+    assert settings.meter_number is None

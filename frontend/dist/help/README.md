@@ -516,7 +516,7 @@ Many older Kindle devices have problems with modern HTTPS/TLS. For local Kindle 
 
 BPSTracker can expose a separate dashboard-only page without requiring a login.
 
-The feature can be enabled in Setup:
+The feature can be enabled in Setup. The same setup page also lets you set the meter number shown on the smart-meter style public display:
 
 ```text
 Setup → Public dashboard / Öffentliches Dashboard

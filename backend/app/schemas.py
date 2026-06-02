@@ -166,6 +166,7 @@ class CurrentValuesApiSettings(BaseModel):
 
 class PublicDashboardSettings(BaseModel):
     enabled: bool = False
+    meter_number: str | None = Field(default=None, max_length=80)
 
 
 class SimulationSettings(BaseModel):
@@ -243,6 +244,7 @@ class SummaryResponse(BaseModel):
     device_count: int
     online_device_count: int
     raw_retention_days: int = 30
+    public_meter_number: str | None = None
 
 
 class HistoryPoint(BaseModel):

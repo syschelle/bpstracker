@@ -457,7 +457,7 @@ Updated: 2:05:12 PM
 
 BPSTracker kann optional eine separate öffentliche Dashboard-Seite bereitstellen, die ohne Login erreichbar ist.
 
-Die Funktion kann im Setup aktiviert werden:
+Die Funktion kann im Setup aktiviert werden. Dort kann auch die Zählernummer hinterlegt werden, die im öffentlichen Smart-Meter-Display angezeigt wird:
 
 ```text
 Setup → Öffentliches Dashboard

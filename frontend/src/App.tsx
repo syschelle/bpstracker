@@ -246,6 +246,19 @@ const translations = {
     publicDashboardDisabledHint: 'Nur aktivieren, wenn Besucher diese Werte ohne Anmeldung sehen dürfen.',
     publicDashboardTitle: 'Öffentliches Dashboard',
     publicDashboardLoadFailed: 'Öffentliches Dashboard konnte nicht geladen werden',
+    publicMeterBrand: 'BPSTracker',
+    publicMeterSeal: 'PV',
+    publicMeterNumber: 'Zählernummer',
+    publicMeterInfo: 'INFO',
+    publicMeterMode: 'MODUS',
+    publicMeterObis: 'OBIS',
+    publicMeterImportTotal: 'Bezug gesamt',
+    publicMeterExportTotal: 'Einspeisung gesamt',
+    publicMeterSolarTotal: 'Solar gesamt',
+    publicMeterCurrentGrid: 'Netz aktuell',
+    publicMeterCurrentSolar: 'Solar aktuell',
+    publicMeterTotalConsumption: 'Verbrauch gesamt',
+    publicMeterLastUpdate: 'Letztes Update',
     currentValuesApiSettings: 'JSON-API',
     currentValuesApiHint: 'Stellt aktuelle BPSTracker-Werte als JSON unter /api/current-values bereit. Deaktiviere diese Option, wenn du die Schnittstelle nicht nutzt.',
     enableCurrentValuesApi: 'JSON-API aktivieren',
@@ -554,6 +567,19 @@ const translations = {
     publicDashboardDisabledHint: 'Only enable this if visitors may see these values without signing in.',
     publicDashboardTitle: 'Public dashboard',
     publicDashboardLoadFailed: 'Public dashboard could not be loaded',
+    publicMeterBrand: 'BPSTracker',
+    publicMeterSeal: 'PV',
+    publicMeterNumber: 'Meter number',
+    publicMeterInfo: 'INFO',
+    publicMeterMode: 'MODE',
+    publicMeterObis: 'OBIS',
+    publicMeterImportTotal: 'Total import',
+    publicMeterExportTotal: 'Total export',
+    publicMeterSolarTotal: 'Total solar',
+    publicMeterCurrentGrid: 'Grid now',
+    publicMeterCurrentSolar: 'Solar now',
+    publicMeterTotalConsumption: 'Total consumption',
+    publicMeterLastUpdate: 'Last update',
     currentValuesApiSettings: 'JSON API',
     currentValuesApiHint: 'Provides current BPSTracker values as JSON at /api/current-values. Disable this option if you do not use the endpoint.',
     enableCurrentValuesApi: 'Enable JSON API',
@@ -1531,6 +1557,112 @@ function PublicAirSensorWidget({ sensor }: { sensor: AirSensorCurrent | null }) 
   );
 }
 
+
+type PublicSmartMeterView = {
+  obis: string;
+  label: string;
+  value: number | null | undefined;
+  unit: 'kWh' | 'kW';
+};
+
+function formatPublicMeterDisplayValue(value: number | null | undefined, unit: 'kWh' | 'kW'): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return unit === 'kWh' ? '------.---' : '----.---';
+  const sign = value < 0 ? '-' : '';
+  const fixed = Math.abs(value).toFixed(3);
+  const [whole, decimal] = fixed.split('.');
+  const width = unit === 'kWh' ? 6 : 4;
+  return `${sign}${whole.padStart(width, '0')}.${decimal}`;
+}
+
+function PublicSmartMeterDisplay({ summary }: { summary: Summary | null }) {
+  const { language, t } = useI18n();
+  const [viewIndex, setViewIndex] = useState(0);
+  const importedTotal = summary?.imported_total_kwh;
+  const exportedTotal = summary?.exported_total_kwh;
+  const solarTotal = summary?.solar_total_kwh;
+  const totalConsumption = sumKwhValues(importedTotal, solarTotal);
+  const currentGridKw = summary?.current_grid_power_w === null || summary?.current_grid_power_w === undefined ? null : summary.current_grid_power_w / 1000;
+  const views: PublicSmartMeterView[] = [
+    { obis: '1.8.0', label: t('publicMeterImportTotal'), value: importedTotal, unit: 'kWh' },
+    { obis: '2.8.0', label: t('publicMeterExportTotal'), value: exportedTotal, unit: 'kWh' },
+    { obis: '16.7.0', label: t('publicMeterCurrentGrid'), value: currentGridKw, unit: 'kW' }
+  ];
+  const view = views[viewIndex % views.length];
+  const exporting = (summary?.current_grid_power_w ?? 0) < -0.01;
+
+  function switchView() {
+    setViewIndex(current => (current + 1) % views.length);
+  }
+
+  return (
+    <section className="public-meter-shell" aria-label={t('publicDashboardTitle')}>
+      <div className="public-meter">
+        <div className="public-meter-brand-row">
+          <div className="public-meter-brand">
+            <img src="/favicon.svg" alt="" className="public-meter-logo" />
+            <span>{t('publicMeterBrand')}</span>
+          </div>
+          <div className="public-meter-seal">{t('publicMeterSeal')}</div>
+        </div>
+
+        <div className="public-meter-display">
+          <div className="public-meter-status">
+            <span>API: {summary ? 'OK' : '----'}</span>
+            <span>{t('publicMeterInfo')}</span>
+            <span>{t('publicMeterMode')}</span>
+          </div>
+
+          <div className="public-meter-obis">{view.obis}</div>
+          <div className="public-meter-current-label">{view.label}</div>
+
+          <div className="public-meter-main-value">
+            <span>{formatPublicMeterDisplayValue(view.value, view.unit)}</span><span className="public-meter-unit">{view.unit}</span>
+          </div>
+
+          <div className="public-meter-sub-grid">
+            <div className="public-meter-label">{t('publicMeterImportTotal')}</div>
+            <div className="public-meter-value">{fmtKwh(importedTotal, language)}</div>
+
+            <div className="public-meter-label">{t('publicMeterExportTotal')}</div>
+            <div className="public-meter-value">{fmtKwh(exportedTotal, language)}</div>
+
+            <div className="public-meter-label">{t('publicMeterSolarTotal')}</div>
+            <div className="public-meter-value">{fmtKwh(solarTotal, language)}</div>
+
+            <div className="public-meter-label">{t('publicMeterTotalConsumption')}</div>
+            <div className="public-meter-value">{fmtKwh(totalConsumption, language)}</div>
+
+            <div className="public-meter-label">{t('publicMeterCurrentGrid')}</div>
+            <div className="public-meter-value">{fmtW(summary?.current_grid_power_w, language)}</div>
+
+            <div className="public-meter-label">{t('publicMeterCurrentSolar')}</div>
+            <div className="public-meter-value">{fmtW(summary?.current_solar_power_w, language)}</div>
+
+            <div className="public-meter-label">{t('publicMeterObis')}</div>
+            <div className="public-meter-value">1.8.0 / 2.8.0 / 16.7.0</div>
+          </div>
+        </div>
+
+        <div className="public-meter-bottom-row">
+          <div className="public-meter-led-wrap">
+            <div className={exporting ? 'public-meter-led exporting' : 'public-meter-led'} />
+            <span>{exporting ? t('gridExporting') : t('gridImportShare')}</span>
+          </div>
+          <button type="button" className="public-meter-button" onClick={switchView}>{t('publicMeterInfo')}</button>
+        </div>
+
+        <div className="public-meter-serial">
+          <span>BPSTracker {APP_VERSION}</span>
+          <span>{t('publicMeterNumber')}: {summary?.public_meter_number || '—'}</span>
+          <span>{t('publicMeterLastUpdate')}: {fmtDate(summary?.last_measurement_at, language)}</span>
+        </div>
+
+        <div className="public-meter-barcode" aria-hidden="true" />
+      </div>
+    </section>
+  );
+}
+
 function PublicDashboard() {
   const { t } = useI18n();
   const [summary, setSummary] = useState<Summary | null>(null);
@@ -1560,8 +1692,9 @@ function PublicDashboard() {
   return (
     <div className="grid gap public-dashboard-content">
       {error && <div className="error">{error}</div>}
+      <PublicSmartMeterDisplay summary={summary} />
       <PublicAirSensorWidget sensor={sensor} />
-      <div className="cards dashboard-cards">
+      <div className="cards dashboard-cards public-dashboard-cards">
         <GridPowerMetric summary={summary} />
         <DailyBalanceMetric summary={summary} />
         <TotalBalanceMetric summary={summary} />
@@ -2544,7 +2677,7 @@ function SimulationSettingsPanel() {
 
 function PublicDashboardSettingsPanel() {
   const { t } = useI18n();
-  const [settings, setSettings] = useState<PublicDashboardSettings>({ enabled: false });
+  const [settings, setSettings] = useState<PublicDashboardSettings>({ enabled: false, meter_number: '' });
   const [message, setMessage] = useState<string | null>(null);
   const publicUrl = typeof window === 'undefined' ? '/public/dashboard' : `${window.location.origin}/public/dashboard`;
 
@@ -2556,7 +2689,7 @@ function PublicDashboardSettingsPanel() {
 
   async function save() {
     setMessage(null);
-    const saved = await api.updatePublicDashboardSettings({ enabled: settings.enabled });
+    const saved = await api.updatePublicDashboardSettings({ enabled: settings.enabled, meter_number: (settings.meter_number || '').trim() || null });
     setSettings(saved);
     setMessage(t('publicDashboardSaved'));
   }
@@ -2567,7 +2700,8 @@ function PublicDashboardSettingsPanel() {
       <p className="hint">{t('publicDashboardHint')}</p>
       {message && <div className="info">{message}</div>}
       <div className="form-grid finance-form">
-        <label className="check"><input type="checkbox" checked={settings.enabled} onChange={e => setSettings({ enabled: e.target.checked })} /> {t('enablePublicDashboard')}</label>
+        <label className="check"><input type="checkbox" checked={settings.enabled} onChange={e => setSettings({ ...settings, enabled: e.target.checked })} /> {t('enablePublicDashboard')}</label>
+        <label>{t('publicMeterNumber')}<input value={settings.meter_number || ''} onChange={e => setSettings({ ...settings, meter_number: e.target.value })} placeholder="DE-2026-001337" /></label>
       </div>
       <p className="hint">{t('publicDashboardDisabledHint')}</p>
       {settings.enabled && (
