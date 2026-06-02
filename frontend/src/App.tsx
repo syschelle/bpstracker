@@ -1649,7 +1649,7 @@ function PublicSmartMeterDisplay({ summary }: { summary: Summary | null }) {
             <div className="public-meter-value">{fmtW(summary?.current_solar_power_w, language)}</div>
 
             <div className="public-meter-label">{t('publicMeterObis')}</div>
-            <div className="public-meter-value">1.8.0 / 2.8.0 / 1.28.0 / 1.29.0 / 16.7.0</div>
+            <div className="public-meter-value public-meter-obis-value">1.8.0 / 2.8.0 / 1.28.0 / 1.29.0 / 16.7.0</div>
           </div>
         </div>
 

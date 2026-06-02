@@ -1164,25 +1164,35 @@ html[data-theme='dark'] .embedded-copy-head { color: #e5e7eb; }
 .public-meter-sub-grid {
   margin-top: 1rem;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(9.5rem, 1fr) minmax(0, auto);
   gap: 0.38rem 0.9rem;
   font-size: 0.88rem;
   border-top: 1px solid rgba(0, 0, 0, 0.28);
   padding-top: 0.75rem;
+  align-items: baseline;
 }
 
 .public-meter-label {
   opacity: 0.78;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
 }
 
 .public-meter-value {
+  min-width: 0;
   text-align: right;
   font-weight: 900;
   white-space: nowrap;
+}
+
+.public-meter-obis-value {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
 }
 
 .public-meter-bottom-row {
@@ -1295,7 +1305,7 @@ html[data-theme='dark'] .public-meter-serial {
   .public-meter { padding: 1rem; border-radius: 18px; }
   .public-meter-display { border-width: 6px; padding: 0.85rem; }
   .public-meter-status, .public-meter-serial { font-size: 0.66rem; }
-  .public-meter-sub-grid { font-size: 0.76rem; gap: 0.32rem 0.55rem; }
+  .public-meter-sub-grid { grid-template-columns: minmax(7.9rem, 1fr) minmax(0, auto); font-size: 0.76rem; gap: 0.32rem 0.55rem; }
   .public-meter-bottom-row { align-items: flex-start; }
 }
 
