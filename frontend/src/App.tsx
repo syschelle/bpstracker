@@ -83,7 +83,7 @@ const translations = {
     solarShare: 'Solar',
     noPowerData: 'Keine aktuelle Leistung',
     totalCurrently: 'Aktuell gesamt',
-    gridExporting: 'Einspeisung ins Grid',
+    gridExporting: 'Einspeisung ins Netz',
     gridNeutral: '0 Netzbezug',
     solarSocket: 'Solar',
     solarSocketSubtitle: 'aktuell an der Einspeisesteckdose',
