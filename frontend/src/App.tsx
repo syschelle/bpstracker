@@ -83,7 +83,8 @@ const translations = {
     solarShare: 'Solar',
     noPowerData: 'Keine aktuelle Leistung',
     totalCurrently: 'Aktuell gesamt',
-    gridExporting: 'Netz speist aktuell ein',
+    gridExporting: 'Einspeisung ins Grid',
+    gridNeutral: '0 Netzbezug',
     solarSocket: 'Solar',
     solarSocketSubtitle: 'aktuell an der Einspeisesteckdose',
     importedToday: 'Bezug',
@@ -238,7 +239,7 @@ const translations = {
     resetValuesDone: 'Alle Werte wurden gelöscht.',
     resetValuesConfirmPlaceholder: 'reset',
     publicDashboardSettings: 'Öffentliches Dashboard',
-    publicDashboardHint: 'Aktiviert eine separate Dashboard-Seite ohne Login. Besucher sehen nur Dashboard-Kacheln und, falls konfiguriert, aktuelle Luftdaten.',
+    publicDashboardHint: 'Aktiviert eine separate Smart-Meter-Zähleransicht ohne Login.',
     enablePublicDashboard: 'Öffentliches Dashboard aktivieren',
     publicDashboardSaved: 'Öffentliches Dashboard wurde gespeichert.',
     publicDashboardLink: 'Öffentlicher Dashboard-Link',
@@ -248,6 +249,7 @@ const translations = {
     publicDashboardLoadFailed: 'Öffentliches Dashboard konnte nicht geladen werden',
     publicMeterBrand: 'BPSTracker',
     publicMeterSeal: 'PV',
+    publicMeterLanguage: 'Sprache',
     publicMeterNumber: 'Zählernummer',
     publicMeterInfo: 'INFO',
     publicMeterMode: 'MODUS',
@@ -404,7 +406,8 @@ const translations = {
     solarShare: 'Solar',
     noPowerData: 'No current power',
     totalCurrently: 'Current total',
-    gridExporting: 'Grid is currently exporting',
+    gridExporting: 'Grid export',
+    gridNeutral: 'Zero grid import',
     solarSocket: 'Solar',
     solarSocketSubtitle: 'current at the feed-in socket',
     importedToday: 'Import',
@@ -559,7 +562,7 @@ const translations = {
     resetValuesDone: 'All values have been deleted.',
     resetValuesConfirmPlaceholder: 'reset',
     publicDashboardSettings: 'Public dashboard',
-    publicDashboardHint: 'Enables a separate dashboard page without login. Visitors only see the dashboard cards and, if configured, current air sensor values.',
+    publicDashboardHint: 'Enables a separate smart-meter style public meter view without login.',
     enablePublicDashboard: 'Enable public dashboard',
     publicDashboardSaved: 'Public dashboard has been saved.',
     publicDashboardLink: 'Public dashboard link',
@@ -569,6 +572,7 @@ const translations = {
     publicDashboardLoadFailed: 'Public dashboard could not be loaded',
     publicMeterBrand: 'BPSTracker',
     publicMeterSeal: 'PV',
+    publicMeterLanguage: 'Language',
     publicMeterNumber: 'Meter number',
     publicMeterInfo: 'INFO',
     publicMeterMode: 'MODE',
@@ -995,21 +999,7 @@ export default function App() {
   if (isPublicDashboardRoute) {
     return (
       <I18nContext.Provider value={i18n}>
-        <div className="public-dashboard-page">
-          <header className="public-dashboard-header">
-            <div>
-              <h1>{t('publicDashboardTitle')}</h1>
-              <p>BPSTracker {APP_VERSION}</p>
-            </div>
-            <button
-              className="language-switch"
-              onClick={() => setLanguage(language === 'de' ? 'en' : 'de')}
-              aria-label={t('switchLanguage')}
-              title={t('switchLanguage')}
-            >
-              {language === 'de' ? 'EN' : 'DE'}
-            </button>
-          </header>
+        <div className="public-dashboard-page public-dashboard-page-meter-only">
           <PublicDashboard />
         </div>
       </I18nContext.Provider>
@@ -1575,7 +1565,7 @@ function formatPublicMeterDisplayValue(value: number | null | undefined, unit: '
 }
 
 function PublicSmartMeterDisplay({ summary }: { summary: Summary | null }) {
-  const { language, t } = useI18n();
+  const { language, setLanguage, t } = useI18n();
   const [viewIndex, setViewIndex] = useState(0);
   const importedTotal = summary?.imported_total_kwh;
   const exportedTotal = summary?.exported_total_kwh;
@@ -1588,10 +1578,26 @@ function PublicSmartMeterDisplay({ summary }: { summary: Summary | null }) {
     { obis: '16.7.0', label: t('publicMeterCurrentGrid'), value: currentGridKw, unit: 'kW' }
   ];
   const view = views[viewIndex % views.length];
-  const exporting = (summary?.current_grid_power_w ?? 0) < -0.01;
+  const gridPowerW = summary?.current_grid_power_w ?? null;
+  const gridStatus = gridPowerW === null || gridPowerW === undefined
+    ? 'neutral'
+    : gridPowerW < -0.01
+      ? 'exporting'
+      : gridPowerW > 0.01
+        ? 'importing'
+        : 'neutral';
+  const gridStatusLabel = gridStatus === 'exporting'
+    ? t('gridExporting')
+    : gridStatus === 'importing'
+      ? t('gridImportShare')
+      : t('gridNeutral');
 
   function switchView() {
     setViewIndex(current => (current + 1) % views.length);
+  }
+
+  function switchLanguage() {
+    setLanguage(language === 'de' ? 'en' : 'de');
   }
 
   return (
@@ -1600,9 +1606,17 @@ function PublicSmartMeterDisplay({ summary }: { summary: Summary | null }) {
         <div className="public-meter-brand-row">
           <div className="public-meter-brand">
             <img src="/favicon.svg" alt="" className="public-meter-logo" />
-            <span>{t('publicMeterBrand')}</span>
+            <span>{t('publicMeterBrand')} <span className="public-meter-version">{APP_VERSION}</span></span>
           </div>
-          <div className="public-meter-seal">{t('publicMeterSeal')}</div>
+          <button
+            type="button"
+            className="public-meter-seal public-meter-language-button"
+            onClick={switchLanguage}
+            aria-label={t('switchLanguage')}
+            title={t('switchLanguage')}
+          >
+            {language === 'de' ? 'EN' : 'DE'}
+          </button>
         </div>
 
         <div className="public-meter-display">
@@ -1645,14 +1659,13 @@ function PublicSmartMeterDisplay({ summary }: { summary: Summary | null }) {
 
         <div className="public-meter-bottom-row">
           <div className="public-meter-led-wrap">
-            <div className={exporting ? 'public-meter-led exporting' : 'public-meter-led'} />
-            <span>{exporting ? t('gridExporting') : t('gridImportShare')}</span>
+            <div className={`public-meter-led ${gridStatus}`} />
+            <span>{gridStatusLabel}</span>
           </div>
           <button type="button" className="public-meter-button" onClick={switchView}>{t('publicMeterInfo')}</button>
         </div>
 
         <div className="public-meter-serial">
-          <span>BPSTracker {APP_VERSION}</span>
           <span>{t('publicMeterNumber')}: {summary?.public_meter_number || '—'}</span>
           <span>{t('publicMeterLastUpdate')}: {fmtDate(summary?.last_measurement_at, language)}</span>
         </div>
@@ -1666,17 +1679,12 @@ function PublicSmartMeterDisplay({ summary }: { summary: Summary | null }) {
 function PublicDashboard() {
   const { t } = useI18n();
   const [summary, setSummary] = useState<Summary | null>(null);
-  const [sensor, setSensor] = useState<AirSensorCurrent | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
     try {
-      const [summaryData, sensorData] = await Promise.all([
-        api.publicSummary(),
-        api.publicAirSensorCurrent().catch(() => null),
-      ]);
+      const summaryData = await api.publicSummary();
       setSummary(summaryData);
-      setSensor(sensorData);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('publicDashboardLoadFailed'));
@@ -1690,17 +1698,9 @@ function PublicDashboard() {
   }, []);
 
   return (
-    <div className="grid gap public-dashboard-content">
+    <div className="public-dashboard-content public-dashboard-meter-only">
       {error && <div className="error">{error}</div>}
       <PublicSmartMeterDisplay summary={summary} />
-      <PublicAirSensorWidget sensor={sensor} />
-      <div className="cards dashboard-cards public-dashboard-cards">
-        <GridPowerMetric summary={summary} />
-        <DailyBalanceMetric summary={summary} />
-        <TotalBalanceMetric summary={summary} />
-        <CostBalanceMetric summary={summary} mode="daily" />
-        <CostBalanceMetric summary={summary} mode="total" />
-      </div>
     </div>
   );
 }
