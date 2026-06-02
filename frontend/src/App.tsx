@@ -257,6 +257,7 @@ const translations = {
     publicMeterImportTotal: 'Bezug gesamt',
     publicMeterExportTotal: 'Einspeisung gesamt',
     publicMeterSolarTotal: 'Solar gesamt',
+    publicMeterSolarToday: 'Solar heute',
     publicMeterCurrentGrid: 'Netz aktuell',
     publicMeterCurrentSolar: 'Solar aktuell',
     publicMeterTotalConsumption: 'Verbrauch gesamt',
@@ -580,6 +581,7 @@ const translations = {
     publicMeterImportTotal: 'Total import',
     publicMeterExportTotal: 'Total export',
     publicMeterSolarTotal: 'Total solar',
+    publicMeterSolarToday: 'Solar today',
     publicMeterCurrentGrid: 'Grid now',
     publicMeterCurrentSolar: 'Solar now',
     publicMeterTotalConsumption: 'Total consumption',
@@ -1570,11 +1572,14 @@ function PublicSmartMeterDisplay({ summary }: { summary: Summary | null }) {
   const importedTotal = summary?.imported_total_kwh;
   const exportedTotal = summary?.exported_total_kwh;
   const solarTotal = summary?.solar_total_kwh;
+  const solarToday = summary?.solar_today_kwh;
   const totalConsumption = sumKwhValues(importedTotal, solarTotal);
   const currentGridKw = summary?.current_grid_power_w === null || summary?.current_grid_power_w === undefined ? null : summary.current_grid_power_w / 1000;
   const views: PublicSmartMeterView[] = [
     { obis: '1.8.0', label: t('publicMeterImportTotal'), value: importedTotal, unit: 'kWh' },
     { obis: '2.8.0', label: t('publicMeterExportTotal'), value: exportedTotal, unit: 'kWh' },
+    { obis: '1.28.0', label: t('publicMeterSolarTotal'), value: solarTotal, unit: 'kWh' },
+    { obis: '1.29.0', label: t('publicMeterSolarToday'), value: solarToday, unit: 'kWh' },
     { obis: '16.7.0', label: t('publicMeterCurrentGrid'), value: currentGridKw, unit: 'kW' }
   ];
   const view = views[viewIndex % views.length];
@@ -1634,15 +1639,6 @@ function PublicSmartMeterDisplay({ summary }: { summary: Summary | null }) {
           </div>
 
           <div className="public-meter-sub-grid">
-            <div className="public-meter-label">{t('publicMeterImportTotal')}</div>
-            <div className="public-meter-value">{fmtKwh(importedTotal, language)}</div>
-
-            <div className="public-meter-label">{t('publicMeterExportTotal')}</div>
-            <div className="public-meter-value">{fmtKwh(exportedTotal, language)}</div>
-
-            <div className="public-meter-label">{t('publicMeterSolarTotal')}</div>
-            <div className="public-meter-value">{fmtKwh(solarTotal, language)}</div>
-
             <div className="public-meter-label">{t('publicMeterTotalConsumption')}</div>
             <div className="public-meter-value">{fmtKwh(totalConsumption, language)}</div>
 
@@ -1653,7 +1649,7 @@ function PublicSmartMeterDisplay({ summary }: { summary: Summary | null }) {
             <div className="public-meter-value">{fmtW(summary?.current_solar_power_w, language)}</div>
 
             <div className="public-meter-label">{t('publicMeterObis')}</div>
-            <div className="public-meter-value">1.8.0 / 2.8.0 / 16.7.0</div>
+            <div className="public-meter-value">1.8.0 / 2.8.0 / 1.28.0 / 1.29.0 / 16.7.0</div>
           </div>
         </div>
 
