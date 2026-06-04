@@ -265,6 +265,11 @@ class HistoryTotalsResponse(BaseModel):
     solar_kwh: float | None = None
 
 
+class HistorySeriesResponse(BaseModel):
+    points: list[HistoryPoint] = Field(default_factory=list)
+    totals: HistoryTotalsResponse = Field(default_factory=HistoryTotalsResponse)
+
+
 class BackupCreateRequest(BaseModel):
     password: str = Field(min_length=12, max_length=1024)
     confirm_password: str = Field(min_length=12, max_length=1024)

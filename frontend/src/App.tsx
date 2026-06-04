@@ -1709,14 +1709,16 @@ function Dashboard() {
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
-    try {
-      const [summaryData, latestData, deviceData] = await Promise.all([api.summary(), api.latest(), api.devices()]);
-      setSummary(summaryData);
-      setLatest(latestData);
-      setDevices(deviceData);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('dashboardLoadFailed'));
+    setError(null);
+    const tasks = [
+      api.summary().then(setSummary),
+      api.latest().then(setLatest),
+      api.devices().then(setDevices),
+    ];
+    const results = await Promise.allSettled(tasks);
+    const rejected = results.find((result): result is PromiseRejectedResult => result.status === 'rejected');
+    if (rejected) {
+      setError(rejected.reason instanceof Error ? rejected.reason.message : t('dashboardLoadFailed'));
     }
   }
 
@@ -2113,9 +2115,9 @@ function HistoryView() {
   const [message, setMessage] = useState<string | null>(null);
 
   async function load() {
-    const [nextHistory, nextTotals] = await Promise.all([api.history(hours), api.historyTotals(hours)]);
-    setHistory(nextHistory);
-    setHistoryTotals(nextTotals);
+    const series = await api.historySeries(hours);
+    setHistory(series.points);
+    setHistoryTotals(series.totals);
   }
 
   async function exportCsv() {

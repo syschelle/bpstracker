@@ -1,4 +1,4 @@
-import type { AirSensorCurrent, AirSensorSettings, BackupCreateResponse, BackupInfo, CurrentValuesApiSettings, Device, FinanceSettings, KindleDisplaySettings, Measurement, HistoryTotals, PublicDashboardSettings, RetentionSettings, ResetValuesResponse, SimulationSettings, Summary, UiSettings, User } from './types';
+import type { AirSensorCurrent, AirSensorSettings, BackupCreateResponse, BackupInfo, CurrentValuesApiSettings, Device, FinanceSettings, KindleDisplaySettings, Measurement, HistorySeries, HistoryTotals, PublicDashboardSettings, RetentionSettings, ResetValuesResponse, SimulationSettings, Summary, UiSettings, User } from './types';
 
 type RuntimeConfig = {
   API_BASE_URL?: string;
@@ -56,6 +56,19 @@ function clearLegacyTokenStorage(): void {
 }
 
 clearLegacyTokenStorage();
+
+function historyQuery(hours: number): string {
+  const end = new Date();
+  const start = new Date(end.getTime() - hours * 60 * 60 * 1000);
+  const limit = historyLimit(hours);
+  return `start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}&limit=${limit}`;
+}
+
+function historyLimit(hours: number): number {
+  if (hours <= 24) return 50000;
+  if (hours <= 168) return 150000;
+  return 300000;
+}
 
 export function getToken(): string | null {
   // Access tokens are stored in an HttpOnly cookie and are intentionally not readable by JavaScript.
@@ -132,16 +145,9 @@ export const api = {
   publicSummary: () => request<Summary>('/api/measurements/public/summary'),
   publicAirSensorCurrent: () => request<AirSensorCurrent>('/api/settings/public/air-sensor/current'),
   currentValues: () => request<Record<string, unknown>>('/api/current-values'),
-  history: (hours: number) => {
-    const end = new Date();
-    const start = new Date(end.getTime() - hours * 60 * 60 * 1000);
-    return request<Measurement[]>(`/api/measurements/history?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}&limit=500000`);
-  },
-  historyTotals: (hours: number) => {
-    const end = new Date();
-    const start = new Date(end.getTime() - hours * 60 * 60 * 1000);
-    return request<HistoryTotals>(`/api/measurements/history/totals?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}&limit=500000`);
-  },
+  history: (hours: number) => request<Measurement[]>(`/api/measurements/history?${historyQuery(hours)}`),
+  historyTotals: (hours: number) => request<HistoryTotals>(`/api/measurements/history/totals?${historyQuery(hours)}`),
+  historySeries: (hours: number) => request<HistorySeries>(`/api/measurements/history/series?${historyQuery(hours)}`),
   exportCsv: () => download('/api/measurements/export.csv'),
   backups: () => request<BackupInfo[]>('/api/backups'),
   createBackup: (password: string, confirm_password: string) => request<BackupCreateResponse>('/api/backups/create', { method: 'POST', body: JSON.stringify({ password, confirm_password }) }),

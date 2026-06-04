@@ -129,6 +129,15 @@ class Measurement(Base):
 
 
 Index('ix_measurements_device_timestamp', Measurement.device_id, Measurement.timestamp.desc())
+Index(
+    'ix_measurements_latest_key_timestamp',
+    Measurement.device_id,
+    Measurement.source_type,
+    Measurement.channel,
+    Measurement.phase,
+    Measurement.timestamp.desc(),
+)
+Index('ix_measurements_timestamp_desc', Measurement.timestamp.desc())
 
 
 class DailyEnergySummary(Base):

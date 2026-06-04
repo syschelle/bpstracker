@@ -15,11 +15,10 @@ from ..energy_retention import (
     GRID_ENERGY_SOURCES,
     SOLAR_ENERGY_SOURCES,
     delta_energy,
-    ensure_completed_daily_summaries,
     get_stored_total_kwh,
 )
 from ..routers.settings import get_finance_settings_from_db, get_public_dashboard_settings_from_db, get_retention_settings_from_db, get_simulation_settings_from_db, get_ui_settings_from_db
-from ..schemas import HistoryPoint, HistoryTotalsResponse, MeasurementRead, SummaryResponse
+from ..schemas import HistoryPoint, HistorySeriesResponse, HistoryTotalsResponse, MeasurementRead, SummaryResponse
 from ..simulation import simulated_history, simulated_latest, simulated_summary
 from ..security import get_current_user
 
@@ -301,89 +300,12 @@ def _history_power_totals(points: list[HistoryPoint]) -> HistoryTotalsResponse:
     )
 
 
-@router.get('/history/totals', response_model=HistoryTotalsResponse)
-def history_totals(
-    _: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-    start: datetime | None = None,
-    end: datetime | None = None,
-    device_id: int | None = None,
-    source_type: str | None = None,
-    limit: int = Query(default=HISTORY_ROW_LIMIT_DEFAULT, ge=1, le=HISTORY_ROW_LIMIT_MAX),
-) -> HistoryTotalsResponse:
-    """Return energy totals for the currently selected history range.
-
-    The chart itself shows aggregated power points. The totals use cumulative
-    energy counter deltas where available, matching dashboard/summary semantics.
-    For simulations or legacy rows without energy counters, they fall back to
-    integrating the charted power values over the selected range.
-    """
-    end = end or datetime.now(timezone.utc)
-    start = start or (end - timedelta(hours=24))
-    simulation = get_simulation_settings_from_db(db)
-    if simulation.enabled:
-        ui = get_ui_settings_from_db(db)
-        return _history_power_totals(simulated_history(start, end, ui.timezone, _bucket_seconds(start, end)))
-
-    rows = _raw_history_rows(db, start, end, device_id=device_id, source_type=source_type, limit=limit)
-    purposes = _device_purposes(db)
-    configs = _device_configs(db)
-    rows = [row for row in rows if _measurement_matches_device_config(row, configs)]
-    grid_rows = [row for row in rows if _is_grid_row(row, purposes)]
-    solar_rows = [row for row in rows if _is_solar_row(row, purposes)]
-
-    imported_wh = delta_energy(grid_rows, 'energy_import_wh', None)
-    exported_wh = delta_energy(grid_rows, 'energy_export_wh', None)
-    solar_wh = delta_energy(solar_rows, 'energy_import_wh', None)
-
-    totals = HistoryTotalsResponse(
-        imported_kwh=imported_wh / 1000.0 if imported_wh is not None else None,
-        exported_kwh=exported_wh / 1000.0 if exported_wh is not None else None,
-        solar_kwh=solar_wh / 1000.0 if solar_wh is not None else None,
-    )
-
-    if totals.imported_kwh is None or totals.exported_kwh is None or totals.solar_kwh is None:
-        fallback = _history_power_totals(history(_, db, start, end, device_id, source_type, limit))
-        if totals.imported_kwh is None:
-            totals.imported_kwh = fallback.imported_kwh
-        if totals.exported_kwh is None:
-            totals.exported_kwh = fallback.exported_kwh
-        if totals.solar_kwh is None:
-            totals.solar_kwh = fallback.solar_kwh
-
-    return totals
-
-
-@router.get('/history', response_model=list[HistoryPoint])
-def history(
-    _: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-    start: datetime | None = None,
-    end: datetime | None = None,
-    device_id: int | None = None,
-    source_type: str | None = None,
-    limit: int = Query(default=HISTORY_ROW_LIMIT_DEFAULT, ge=1, le=HISTORY_ROW_LIMIT_MAX),
+def _history_points_from_rows(
+    rows: list[Measurement],
+    purposes: dict[int, str],
+    configs: dict[int, tuple[str, int | None]],
+    bucket_seconds: int,
 ) -> list[HistoryPoint]:
-    """Return chart-ready aggregated history points.
-
-    The database intentionally stores normalized raw measurements. For devices
-    such as Shelly 3EM this means several rows per polling timestamp, e.g. L1,
-    L2, L3 and one total row. Plotting those rows as one line creates the
-    vertical spikes seen in the history view. This endpoint now aggregates rows
-    into time buckets and returns one value per bucket.
-    """
-    end = end or datetime.now(timezone.utc)
-    start = start or (end - timedelta(hours=24))
-    bucket_seconds = _bucket_seconds(start, end)
-    simulation = get_simulation_settings_from_db(db)
-    if simulation.enabled:
-        ui = get_ui_settings_from_db(db)
-        return simulated_history(start, end, ui.timezone, bucket_seconds)
-
-    rows = _raw_history_rows(db, start, end, device_id=device_id, source_type=source_type, limit=limit)
-    purposes = _device_purposes(db)
-    configs = _device_configs(db)
-
     buckets: dict[datetime, dict] = defaultdict(lambda: {
         'solar_by_key': defaultdict(list),
         'grid_values': [],
@@ -438,6 +360,140 @@ def history(
         ))
 
     return points
+
+
+def _history_totals_from_rows(
+    rows: list[Measurement],
+    purposes: dict[int, str],
+    configs: dict[int, tuple[str, int | None]],
+    bucket_seconds: int,
+    points: list[HistoryPoint] | None = None,
+) -> HistoryTotalsResponse:
+    visible_rows = [row for row in rows if _measurement_matches_device_config(row, configs)]
+    grid_rows = [row for row in visible_rows if _is_grid_row(row, purposes)]
+    solar_rows = [row for row in visible_rows if _is_solar_row(row, purposes)]
+
+    imported_wh = delta_energy(grid_rows, 'energy_import_wh', None)
+    exported_wh = delta_energy(grid_rows, 'energy_export_wh', None)
+    solar_wh = delta_energy(solar_rows, 'energy_import_wh', None)
+
+    totals = HistoryTotalsResponse(
+        imported_kwh=imported_wh / 1000.0 if imported_wh is not None else None,
+        exported_kwh=exported_wh / 1000.0 if exported_wh is not None else None,
+        solar_kwh=solar_wh / 1000.0 if solar_wh is not None else None,
+    )
+
+    if totals.imported_kwh is None or totals.exported_kwh is None or totals.solar_kwh is None:
+        fallback_points = points if points is not None else _history_points_from_rows(rows, purposes, configs, bucket_seconds)
+        fallback = _history_power_totals(fallback_points)
+        if totals.imported_kwh is None:
+            totals.imported_kwh = fallback.imported_kwh
+        if totals.exported_kwh is None:
+            totals.exported_kwh = fallback.exported_kwh
+        if totals.solar_kwh is None:
+            totals.solar_kwh = fallback.solar_kwh
+
+    return totals
+
+
+def _history_series_from_rows(
+    rows: list[Measurement],
+    purposes: dict[int, str],
+    configs: dict[int, tuple[str, int | None]],
+    bucket_seconds: int,
+) -> HistorySeriesResponse:
+    points = _history_points_from_rows(rows, purposes, configs, bucket_seconds)
+    totals = _history_totals_from_rows(rows, purposes, configs, bucket_seconds, points)
+    return HistorySeriesResponse(points=points, totals=totals)
+
+
+@router.get('/history/totals', response_model=HistoryTotalsResponse)
+def history_totals(
+    _: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    start: datetime | None = None,
+    end: datetime | None = None,
+    device_id: int | None = None,
+    source_type: str | None = None,
+    limit: int = Query(default=HISTORY_ROW_LIMIT_DEFAULT, ge=1, le=HISTORY_ROW_LIMIT_MAX),
+) -> HistoryTotalsResponse:
+    """Return energy totals for the currently selected history range.
+
+    The chart itself shows aggregated power points. The totals use cumulative
+    energy counter deltas where available, matching dashboard/summary semantics.
+    For simulations or legacy rows without energy counters, they fall back to
+    integrating the charted power values over the selected range.
+    """
+    end = end or datetime.now(timezone.utc)
+    start = start or (end - timedelta(hours=24))
+    bucket_seconds = _bucket_seconds(start, end)
+    simulation = get_simulation_settings_from_db(db)
+    if simulation.enabled:
+        ui = get_ui_settings_from_db(db)
+        return _history_power_totals(simulated_history(start, end, ui.timezone, bucket_seconds))
+
+    rows = _raw_history_rows(db, start, end, device_id=device_id, source_type=source_type, limit=limit)
+    purposes = _device_purposes(db)
+    configs = _device_configs(db)
+    return _history_totals_from_rows(rows, purposes, configs, bucket_seconds)
+
+
+@router.get('/history/series', response_model=HistorySeriesResponse)
+def history_series(
+    _: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    start: datetime | None = None,
+    end: datetime | None = None,
+    device_id: int | None = None,
+    source_type: str | None = None,
+    limit: int = Query(default=HISTORY_ROW_LIMIT_DEFAULT, ge=1, le=HISTORY_ROW_LIMIT_MAX),
+) -> HistorySeriesResponse:
+    """Return chart-ready history points and matching totals in one database pass."""
+    end = end or datetime.now(timezone.utc)
+    start = start or (end - timedelta(hours=24))
+    bucket_seconds = _bucket_seconds(start, end)
+    simulation = get_simulation_settings_from_db(db)
+    if simulation.enabled:
+        ui = get_ui_settings_from_db(db)
+        points = simulated_history(start, end, ui.timezone, bucket_seconds)
+        return HistorySeriesResponse(points=points, totals=_history_power_totals(points))
+
+    rows = _raw_history_rows(db, start, end, device_id=device_id, source_type=source_type, limit=limit)
+    purposes = _device_purposes(db)
+    configs = _device_configs(db)
+    return _history_series_from_rows(rows, purposes, configs, bucket_seconds)
+
+
+@router.get('/history', response_model=list[HistoryPoint])
+def history(
+    _: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    start: datetime | None = None,
+    end: datetime | None = None,
+    device_id: int | None = None,
+    source_type: str | None = None,
+    limit: int = Query(default=HISTORY_ROW_LIMIT_DEFAULT, ge=1, le=HISTORY_ROW_LIMIT_MAX),
+) -> list[HistoryPoint]:
+    """Return chart-ready aggregated history points.
+
+    The database intentionally stores normalized raw measurements. For devices
+    such as Shelly 3EM this means several rows per polling timestamp, e.g. L1,
+    L2, L3 and one total row. Plotting those rows as one line creates the
+    vertical spikes seen in the history view. This endpoint aggregates rows into
+    time buckets and returns one value per bucket.
+    """
+    end = end or datetime.now(timezone.utc)
+    start = start or (end - timedelta(hours=24))
+    bucket_seconds = _bucket_seconds(start, end)
+    simulation = get_simulation_settings_from_db(db)
+    if simulation.enabled:
+        ui = get_ui_settings_from_db(db)
+        return simulated_history(start, end, ui.timezone, bucket_seconds)
+
+    rows = _raw_history_rows(db, start, end, device_id=device_id, source_type=source_type, limit=limit)
+    purposes = _device_purposes(db)
+    configs = _device_configs(db)
+    return _history_points_from_rows(rows, purposes, configs, bucket_seconds)
 
 
 @router.get('/summary', response_model=SummaryResponse)
@@ -500,10 +556,6 @@ def summary(_: User = Depends(get_current_user), db: Session = Depends(get_db)) 
 
     now = datetime.now(timezone.utc)
     today = now.replace(hour=0, minute=0, second=0, microsecond=0)
-
-    # Keep completed days materialized before totals are calculated. Raw rows may
-    # later be deleted by the retention job, but these daily summaries stay forever.
-    ensure_completed_daily_summaries(db, now)
 
     today_rows = db.query(Measurement).filter(Measurement.timestamp >= today).order_by(Measurement.timestamp.asc()).all()
     today_rows = [row for row in today_rows if _measurement_matches_device_config(row, configs)]

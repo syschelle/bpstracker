@@ -48,7 +48,7 @@ Das Projekt ist für den lokalen Betrieb im Heimnetz gedacht. Backend und Datenb
 
 ### Setup-Übersicht
 
-![BPSTracker setup overview](docs/images/setup-overview.jpeg)
+![BPSTracker setup overview](docs/images/setup-overview.png)
 
 
 ---
@@ -849,3 +849,12 @@ v0.7.11 überarbeitet die Dashboard-Achievements. Ein neues GoLive-Badge wird ve
 ### v0.7.13 README-Architekturbild
 
 v0.7.13 ergänzt die README-Dateien um das BPSTracker-Systemschema. Das Bild zeigt den typischen Aufbau mit getrenntem Netzbezug, separat gemessener Balkonsolar-Erzeugung, Shelly-Messgeräten, BPSTracker-Server, Browser-/Mobile-Clients, öffentlichem Dashboard und Kindle-Abruf von `display.png`.
+
+### v0.8.7 Screenshot-Assets bereinigt
+
+v0.8.7 vereinheitlicht die Doku-Bilder: `docs/images/setup-overview.jpeg` wurde nach `docs/images/setup-overview.png` konvertiert und die Verweise in README/Hilfe wurden entsprechend angepasst. Damit liegen die Screenshot-Assets im aktuellen Projektstand konsistent als PNG vor.
+
+### v0.8.8 Dashboard- und History-Performance
+
+v0.8.8 reduziert die Ladezeit von Dashboard und Historie. Das Dashboard verarbeitet `summary`, `latest` und `devices` jetzt unabhängig voneinander, damit die Kennzahlen erscheinen können, sobald die Summary-Anfrage fertig ist, ohne auf alle Dashboard-Anfragen zu warten. Der heiße Pfad `/api/measurements/summary` materialisiert abgeschlossene Tageszusammenfassungen nicht mehr bei jedem Aufruf; die stündliche Poller-Wartung hält die Tageswerte weiterhin vor. Die Historie nutzt jetzt einen kombinierten Endpunkt `/api/measurements/history/series`, sodass Diagrammpunkte und Summen aus einer gemeinsamen Rohdatenabfrage entstehen. Das Frontend sendet außerdem kleinere, zeitraumabhängige Limits für 24h-, 7-Tage- und 30-Tage-Ansichten. Zusätzliche Measurement-Indizes beschleunigen Latest-Value- und History-Zeitfenster-Abfragen auf aktualisierten Installationen.
+

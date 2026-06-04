@@ -159,6 +159,10 @@ def migrate_existing_schema() -> None:
             conn.execute(text("UPDATE measurements SET timestamp = now() WHERE timestamp IS NULL"))
             conn.execute(text("UPDATE measurements SET source_type = 'unknown' WHERE source_type IS NULL OR source_type = ''"))
 
+            conn.execute(text('CREATE INDEX IF NOT EXISTS ix_measurements_timestamp_desc ON measurements(timestamp DESC)'))
+            conn.execute(text('CREATE INDEX IF NOT EXISTS ix_measurements_device_timestamp ON measurements(device_id, timestamp DESC)'))
+            conn.execute(text('CREATE INDEX IF NOT EXISTS ix_measurements_latest_key_timestamp ON measurements(device_id, source_type, channel, phase, timestamp DESC)'))
+
         if 'audit_log' in tables:
             cols = _columns('audit_log')
             _add_column_if_missing(conn, 'audit_log', cols, 'timestamp', 'TIMESTAMP WITH TIME ZONE DEFAULT now()')
@@ -248,7 +252,7 @@ async def lifespan(app: FastAPI):
 
 
 settings = get_settings()
-app = FastAPI(title=settings.app_name, version='0.8.6', lifespan=lifespan)
+app = FastAPI(title=settings.app_name, version='0.8.8', lifespan=lifespan)
 
 configured_origins = [origin.strip() for origin in settings.frontend_origin.split(',') if origin.strip()]
 loopback_hosts = {'localhost', '127.0.0.1', '::1', '0.0.0.0'}

@@ -62,6 +62,11 @@ export interface HistoryTotals {
   solar_kwh?: number | null;
 }
 
+export interface HistorySeries {
+  points: Measurement[];
+  totals: HistoryTotals;
+}
+
 export interface UiSettings {
   language: Language;
   timezone: string;

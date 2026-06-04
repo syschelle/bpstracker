@@ -313,7 +313,7 @@ The backend remains private inside the Docker network.
 
 ### Setup overview
 
-![BPSTracker setup overview](docs/images/setup-overview.jpeg)
+![BPSTracker setup overview](docs/images/setup-overview.png)
 
 
 ## Screens and UI
@@ -1578,3 +1578,12 @@ v0.7.11 refreshes the dashboard achievement flow. A new GoLive badge is unlocked
 ### v0.7.13 README architecture diagram
 
 v0.7.13 adds the BPSTracker system setup schematic to the README files. The diagram documents the typical deployment with separate grid import and balcony solar measurement, Shelly-based metering, the BPSTracker server stack, browser/mobile clients, the public dashboard and Kindle display retrieval via `display.png`.
+
+### v0.8.7 screenshot asset cleanup
+
+v0.8.7 refreshes the documentation asset set by converting `docs/images/setup-overview.jpeg` to `docs/images/setup-overview.png` and updating the README/help references accordingly. This keeps the screenshot assets consistent in PNG format for the current project snapshot.
+
+### v0.8.8 dashboard and history performance
+
+v0.8.8 reduces dashboard and history loading latency. The dashboard now applies `summary`, `latest` and `devices` responses independently so the metric cards can render as soon as the summary request finishes instead of waiting for all dashboard requests. The `/api/measurements/summary` hot path no longer materializes completed daily summaries on every request; hourly poller maintenance keeps daily totals materialized. The history view now uses a combined `/api/measurements/history/series` endpoint so chart points and totals are produced from one raw history query, and the frontend sends smaller range-aware row limits for 24h, 7d and 30d views. Additional measurement indexes improve latest-value and history-window lookups on upgraded installations.
+
