@@ -245,17 +245,22 @@ button.secondary { background: #e5e7eb; color: #172033; }
 .grid-power-values { min-width: 0; flex: 1; }
 .grid-power-value-list {
   display: grid;
-  gap: 0.28rem;
-  margin-top: 0.5rem;
+  grid-template-columns: max-content max-content;
+  align-items: baseline;
+  gap: 0.28rem 0.42rem;
+  margin-top: 0.48rem;
 }
 .grid-power-value-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: flex-start;
-  gap: 0.35rem;
+  display: contents;
   color: #65708a;
   font-size: 0.98rem;
   font-weight: 750;
+}
+.grid-power-value-row span {
+  color: #65708a;
+  font-size: 0.98rem;
+  font-weight: 750;
+  white-space: nowrap;
 }
 .grid-power-value-row span::after {
   content: ':';
@@ -264,6 +269,7 @@ button.secondary { background: #e5e7eb; color: #172033; }
   color: #111827;
   font-size: 0.98rem;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 .grid-power-value-row.solar strong { color: #0d9488; }
@@ -286,6 +292,7 @@ button.secondary { background: #e5e7eb; color: #172033; }
 
 @media (max-width: 560px) {
   .grid-power-value-row,
+  .grid-power-value-row span,
   .grid-power-value-row strong { font-size: 0.9rem; }
 }
 
