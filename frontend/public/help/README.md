@@ -1583,7 +1583,13 @@ v0.7.13 adds the BPSTracker system setup schematic to the README files. The diag
 
 v0.8.7 refreshes the documentation asset set by converting `docs/images/setup-overview.jpeg` to `docs/images/setup-overview.png` and updating the README/help references accordingly. This keeps the screenshot assets consistent in PNG format for the current project snapshot.
 
-### v0.8.8 dashboard and history performance
+### v0.9.0 dashboard and history performance
 
-v0.8.8 reduces dashboard and history loading latency. The dashboard now applies `summary`, `latest` and `devices` responses independently so the metric cards can render as soon as the summary request finishes instead of waiting for all dashboard requests. The `/api/measurements/summary` hot path no longer materializes completed daily summaries on every request; hourly poller maintenance keeps daily totals materialized. The history view now uses a combined `/api/measurements/history/series` endpoint so chart points and totals are produced from one raw history query, and the frontend sends smaller range-aware row limits for 24h, 7d and 30d views. Additional measurement indexes improve latest-value and history-window lookups on upgraded installations.
+v0.9.0 reduces dashboard and history loading latency. The dashboard now applies `summary`, `latest` and `devices` responses independently so the metric cards can render as soon as the summary request finishes instead of waiting for all dashboard requests. The `/api/measurements/summary` hot path no longer materializes completed daily summaries on every request; hourly poller maintenance keeps daily totals materialized. The history view now uses a combined `/api/measurements/history/series` endpoint so chart points and totals are produced from one raw history query, and the frontend sends smaller range-aware row limits for 24h, 7d and 30d views. Additional measurement indexes improve latest-value and history-window lookups on upgraded installations.
+
+### v0.9.0 frontend healthcheck and documentation refresh
+
+v0.9.0 updates both Compose files to use a robust frontend healthcheck that verifies the generated nginx assets and the running nginx process instead of relying on an internal `wget` request. This avoids false `unhealthy` states on minimal nginx/Alpine images and Raspberry Pi deployments where the page is served correctly but the old healthcheck cannot connect to `127.0.0.1:8080`.
+
+The release also refreshes the History screenshot in `docs/images/history-simulation.png` and bumps the application version to `v0.9.0` across backend, frontend and built frontend assets.
 
