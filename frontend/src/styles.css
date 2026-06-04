@@ -242,20 +242,28 @@ button.secondary { background: #e5e7eb; color: #172033; }
 
 
 /* Compact combined Hausbezug/Solar and Amortisation cards */
-.grid-power-values { min-width: 0; }
-.embedded-solar-value {
+.grid-power-values { min-width: 0; flex: 1; }
+.grid-power-value-list {
+  display: grid;
+  gap: 0.42rem;
+  margin-top: 0.55rem;
+}
+.grid-power-value-row {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-top: 0.45rem;
-  padding-top: 0.45rem;
-  border-top: 1px solid #e7ebf5;
   color: #65708a;
-  font-size: 0.82rem;
+  font-size: 0.98rem;
   font-weight: 750;
 }
-.embedded-solar-value b { color: #0d9488; font-size: 0.98rem; white-space: nowrap; }
+.grid-power-value-row strong {
+  color: #111827;
+  font-size: 0.98rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.grid-power-value-row.solar strong { color: #0d9488; }
 .amortization-metric { grid-column: span 1; }
 .progress-line {
   width: 100%;
@@ -274,8 +282,8 @@ button.secondary { background: #e5e7eb; color: #172033; }
 }
 
 @media (max-width: 560px) {
-  .embedded-solar-value { font-size: 0.78rem; }
-  .embedded-solar-value b { font-size: 0.9rem; }
+  .grid-power-value-row,
+  .grid-power-value-row strong { font-size: 0.9rem; }
 }
 
 /* Header branding and cleaner collapsed navigation */
@@ -414,7 +422,7 @@ html[data-theme='dark'] label,
 html[data-theme='dark'] header h1,
 html[data-theme='dark'] .share-legend-item strong,
 html[data-theme='dark'] .daily-balance-list strong,
-html[data-theme='dark'] .grid-power-values strong { color: #e5e7eb; }
+html[data-theme='dark'] .grid-power-value-row strong { color: #e5e7eb; }
 html[data-theme='dark'] .daily-balance-total-row { border-bottom-color: #334155; }
 html[data-theme='dark'] .daily-balance-total-row span,
 html[data-theme='dark'] .daily-balance-total-row strong { color: #f8fafc; }
@@ -427,7 +435,7 @@ html[data-theme='dark'] .brand-subtitle,
 html[data-theme='dark'] .share-legend-item small,
 html[data-theme='dark'] .share-total,
 html[data-theme='dark'] .mini-share-row,
-html[data-theme='dark'] .embedded-solar-value,
+html[data-theme='dark'] .grid-power-value-row,
 html[data-theme='dark'] .edit-actions small,
 html[data-theme='dark'] .credential-card small {
   color: #94a3b8;
@@ -435,7 +443,6 @@ html[data-theme='dark'] .credential-card small {
 html[data-theme='dark'] th { color: #a5b4fc; }
 html[data-theme='dark'] th,
 html[data-theme='dark'] td,
-html[data-theme='dark'] .embedded-solar-value,
 html[data-theme='dark'] .credential-card,
 html[data-theme='dark'] .recovery-box,
 html[data-theme='dark'] .progress-line,

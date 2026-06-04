@@ -77,11 +77,9 @@ The dashboard provides a compact view of the current energy situation.
 It includes:
 
 - **House import / Hausbezug**
-  - current signed grid power
-  - current grid import
-  - current grid export
-  - current solar power
   - current total consumption estimate
+  - current signed grid power / grid import value
+  - current solar power
   - solar/grid share gauge
 
 - **Daily energy balance**
@@ -1607,4 +1605,8 @@ v0.9.2 adds a configurable maximum solar output to the simulation settings. The 
 ### v0.9.3 configurable simulation baseload
 
 v0.9.3 adds configurable day and night baseload values to the simulation settings. The configured watt values define the continuous household consumption floor for daytime and nighttime, while existing simulated consumption peaks such as washing machine, kettle, cooking and coffee-maker events remain active and are added on top. The baseload values are used consistently by dashboard summary values, latest measurements, history charts, history totals, Kindle display and the current-values JSON API.
+
+### v0.9.4 dashboard home import layout
+
+v0.9.4 updates the dashboard **House import / Hausbezug** card. The card now shows the current total household consumption estimate first, followed by the signed grid import/export value and the current solar power. The former separator line above the solar value was removed, and the three displayed values now use the same font size for a more consistent layout.
 

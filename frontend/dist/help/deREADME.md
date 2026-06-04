@@ -329,6 +329,10 @@ Das Dashboard zeigt unter anderem:
 - Luftdaten im Header, falls aktiviert
 - Simulationshinweis, falls der Demo-Modus aktiv ist
 
+
+
+Die Kachel **Hausbezug / Home import** zeigt den aktuellen Gesamtverbrauch, darunter den vorzeichenbehafteten Netzbezug beziehungsweise die Einspeisung und danach die aktuelle Solarleistung. Die drei Werte werden in gleicher Schriftgröße dargestellt; die frühere Trennlinie vor dem Solarwert entfällt.
+
 In der Kachel **Hausbezug / Home import** wird der Wert farblich markiert:
 
 ```text
@@ -877,4 +881,8 @@ v0.9.2 ergänzt in den Simulationseinstellungen einen konfigurierbaren maximalen
 ### v0.9.3 Konfigurierbare Simulations-Grundlast
 
 v0.9.3 ergänzt in den Simulationseinstellungen eine konfigurierbare Grundlast für Tag und Nacht. Die hinterlegten Watt-Werte bilden den dauerhaften Verbrauchssockel des Haushalts, während vorhandene simulierte Verbrauchsspitzen wie Waschmaschine, Wasserkocher, Kochen und Kaffeeautomat weiterhin aktiv bleiben und zusätzlich auf die Grundlast gerechnet werden. Die Grundlastwerte werden konsistent für Dashboard-Summary, aktuelle Messwerte, Historien-Diagramme, Historien-Summen, Kindle-Display und die Current-Values-JSON-API verwendet.
+
+### v0.9.4 Dashboard-Kachel Hausbezug überarbeitet
+
+v0.9.4 überarbeitet die Dashboard-Kachel **Hausbezug / Home import**. Die Kachel zeigt jetzt zuerst den aktuellen Gesamtverbrauch, darunter den vorzeichenbehafteten Netzbezug beziehungsweise die Einspeisung und danach die aktuelle Solarleistung. Die frühere Trennlinie vor dem Solarwert wurde entfernt, und die drei Werte werden in gleicher Schriftgröße angezeigt.
 

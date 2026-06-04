@@ -91,6 +91,7 @@ const translations = {
     exportedToday: 'Einspeisung',
     solarToday: 'Solar',
     totalConsumption: 'Verbrauch gesamt',
+    currentTotalConsumption: 'Gesamtverbrauch',
     totalBalance: 'Gesamtbilanz',
     solarTodaySubtitle: 'an der Einspeisesteckdose',
     dailyBalance: 'Tagesbilanz',
@@ -420,6 +421,7 @@ const translations = {
     exportedToday: 'Export',
     solarToday: 'Solar',
     totalConsumption: 'Total consumption',
+    currentTotalConsumption: 'Total consumption',
     totalBalance: 'Total energy balance',
     solarTodaySubtitle: 'at the feed-in socket',
     dailyBalance: 'Daily energy balance',
@@ -1870,10 +1872,10 @@ function GridPowerMetric({ summary }: { summary: Summary | null }) {
   const solarPower = Math.max(solarRaw ?? 0, 0);
   const gridImportPower = Math.max(gridPower, 0);
   const totalPower = gridImportPower + solarPower;
+  const currentTotalConsumption = summary ? Math.max(gridPower + solarPower, 0) : null;
   const hasPower = totalPower > 0.01;
   const gridPercent = hasPower ? clampPercent((gridImportPower / totalPower) * 100) : 0;
   const solarPercent = hasPower ? clampPercent(100 - gridPercent) : 0;
-  const exporting = gridPower < -0.01;
   const gridValueClass = gridPower < -0.01 ? 'negative' : Math.abs(gridPower) <= 0.01 ? 'zero' : 'positive';
 
   return (
@@ -1881,12 +1883,20 @@ function GridPowerMetric({ summary }: { summary: Summary | null }) {
       <div className="grid-power-top">
         <div className="grid-power-values">
           <p>{t('gridPower')}</p>
-          <strong className={`home-import-value ${gridValueClass}`}>{fmtW(summary?.current_grid_power_w, language)}</strong>
-          <div className="embedded-solar-value">
-            <span>{t('solarShare')}</span>
-            <b>{fmtW(solarRaw ?? 0, language)}</b>
+          <div className="grid-power-value-list">
+            <div className="grid-power-value-row">
+              <span>{t('currentTotalConsumption')}</span>
+              <strong>{fmtW(currentTotalConsumption, language)}</strong>
+            </div>
+            <div className="grid-power-value-row">
+              <span>{t('gridImportShare')}</span>
+              <strong className={`home-import-value ${gridValueClass}`}>{fmtW(summary?.current_grid_power_w, language)}</strong>
+            </div>
+            <div className="grid-power-value-row solar">
+              <span>{t('solarShare')}</span>
+              <strong>{fmtW(solarRaw ?? 0, language)}</strong>
+            </div>
           </div>
-          {exporting && <small>{`${t('gridExporting')}: ${fmtW(Math.abs(gridPower), language)}`}</small>}
         </div>
         <div
           className="share-gauge share-gauge-mini"
@@ -1900,10 +1910,6 @@ function GridPowerMetric({ summary }: { summary: Summary | null }) {
             <span>{t('solarShare')}</span>
           </div>
         </div>
-      </div>
-      <div className="mini-share-row">
-        <span className="mini-share-item grid-import"><i />{t('gridImportShare')}: {fmtW(gridImportPower, language)} · {hasPower ? fmtPercent(gridPercent, language) : t('noPowerData')}</span>
-        <span className="mini-share-item solar"><i />{t('solarShare')}: {fmtW(solarRaw ?? 0, language)} · {hasPower ? fmtPercent(solarPercent, language) : t('noPowerData')}</span>
       </div>
     </div>
   );
