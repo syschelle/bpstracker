@@ -252,7 +252,7 @@ async def lifespan(app: FastAPI):
 
 
 settings = get_settings()
-app = FastAPI(title=settings.app_name, version='0.9.4', lifespan=lifespan)
+app = FastAPI(title=settings.app_name, version='0.9.5', lifespan=lifespan)
 
 configured_origins = [origin.strip() for origin in settings.frontend_origin.split(',') if origin.strip()]
 loopback_hosts = {'localhost', '127.0.0.1', '::1', '0.0.0.0'}

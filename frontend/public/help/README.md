@@ -1606,7 +1606,11 @@ v0.9.2 adds a configurable maximum solar output to the simulation settings. The 
 
 v0.9.3 adds configurable day and night baseload values to the simulation settings. The configured watt values define the continuous household consumption floor for daytime and nighttime, while existing simulated consumption peaks such as washing machine, kettle, cooking and coffee-maker events remain active and are added on top. The baseload values are used consistently by dashboard summary values, latest measurements, history charts, history totals, Kindle display and the current-values JSON API.
 
-### v0.9.4 dashboard home import layout
+### v0.9.5 dashboard home import layout
 
-v0.9.4 updates the dashboard **House import / Hausbezug** card. The card now shows the current total household consumption estimate first, followed by the signed grid import/export value and the current solar power. The former separator line above the solar value was removed, and the three displayed values now use the same font size for a more consistent layout.
+v0.9.5 updates the dashboard **House import / Hausbezug** card. The card now shows the current total household consumption estimate first, followed by the signed grid import/export value and the current solar power. The former separator line above the solar value was removed, and the three displayed values now use the same font size for a more consistent layout.
+
+### v0.9.5 dashboard Home Import layout refinement
+
+v0.9.5 refines the Dashboard `Home Import` card after the v0.9.4 total-consumption addition. The value rows are now more compact so labels and values stay close together, the compact network/solar share line is restored at the bottom of the card, and positive grid import values use the same blue as the History grid import series. Negative grid values remain red for export.
 

@@ -184,7 +184,7 @@ button.secondary { background: #e5e7eb; color: #172033; }
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: conic-gradient(#172033 0 var(--grid-share), #0d9488 var(--grid-share) 100%);
+  background: conic-gradient(#2563eb 0 var(--grid-share), #0d9488 var(--grid-share) 100%);
   box-shadow: inset 0 0 0 1px rgba(23, 32, 51, 0.08), 0 12px 34px rgba(23, 32, 51, 0.10);
   margin: 0 auto;
 }
@@ -205,7 +205,7 @@ button.secondary { background: #e5e7eb; color: #172033; }
 .share-legend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; }
 .share-legend-item { border: 1px solid #e7ebf5; border-radius: 1rem; padding: 0.9rem; display: flex; align-items: flex-start; gap: 0.75rem; background: #f8fafc; }
 .share-legend-item > span { width: 0.9rem; height: 0.9rem; border-radius: 50%; flex: 0 0 auto; margin-top: 0.18rem; }
-.share-legend-item.grid-import > span { background: #172033; }
+.share-legend-item.grid-import > span { background: #2563eb; }
 .share-legend-item.solar > span { background: #0d9488; }
 .share-legend-item strong { display: block; color: #172033; }
 .share-legend-item small { color: #65708a; }
@@ -229,10 +229,10 @@ button.secondary { background: #e5e7eb; color: #172033; }
 .share-gauge-mini .share-gauge-inner { width: 68%; padding: 0.35rem; }
 .share-gauge-mini .share-gauge-inner strong { font-size: 0.95rem; margin: 0; }
 .share-gauge-mini .share-gauge-inner span { font-size: 0.62rem; margin-top: 0.15rem; }
-.mini-share-row { display: flex; flex-wrap: wrap; gap: 0.45rem 0.75rem; margin-top: 0.75rem; color: #65708a; font-size: 0.78rem; font-weight: 700; }
+.mini-share-row { display: flex; flex-wrap: wrap; gap: 0.35rem 0.65rem; margin-top: 0.55rem; color: #65708a; font-size: 0.78rem; font-weight: 700; line-height: 1.25; }
 .mini-share-item { display: inline-flex; align-items: center; gap: 0.3rem; white-space: nowrap; }
 .mini-share-item i { width: 0.55rem; height: 0.55rem; border-radius: 50%; display: inline-block; }
-.mini-share-item.grid-import i { background: #172033; }
+.mini-share-item.grid-import i { background: #2563eb; }
 .mini-share-item.solar i { background: #0d9488; }
 @media (max-width: 560px) {
   .grid-power-top { align-items: flex-start; }
@@ -245,17 +245,20 @@ button.secondary { background: #e5e7eb; color: #172033; }
 .grid-power-values { min-width: 0; flex: 1; }
 .grid-power-value-list {
   display: grid;
-  gap: 0.42rem;
-  margin-top: 0.55rem;
+  gap: 0.28rem;
+  margin-top: 0.5rem;
 }
 .grid-power-value-row {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
-  gap: 0.75rem;
+  justify-content: flex-start;
+  gap: 0.35rem;
   color: #65708a;
   font-size: 0.98rem;
   font-weight: 750;
+}
+.grid-power-value-row span::after {
+  content: ':';
 }
 .grid-power-value-row strong {
   color: #111827;
@@ -823,12 +826,9 @@ html[data-theme='dark'] .metric .home-import-value.zero {
   color: #16a34a !important;
 }
 
-.metric .home-import-value.positive {
-  color: #111827 !important;
-}
-
+.metric .home-import-value.positive,
 html[data-theme='dark'] .metric .home-import-value.positive {
-  color: #e5e7eb !important;
+  color: #2563eb !important;
 }
 
 

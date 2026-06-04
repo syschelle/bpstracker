@@ -1897,6 +1897,10 @@ function GridPowerMetric({ summary }: { summary: Summary | null }) {
               <strong>{fmtW(solarRaw ?? 0, language)}</strong>
             </div>
           </div>
+          <div className="mini-share-row" aria-label={`${t('gridImportShare')}: ${fmtW(gridImportPower, language)} · ${hasPower ? fmtPercent(gridPercent, language) : t('noPowerData')}, ${t('solarShare')}: ${fmtW(solarPower, language)} · ${hasPower ? fmtPercent(solarPercent, language) : t('noPowerData')}`}>
+            <span className="mini-share-item grid-import"><i aria-hidden="true" />{t('gridImportShare')}: {fmtW(gridImportPower, language)} · {hasPower ? fmtPercent(gridPercent, language) : t('noPowerData')}</span>
+            <span className="mini-share-item solar"><i aria-hidden="true" />{t('solarShare')}: {fmtW(solarPower, language)} · {hasPower ? fmtPercent(solarPercent, language) : t('noPowerData')}</span>
+          </div>
         </div>
         <div
           className="share-gauge share-gauge-mini"
