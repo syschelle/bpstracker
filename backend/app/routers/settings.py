@@ -362,9 +362,14 @@ def get_current_values_api_settings_from_db(db: Session) -> CurrentValuesApiSett
 
 def _normalize_simulation_value(value: dict | None) -> SimulationSettings:
     value = value or {}
+    try:
+        pv_peak_w = float(value.get('pv_peak_w', 800.0) or 800.0)
+    except (TypeError, ValueError):
+        pv_peak_w = 800.0
+    pv_peak_w = min(5000.0, max(100.0, pv_peak_w))
     return SimulationSettings(
         enabled=bool(value.get('enabled', False)),
-        pv_peak_w=float(value.get('pv_peak_w', 800.0) or 800.0),
+        pv_peak_w=pv_peak_w,
         household_profile=str(value.get('household_profile') or 'two_person_household'),
     )
 

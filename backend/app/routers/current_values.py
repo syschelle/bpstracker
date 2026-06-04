@@ -71,10 +71,21 @@ def _grid_power_value(row: Measurement) -> float | None:
 
 
 
-def _simulation_enabled(db: Session) -> bool:
+def _simulation_settings_value(db: Session) -> dict:
     row = db.get(AppSetting, SIMULATION_SETTINGS_KEY)
-    value = row.value if row and isinstance(row.value, dict) else {}
-    return bool(value.get('enabled', False))
+    return row.value if row and isinstance(row.value, dict) else {}
+
+
+def _simulation_enabled(db: Session) -> bool:
+    return bool(_simulation_settings_value(db).get('enabled', False))
+
+
+def _simulation_pv_peak_w(db: Session) -> float:
+    value = _simulation_settings_value(db)
+    try:
+        return float(value.get('pv_peak_w', 800.0) or 800.0)
+    except (TypeError, ValueError):
+        return 800.0
 
 
 def _api_enabled(db: Session) -> bool:
@@ -156,13 +167,15 @@ def current_values(db: Session = Depends(get_db)) -> dict:
     timezone_name = _ui_timezone(db)
     now_utc = datetime.now(timezone.utc)
     if _simulation_enabled(db):
-        values = simulated_values_at(now_utc, timezone_name)
+        pv_peak_w = _simulation_pv_peak_w(db)
+        values = simulated_values_at(now_utc, timezone_name, pv_peak_w)
         return {
             'timestamp_utc': now_utc.isoformat(),
             'local_date': now_utc.astimezone(_zoneinfo(timezone_name)).date().isoformat(),
             'timezone': timezone_name,
             'simulation_enabled': True,
-            'simulation_profile': '800 W balcony PV, 2-person household',
+            'simulation_profile': f'{pv_peak_w:g} W balcony PV, 2-person household',
+            'simulation_pv_peak_w': pv_peak_w,
             'last_measurement_at': values.timestamp.isoformat(),
             'current_solar_production_w': values.solar_w,
             'current_grid_power_w': values.grid_w,

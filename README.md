@@ -642,9 +642,11 @@ Setup -> Simulation
 
 When enabled, the dashboard, history chart and JSON API return simulated values instead of real device measurements.
 
+The simulation settings include a configurable maximum solar output in watts. This value caps the generated PV curve so the simulated output matches what the real installation could actually deliver.
+
 The simulation is based on:
 
-- an 800 W balcony PV system
+- a configurable balcony PV / solar installation with a maximum simulated output in watts
 - a typical 2-person household
 - realistic daily load curves
 - morning and evening consumption peaks
@@ -1583,17 +1585,21 @@ v0.7.13 adds the BPSTracker system setup schematic to the README files. The diag
 
 v0.8.7 refreshes the documentation asset set by converting `docs/images/setup-overview.jpeg` to `docs/images/setup-overview.png` and updating the README/help references accordingly. This keeps the screenshot assets consistent in PNG format for the current project snapshot.
 
-### v0.9.1 dashboard and history performance
+### v0.8.8 dashboard and history performance
 
-v0.9.1 reduces dashboard and history loading latency. The dashboard now applies `summary`, `latest` and `devices` responses independently so the metric cards can render as soon as the summary request finishes instead of waiting for all dashboard requests. The `/api/measurements/summary` hot path no longer materializes completed daily summaries on every request; hourly poller maintenance keeps daily totals materialized. The history view now uses a combined `/api/measurements/history/series` endpoint so chart points and totals are produced from one raw history query, and the frontend sends smaller range-aware row limits for 24h, 7d and 30d views. Additional measurement indexes improve latest-value and history-window lookups on upgraded installations.
+v0.8.8 reduces dashboard and history loading latency. The dashboard now applies `summary`, `latest` and `devices` responses independently so the metric cards can render as soon as the summary request finishes instead of waiting for all dashboard requests. The `/api/measurements/summary` hot path no longer materializes completed daily summaries on every request; hourly poller maintenance keeps daily totals materialized. The history view now uses a combined `/api/measurements/history/series` endpoint so chart points and totals are produced from one raw history query, and the frontend sends smaller range-aware row limits for 24h, 7d and 30d views. Additional measurement indexes improve latest-value and history-window lookups on upgraded installations.
 
-### v0.9.1 frontend healthcheck and documentation refresh
+### v0.9.0 frontend healthcheck and documentation refresh
 
-v0.9.1 updates both Compose files to use a robust frontend healthcheck that verifies the generated nginx assets and the running nginx process instead of relying on an internal `wget` request. This avoids false `unhealthy` states on minimal nginx/Alpine images and Raspberry Pi deployments where the page is served correctly but the old healthcheck cannot connect to `127.0.0.1:8080`.
+v0.9.0 updates both Compose files to use a robust frontend healthcheck that verifies the generated nginx assets and the running nginx process instead of relying on an internal `wget` request. This avoids false `unhealthy` states on minimal nginx/Alpine images and Raspberry Pi deployments where the page is served correctly but the old healthcheck cannot connect to `127.0.0.1:8080`.
 
-The release also refreshes the History screenshot in `docs/images/history-simulation.png` and bumps the application version to `v0.9.1` across backend, frontend and built frontend assets.
+The release also refreshes the History screenshot in `docs/images/history-simulation.png` and bumps the application version to `v0.9.0` across backend, frontend and built frontend assets.
 
 ### v0.9.1 history screenshot correction
 
 v0.9.1 replaces `docs/images/history-simulation.png` with the corrected current History screenshot while keeping the v0.9.0 healthcheck and performance changes unchanged. The application version is bumped to `v0.9.1` across backend, frontend and built frontend assets.
+
+### v0.9.2 configurable simulation solar output
+
+v0.9.2 adds a configurable maximum solar output to the simulation settings. The configured watt value caps the generated PV curve and is used consistently by dashboard summary values, latest measurements, history charts, history totals and the current-values JSON API. This makes the simulation match the real-world output limit of the planned or actual solar installation instead of always using the former fixed 800 W demo profile.
 

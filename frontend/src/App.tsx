@@ -225,7 +225,9 @@ const translations = {
     backupSize: 'Größe',
     created: 'Erstellt',
     simulationSettings: 'Simulation',
-    simulationHint: 'Erzeugt realistische Demo-Werte ohne echte Geräte: 800-Watt-Balkon-PV und typischer 2-Personen-Haushalt mit Schwankungen.',
+    simulationHint: 'Erzeugt realistische Demo-Werte ohne echte Geräte. Der maximale Solar-Output begrenzt die simulierte PV-Leistung auf den Wert, den Deine Anlage tatsächlich liefern könnte.',
+    simulationPvPeak: 'Maximaler Solar-Output',
+    simulationPvPeakHint: 'Watt, z. B. 800 für ein Balkonkraftwerk oder 2000 für eine größere reale Anlage.',
     enableSimulation: 'Simulation aktivieren',
     simulationSaved: 'Simulation wurde gespeichert.',
     saveSimulation: 'Simulation speichern',
@@ -549,7 +551,9 @@ const translations = {
     backupSize: 'Size',
     created: 'Created',
     simulationSettings: 'Simulation',
-    simulationHint: 'Generates realistic demo values without real devices: 800 W balcony PV and a typical 2-person household with fluctuations.',
+    simulationHint: 'Generates realistic demo values without real devices. The maximum solar output caps the simulated PV power at the value your real installation could actually deliver.',
+    simulationPvPeak: 'Maximum solar output',
+    simulationPvPeakHint: 'Watts, for example 800 for a balcony PV system or 2000 for a larger real installation.',
     enableSimulation: 'Enable simulation',
     simulationSaved: 'Simulation has been saved.',
     saveSimulation: 'Save simulation',
@@ -2651,7 +2655,7 @@ function SimulationSettingsPanel() {
     setMessage(null);
     const saved = await api.updateSimulationSettings({
       enabled: settings.enabled,
-      pv_peak_w: 800,
+      pv_peak_w: Number(settings.pv_peak_w) || 800,
       household_profile: 'two_person_household',
     });
     setSettings(saved);
@@ -2665,6 +2669,7 @@ function SimulationSettingsPanel() {
       {message && <div className="info">{message}</div>}
       <div className="form-grid finance-form">
         <label className="check"><input type="checkbox" checked={settings.enabled} onChange={e => setSettings({ ...settings, enabled: e.target.checked })} /> {t('enableSimulation')}</label>
+        <label>{t('simulationPvPeak')} (W)<input type="number" min={100} max={5000} step={10} value={settings.pv_peak_w ?? 800} onChange={e => setSettings({ ...settings, pv_peak_w: Number(e.target.value) })} placeholder="800" /><small>{t('simulationPvPeakHint')}</small></label>
       </div>
       <p className="hint">{t('simulationWarning')}</p>
       <button onClick={() => void save()}>{t('saveSimulation')}</button>

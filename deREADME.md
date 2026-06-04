@@ -363,9 +363,11 @@ Die Werte sind farblich getrennt, damit sie leichter unterschieden werden könne
 
 Der Simulationsmodus kann im Setup aktiviert werden.
 
+In den Simulationseinstellungen kann der maximale Solar-Output in Watt gesetzt werden. Dieser Wert begrenzt die erzeugte PV-Kurve, damit die Simulation zu dem passt, was die echte Anlage tatsächlich liefern könnte.
+
 Er simuliert:
 
-- eine 800-Watt-Balkon-PV-Anlage
+- eine konfigurierbare Balkon-PV-/Solaranlage mit maximalem simuliertem Output in Watt
 - einen typischen 2-Personen-Haushalt
 - realistische Tagesverläufe
 - Morgen- und Abendspitzen
@@ -854,17 +856,21 @@ v0.7.13 ergänzt die README-Dateien um das BPSTracker-Systemschema. Das Bild zei
 
 v0.8.7 vereinheitlicht die Doku-Bilder: `docs/images/setup-overview.jpeg` wurde nach `docs/images/setup-overview.png` konvertiert und die Verweise in README/Hilfe wurden entsprechend angepasst. Damit liegen die Screenshot-Assets im aktuellen Projektstand konsistent als PNG vor.
 
-### v0.9.1 Dashboard- und History-Performance
+### v0.8.8 Dashboard- und History-Performance
 
-v0.9.1 reduziert die Ladezeit von Dashboard und Historie. Das Dashboard verarbeitet `summary`, `latest` und `devices` jetzt unabhängig voneinander, damit die Kennzahlen erscheinen können, sobald die Summary-Anfrage fertig ist, ohne auf alle Dashboard-Anfragen zu warten. Der heiße Pfad `/api/measurements/summary` materialisiert abgeschlossene Tageszusammenfassungen nicht mehr bei jedem Aufruf; die stündliche Poller-Wartung hält die Tageswerte weiterhin vor. Die Historie nutzt jetzt einen kombinierten Endpunkt `/api/measurements/history/series`, sodass Diagrammpunkte und Summen aus einer gemeinsamen Rohdatenabfrage entstehen. Das Frontend sendet außerdem kleinere, zeitraumabhängige Limits für 24h-, 7-Tage- und 30-Tage-Ansichten. Zusätzliche Measurement-Indizes beschleunigen Latest-Value- und History-Zeitfenster-Abfragen auf aktualisierten Installationen.
+v0.8.8 reduziert die Ladezeit von Dashboard und Historie. Das Dashboard verarbeitet `summary`, `latest` und `devices` jetzt unabhängig voneinander, damit die Kennzahlen erscheinen können, sobald die Summary-Anfrage fertig ist, ohne auf alle Dashboard-Anfragen zu warten. Der heiße Pfad `/api/measurements/summary` materialisiert abgeschlossene Tageszusammenfassungen nicht mehr bei jedem Aufruf; die stündliche Poller-Wartung hält die Tageswerte weiterhin vor. Die Historie nutzt jetzt einen kombinierten Endpunkt `/api/measurements/history/series`, sodass Diagrammpunkte und Summen aus einer gemeinsamen Rohdatenabfrage entstehen. Das Frontend sendet außerdem kleinere, zeitraumabhängige Limits für 24h-, 7-Tage- und 30-Tage-Ansichten. Zusätzliche Measurement-Indizes beschleunigen Latest-Value- und History-Zeitfenster-Abfragen auf aktualisierten Installationen.
 
-### v0.9.1 Frontend-Healthcheck und Doku-Screenshot aktualisiert
+### v0.9.0 Frontend-Healthcheck und Doku-Screenshot aktualisiert
 
-v0.9.1 stellt beide Compose-Dateien auf einen robusteren Frontend-Healthcheck um. Der Check prüft die erzeugten nginx-Dateien und den laufenden nginx-Prozess, statt intern per `wget` auf `127.0.0.1:8080/health` zuzugreifen. Dadurch werden falsche `unhealthy`-Zustände auf minimalen nginx-/Alpine-Images und Raspberry-Pi-Deployments vermieden, obwohl die Webseite korrekt ausgeliefert wird.
+v0.9.0 stellt beide Compose-Dateien auf einen robusteren Frontend-Healthcheck um. Der Check prüft die erzeugten nginx-Dateien und den laufenden nginx-Prozess, statt intern per `wget` auf `127.0.0.1:8080/health` zuzugreifen. Dadurch werden falsche `unhealthy`-Zustände auf minimalen nginx-/Alpine-Images und Raspberry-Pi-Deployments vermieden, obwohl die Webseite korrekt ausgeliefert wird.
 
-Zusätzlich wurde der History-Screenshot in `docs/images/history-simulation.png` erneuert und die App-Version in Backend, Frontend und gebauten Frontend-Dateien auf `v0.9.1` angehoben.
+Zusätzlich wurde der History-Screenshot in `docs/images/history-simulation.png` erneuert und die App-Version in Backend, Frontend und gebauten Frontend-Dateien auf `v0.9.0` angehoben.
 
 ### v0.9.1 History-Screenshot korrigiert
 
 v0.9.1 ersetzt `docs/images/history-simulation.png` durch den korrigierten aktuellen History-Screenshot. Die Healthcheck- und Performance-Änderungen aus v0.9.0 bleiben unverändert erhalten. Zusätzlich wurde die App-Version in Backend, Frontend und gebauten Frontend-Dateien auf `v0.9.1` angehoben.
+
+### v0.9.2 Konfigurierbarer Solar-Output in der Simulation
+
+v0.9.2 ergänzt in den Simulationseinstellungen einen konfigurierbaren maximalen Solar-Output. Der hinterlegte Watt-Wert begrenzt die simulierte PV-Kurve und wird konsistent für Dashboard-Summary, aktuelle Messwerte, Historien-Diagramme, Historien-Summen und die Current-Values-JSON-API verwendet. Damit kann die Simulation an die tatsächliche oder geplante Leistung der eigenen Solaranlage angepasst werden, statt immer das bisher feste 800-Watt-Demoprofil zu verwenden.
 

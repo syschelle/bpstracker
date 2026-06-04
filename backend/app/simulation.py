@@ -11,6 +11,8 @@ from .schemas import HistoryPoint, MeasurementRead, SummaryResponse
 
 DEFAULT_TIMEZONE = 'Europe/Berlin'
 SIMULATED_PV_PEAK_W = 800.0
+MIN_SIMULATED_PV_PEAK_W = 100.0
+MAX_SIMULATED_PV_PEAK_W = 5000.0
 SIMULATED_HOUSEHOLD = '2-person household'
 
 
@@ -48,8 +50,16 @@ def _smooth_pulse(hour: float, center: float, width: float, height: float) -> fl
     return height * math.exp(-((hour - center) ** 2) / (2 * width * width))
 
 
-def solar_power_at(local_dt: datetime) -> float:
-    """Realistic-ish 800 W balcony PV curve with deterministic cloud variation."""
+def _normalized_pv_peak_w(pv_peak_w: float | None = None) -> float:
+    try:
+        value = float(pv_peak_w if pv_peak_w is not None else SIMULATED_PV_PEAK_W)
+    except (TypeError, ValueError):
+        value = SIMULATED_PV_PEAK_W
+    return min(MAX_SIMULATED_PV_PEAK_W, max(MIN_SIMULATED_PV_PEAK_W, value))
+
+
+def solar_power_at(local_dt: datetime, pv_peak_w: float | None = None) -> float:
+    """Realistic-ish balcony PV curve with deterministic cloud variation."""
     hour = local_dt.hour + local_dt.minute / 60 + local_dt.second / 3600
     day_of_year = local_dt.timetuple().tm_yday
 
@@ -73,7 +83,7 @@ def solar_power_at(local_dt: datetime) -> float:
     minute_flicker = _noise(seed * 1000 + local_dt.hour * 60 + local_dt.minute, 0.04)
     cloud_factor = min(1.0, max(0.18, base_cloud + cloud_wave_1 + cloud_wave_2 + minute_flicker))
 
-    power = SIMULATED_PV_PEAK_W * sun_curve * seasonal_factor * cloud_factor
+    power = _normalized_pv_peak_w(pv_peak_w) * sun_curve * seasonal_factor * cloud_factor
 
     # Small inverter threshold / low-light cut-off.
     return round(max(0.0, power if power >= 8 else 0.0), 1)
@@ -107,12 +117,12 @@ def consumption_power_at(local_dt: datetime) -> float:
     return round(max(80.0, base + night + morning + lunch + evening + tv + fridge_cycle + appliance + jitter), 1)
 
 
-def simulated_values_at(utc_dt: datetime, timezone_name: str | None = DEFAULT_TIMEZONE) -> SimulatedValues:
+def simulated_values_at(utc_dt: datetime, timezone_name: str | None = DEFAULT_TIMEZONE, pv_peak_w: float | None = None) -> SimulatedValues:
     if utc_dt.tzinfo is None:
         utc_dt = utc_dt.replace(tzinfo=timezone.utc)
     tz = _zoneinfo(timezone_name)
     local_dt = utc_dt.astimezone(tz)
-    solar_w = solar_power_at(local_dt)
+    solar_w = solar_power_at(local_dt, pv_peak_w)
     consumption_w = consumption_power_at(local_dt)
     grid_w = round(consumption_w - solar_w, 1)
 
@@ -125,7 +135,7 @@ def simulated_values_at(utc_dt: datetime, timezone_name: str | None = DEFAULT_TI
     step_minutes = 5
     for minute in range(0, minutes_elapsed + 1, step_minutes):
         sample_local = start_local + timedelta(minutes=minute)
-        s = solar_power_at(sample_local)
+        s = solar_power_at(sample_local, pv_peak_w)
         c = consumption_power_at(sample_local)
         g = c - s
         solar_wh += s * step_minutes / 60.0
@@ -137,9 +147,10 @@ def simulated_values_at(utc_dt: datetime, timezone_name: str | None = DEFAULT_TI
     # Plausible totals for a demo installation that has already been running for a while.
     day_of_year = local_dt.timetuple().tm_yday
     simulated_days = 42 + (day_of_year % 60)
-    solar_total = simulated_days * 2.65 + solar_wh / 1000.0
-    import_total = simulated_days * 5.75 + import_wh / 1000.0
-    export_total = simulated_days * 0.55 + export_wh / 1000.0
+    pv_scale = _normalized_pv_peak_w(pv_peak_w) / SIMULATED_PV_PEAK_W
+    solar_total = simulated_days * (2.65 * pv_scale) + solar_wh / 1000.0
+    import_total = simulated_days * max(2.0, 5.75 - 1.1 * (pv_scale - 1.0)) + import_wh / 1000.0
+    export_total = simulated_days * (0.55 * pv_scale) + export_wh / 1000.0
 
     return SimulatedValues(
         timestamp=utc_dt.astimezone(timezone.utc),
@@ -261,9 +272,9 @@ def _append_simulated_3em_rows(
     return row_id
 
 
-def simulated_summary(timezone_name: str, *, kwh_price: float, investment: float, currency_code: str, devices: list[Any] | None = None) -> SummaryResponse:
+def simulated_summary(timezone_name: str, *, kwh_price: float, investment: float, currency_code: str, devices: list[Any] | None = None, pv_peak_w: float | None = None) -> SummaryResponse:
     now = datetime.now(timezone.utc)
-    values = simulated_values_at(now, timezone_name)
+    values = simulated_values_at(now, timezone_name, pv_peak_w)
     consumption_cost_today = values.import_today_kwh * kwh_price
     savings_today = values.solar_today_kwh * kwh_price
     savings_total = values.solar_total_kwh * kwh_price
@@ -312,9 +323,9 @@ def simulated_summary(timezone_name: str, *, kwh_price: float, investment: float
     )
 
 
-def simulated_latest(timezone_name: str, devices: list[Any] | None = None) -> list[MeasurementRead]:
+def simulated_latest(timezone_name: str, devices: list[Any] | None = None, pv_peak_w: float | None = None) -> list[MeasurementRead]:
     now = datetime.now(timezone.utc)
-    values = simulated_values_at(now, timezone_name)
+    values = simulated_values_at(now, timezone_name, pv_peak_w)
     active = _active_devices(devices)
 
     if not active:
@@ -418,10 +429,10 @@ def simulated_latest(timezone_name: str, devices: list[Any] | None = None) -> li
 
     # If only consumer/ignored devices exist, keep at least one virtual aggregate row for the dashboard.
     if not rows:
-        return simulated_latest(timezone_name, None)
+        return simulated_latest(timezone_name, None, pv_peak_w)
     return rows
 
-def simulated_history(start: datetime, end: datetime, timezone_name: str, bucket_seconds: int) -> list[HistoryPoint]:
+def simulated_history(start: datetime, end: datetime, timezone_name: str, bucket_seconds: int, pv_peak_w: float | None = None) -> list[HistoryPoint]:
     points: list[HistoryPoint] = []
     cursor = start
     if cursor.tzinfo is None:
@@ -432,7 +443,7 @@ def simulated_history(start: datetime, end: datetime, timezone_name: str, bucket
     max_points = 2500
     step = max(bucket_seconds, int((end - start).total_seconds() / max_points) if (end - start).total_seconds() > 0 else bucket_seconds)
     while cursor <= end:
-        values = simulated_values_at(cursor, timezone_name)
+        values = simulated_values_at(cursor, timezone_name, pv_peak_w)
         points.append(HistoryPoint(
             timestamp=cursor.astimezone(timezone.utc),
             device_id=-1,
