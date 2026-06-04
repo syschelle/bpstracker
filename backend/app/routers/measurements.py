@@ -233,7 +233,7 @@ def latest_measurements(_: User = Depends(get_current_user), db: Session = Depen
     if simulation.enabled:
         ui = get_ui_settings_from_db(db)
         devices = db.query(Device).order_by(Device.id).all()
-        return simulated_latest(ui.timezone, devices, simulation.pv_peak_w)
+        return simulated_latest(ui.timezone, devices, simulation.pv_peak_w, simulation.baseload_day_w, simulation.baseload_night_w)
 
     subq = (
         db.query(Measurement.device_id, Measurement.source_type, Measurement.channel, Measurement.phase, func.max(Measurement.timestamp).label('max_ts'))
@@ -430,7 +430,7 @@ def history_totals(
     simulation = get_simulation_settings_from_db(db)
     if simulation.enabled:
         ui = get_ui_settings_from_db(db)
-        return _history_power_totals(simulated_history(start, end, ui.timezone, bucket_seconds, simulation.pv_peak_w))
+        return _history_power_totals(simulated_history(start, end, ui.timezone, bucket_seconds, simulation.pv_peak_w, simulation.baseload_day_w, simulation.baseload_night_w))
 
     rows = _raw_history_rows(db, start, end, device_id=device_id, source_type=source_type, limit=limit)
     purposes = _device_purposes(db)
@@ -455,7 +455,7 @@ def history_series(
     simulation = get_simulation_settings_from_db(db)
     if simulation.enabled:
         ui = get_ui_settings_from_db(db)
-        points = simulated_history(start, end, ui.timezone, bucket_seconds, simulation.pv_peak_w)
+        points = simulated_history(start, end, ui.timezone, bucket_seconds, simulation.pv_peak_w, simulation.baseload_day_w, simulation.baseload_night_w)
         return HistorySeriesResponse(points=points, totals=_history_power_totals(points))
 
     rows = _raw_history_rows(db, start, end, device_id=device_id, source_type=source_type, limit=limit)
@@ -488,7 +488,7 @@ def history(
     simulation = get_simulation_settings_from_db(db)
     if simulation.enabled:
         ui = get_ui_settings_from_db(db)
-        return simulated_history(start, end, ui.timezone, bucket_seconds, simulation.pv_peak_w)
+        return simulated_history(start, end, ui.timezone, bucket_seconds, simulation.pv_peak_w, simulation.baseload_day_w, simulation.baseload_night_w)
 
     rows = _raw_history_rows(db, start, end, device_id=device_id, source_type=source_type, limit=limit)
     purposes = _device_purposes(db)
@@ -512,6 +512,8 @@ def summary(_: User = Depends(get_current_user), db: Session = Depends(get_db)) 
             currency_code=finance.currency_code,
             devices=devices,
             pv_peak_w=simulation.pv_peak_w,
+            day_baseload_w=simulation.baseload_day_w,
+            night_baseload_w=simulation.baseload_night_w,
         )
         battery = battery_analysis(
             simulated.exported_today_kwh,

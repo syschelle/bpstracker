@@ -227,10 +227,35 @@ def parse_float(value: object) -> float | None:
 
 
 
-def _simulation_enabled(db: Session) -> bool:
+def _simulation_settings(db: Session) -> dict[str, Any]:
     row = db.get(AppSetting, SIMULATION_SETTINGS_KEY)
-    value = row.value if row and isinstance(row.value, dict) else {}
-    return bool(value.get('enabled', False))
+    return row.value if row and isinstance(row.value, dict) else {}
+
+
+def _simulation_enabled(db: Session) -> bool:
+    return bool(_simulation_settings(db).get('enabled', False))
+
+
+def _simulation_pv_peak_w(db: Session) -> float:
+    value = _simulation_settings(db)
+    try:
+        parsed = float(value.get('pv_peak_w', 800.0) or 800.0)
+    except (TypeError, ValueError):
+        parsed = 800.0
+    return min(5000.0, max(100.0, parsed))
+
+
+def _simulation_baseload_w(db: Session) -> tuple[float, float]:
+    value = _simulation_settings(db)
+    try:
+        day = float(value.get('baseload_day_w', 155.0) or 0.0)
+    except (TypeError, ValueError):
+        day = 155.0
+    try:
+        night = float(value.get('baseload_night_w', 90.0) or 0.0)
+    except (TypeError, ValueError):
+        night = 90.0
+    return min(5000.0, max(0.0, day)), min(5000.0, max(0.0, night))
 
 
 def _air_cache(db: Session) -> dict[str, Any]:
@@ -351,7 +376,9 @@ def collect_kindle_values(db: Session) -> KindleValues:
 
     if _simulation_enabled(db):
         now = datetime.now(timezone.utc)
-        sim = simulated_values_at(now, timezone_name)
+        pv_peak_w = _simulation_pv_peak_w(db)
+        baseload_day_w, baseload_night_w = _simulation_baseload_w(db)
+        sim = simulated_values_at(now, timezone_name, pv_peak_w, baseload_day_w, baseload_night_w)
         air = simulated_air_sensor_current(timezone_name)
         return KindleValues(
             generated_at=now,

@@ -366,10 +366,22 @@ def _normalize_simulation_value(value: dict | None) -> SimulationSettings:
         pv_peak_w = float(value.get('pv_peak_w', 800.0) or 800.0)
     except (TypeError, ValueError):
         pv_peak_w = 800.0
+    try:
+        baseload_day_w = float(value.get('baseload_day_w', 155.0) or 0.0)
+    except (TypeError, ValueError):
+        baseload_day_w = 155.0
+    try:
+        baseload_night_w = float(value.get('baseload_night_w', 90.0) or 0.0)
+    except (TypeError, ValueError):
+        baseload_night_w = 90.0
     pv_peak_w = min(5000.0, max(100.0, pv_peak_w))
+    baseload_day_w = min(5000.0, max(0.0, baseload_day_w))
+    baseload_night_w = min(5000.0, max(0.0, baseload_night_w))
     return SimulationSettings(
         enabled=bool(value.get('enabled', False)),
         pv_peak_w=pv_peak_w,
+        baseload_day_w=baseload_day_w,
+        baseload_night_w=baseload_night_w,
         household_profile=str(value.get('household_profile') or 'two_person_household'),
     )
 

@@ -225,9 +225,12 @@ const translations = {
     backupSize: 'Größe',
     created: 'Erstellt',
     simulationSettings: 'Simulation',
-    simulationHint: 'Erzeugt realistische Demo-Werte ohne echte Geräte. Der maximale Solar-Output begrenzt die simulierte PV-Leistung auf den Wert, den Deine Anlage tatsächlich liefern könnte.',
+    simulationHint: 'Erzeugt realistische Demo-Werte ohne echte Geräte. Der maximale Solar-Output begrenzt die PV-Leistung; Grundlast Tag/Nacht legt den dauerhaften Verbrauch fest. Spitzen wie Waschmaschine oder Kaffeeautomat bleiben zusätzlich erhalten.',
     simulationPvPeak: 'Maximaler Solar-Output',
     simulationPvPeakHint: 'Watt, z. B. 800 für ein Balkonkraftwerk oder 2000 für eine größere reale Anlage.',
+    simulationBaseloadDay: 'Grundlast Tag',
+    simulationBaseloadNight: 'Grundlast Nacht',
+    simulationBaseloadHint: 'Dauerhafte Last in Watt. Simulierte Verbrauchsspitzen werden zusätzlich auf diese Grundlast addiert.',
     enableSimulation: 'Simulation aktivieren',
     simulationSaved: 'Simulation wurde gespeichert.',
     saveSimulation: 'Simulation speichern',
@@ -551,9 +554,12 @@ const translations = {
     backupSize: 'Size',
     created: 'Created',
     simulationSettings: 'Simulation',
-    simulationHint: 'Generates realistic demo values without real devices. The maximum solar output caps the simulated PV power at the value your real installation could actually deliver.',
+    simulationHint: 'Generates realistic demo values without real devices. The maximum solar output caps PV power; day/night baseload defines the continuous household consumption. Spikes such as washing machine or coffee maker remain additional peaks.',
     simulationPvPeak: 'Maximum solar output',
     simulationPvPeakHint: 'Watts, for example 800 for a balcony PV system or 2000 for a larger real installation.',
+    simulationBaseloadDay: 'Day baseload',
+    simulationBaseloadNight: 'Night baseload',
+    simulationBaseloadHint: 'Continuous load in watts. Simulated consumption spikes are added on top of this baseload.',
     enableSimulation: 'Enable simulation',
     simulationSaved: 'Simulation has been saved.',
     saveSimulation: 'Save simulation',
@@ -2642,7 +2648,7 @@ function ResetValuesPanel() {
 
 function SimulationSettingsPanel() {
   const { t } = useI18n();
-  const [settings, setSettings] = useState<SimulationSettings>({ enabled: false, pv_peak_w: 800, household_profile: 'two_person_household' });
+  const [settings, setSettings] = useState<SimulationSettings>({ enabled: false, pv_peak_w: 800, baseload_day_w: 155, baseload_night_w: 90, household_profile: 'two_person_household' });
   const [message, setMessage] = useState<string | null>(null);
 
   async function load() {
@@ -2656,6 +2662,8 @@ function SimulationSettingsPanel() {
     const saved = await api.updateSimulationSettings({
       enabled: settings.enabled,
       pv_peak_w: Number(settings.pv_peak_w) || 800,
+      baseload_day_w: Number(settings.baseload_day_w) || 0,
+      baseload_night_w: Number(settings.baseload_night_w) || 0,
       household_profile: 'two_person_household',
     });
     setSettings(saved);
@@ -2670,6 +2678,8 @@ function SimulationSettingsPanel() {
       <div className="form-grid finance-form">
         <label className="check"><input type="checkbox" checked={settings.enabled} onChange={e => setSettings({ ...settings, enabled: e.target.checked })} /> {t('enableSimulation')}</label>
         <label>{t('simulationPvPeak')} (W)<input type="number" min={100} max={5000} step={10} value={settings.pv_peak_w ?? 800} onChange={e => setSettings({ ...settings, pv_peak_w: Number(e.target.value) })} placeholder="800" /><small>{t('simulationPvPeakHint')}</small></label>
+        <label>{t('simulationBaseloadDay')} (W)<input type="number" min={0} max={5000} step={5} value={settings.baseload_day_w ?? 155} onChange={e => setSettings({ ...settings, baseload_day_w: Number(e.target.value) })} placeholder="155" /><small>{t('simulationBaseloadHint')}</small></label>
+        <label>{t('simulationBaseloadNight')} (W)<input type="number" min={0} max={5000} step={5} value={settings.baseload_night_w ?? 90} onChange={e => setSettings({ ...settings, baseload_night_w: Number(e.target.value) })} placeholder="90" /><small>{t('simulationBaseloadHint')}</small></label>
       </div>
       <p className="hint">{t('simulationWarning')}</p>
       <button onClick={() => void save()}>{t('saveSimulation')}</button>

@@ -172,6 +172,8 @@ class PublicDashboardSettings(BaseModel):
 class SimulationSettings(BaseModel):
     enabled: bool = False
     pv_peak_w: float = Field(default=800.0, ge=100, le=5000)
+    baseload_day_w: float = Field(default=155.0, ge=0, le=5000)
+    baseload_night_w: float = Field(default=90.0, ge=0, le=5000)
     household_profile: str = 'two_person_household'
 
 

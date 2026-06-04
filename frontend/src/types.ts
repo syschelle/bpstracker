@@ -98,6 +98,8 @@ export interface CurrentValuesApiSettings {
 export interface SimulationSettings {
   enabled: boolean;
   pv_peak_w: number;
+  baseload_day_w: number;
+  baseload_night_w: number;
   household_profile: string;
 }
 

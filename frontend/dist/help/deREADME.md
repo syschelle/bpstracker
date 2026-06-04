@@ -363,16 +363,16 @@ Die Werte sind farblich getrennt, damit sie leichter unterschieden werden könne
 
 Der Simulationsmodus kann im Setup aktiviert werden.
 
-In den Simulationseinstellungen kann der maximale Solar-Output in Watt gesetzt werden. Dieser Wert begrenzt die erzeugte PV-Kurve, damit die Simulation zu dem passt, was die echte Anlage tatsächlich liefern könnte.
+In den Simulationseinstellungen kann der maximale Solar-Output in Watt gesetzt werden. Dieser Wert begrenzt die erzeugte PV-Kurve, damit die Simulation zu dem passt, was die echte Anlage tatsächlich liefern könnte. Zusätzlich können eine Grundlast für Tag und eine Grundlast für Nacht in Watt gesetzt werden. Diese Werte bilden den dauerhaften Verbrauchssockel; simulierte Spitzen wie Waschmaschine, Wasserkocher, Kochen oder Kaffeeautomat werden weiterhin zusätzlich daraufgerechnet.
 
 Er simuliert:
 
 - eine konfigurierbare Balkon-PV-/Solaranlage mit maximalem simuliertem Output in Watt
 - einen typischen 2-Personen-Haushalt
+- konfigurierbare Grundlast für Tag und Nacht
 - realistische Tagesverläufe
 - Morgen- und Abendspitzen
-- Haushaltsgeräte-Spikes
-- Grundlast
+- Haushaltsgeräte-Spikes zusätzlich zur Grundlast
 - Wolken- und Erzeugungsschwankungen
 - saisonale Solarvariation
 
@@ -873,4 +873,8 @@ v0.9.1 ersetzt `docs/images/history-simulation.png` durch den korrigierten aktue
 ### v0.9.2 Konfigurierbarer Solar-Output in der Simulation
 
 v0.9.2 ergänzt in den Simulationseinstellungen einen konfigurierbaren maximalen Solar-Output. Der hinterlegte Watt-Wert begrenzt die simulierte PV-Kurve und wird konsistent für Dashboard-Summary, aktuelle Messwerte, Historien-Diagramme, Historien-Summen und die Current-Values-JSON-API verwendet. Damit kann die Simulation an die tatsächliche oder geplante Leistung der eigenen Solaranlage angepasst werden, statt immer das bisher feste 800-Watt-Demoprofil zu verwenden.
+
+### v0.9.3 Konfigurierbare Simulations-Grundlast
+
+v0.9.3 ergänzt in den Simulationseinstellungen eine konfigurierbare Grundlast für Tag und Nacht. Die hinterlegten Watt-Werte bilden den dauerhaften Verbrauchssockel des Haushalts, während vorhandene simulierte Verbrauchsspitzen wie Waschmaschine, Wasserkocher, Kochen und Kaffeeautomat weiterhin aktiv bleiben und zusätzlich auf die Grundlast gerechnet werden. Die Grundlastwerte werden konsistent für Dashboard-Summary, aktuelle Messwerte, Historien-Diagramme, Historien-Summen, Kindle-Display und die Current-Values-JSON-API verwendet.
 

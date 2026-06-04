@@ -642,15 +642,16 @@ Setup -> Simulation
 
 When enabled, the dashboard, history chart and JSON API return simulated values instead of real device measurements.
 
-The simulation settings include a configurable maximum solar output in watts. This value caps the generated PV curve so the simulated output matches what the real installation could actually deliver.
+The simulation settings include a configurable maximum solar output in watts. This value caps the generated PV curve so the simulated output matches what the real installation could actually deliver. You can also configure separate day and night baseload values in watts. These baseload values define the continuous household consumption floor, while simulated peaks such as washing machine, kettle, cooking or coffee maker events are still added on top.
 
 The simulation is based on:
 
 - a configurable balcony PV / solar installation with a maximum simulated output in watts
 - a typical 2-person household
+- configurable day and night baseload values
 - realistic daily load curves
 - morning and evening consumption peaks
-- appliance spikes
+- appliance spikes on top of the configured baseload
 - cloud and daylight fluctuations
 - seasonal solar variation
 
@@ -1602,4 +1603,8 @@ v0.9.1 replaces `docs/images/history-simulation.png` with the corrected current 
 ### v0.9.2 configurable simulation solar output
 
 v0.9.2 adds a configurable maximum solar output to the simulation settings. The configured watt value caps the generated PV curve and is used consistently by dashboard summary values, latest measurements, history charts, history totals and the current-values JSON API. This makes the simulation match the real-world output limit of the planned or actual solar installation instead of always using the former fixed 800 W demo profile.
+
+### v0.9.3 configurable simulation baseload
+
+v0.9.3 adds configurable day and night baseload values to the simulation settings. The configured watt values define the continuous household consumption floor for daytime and nighttime, while existing simulated consumption peaks such as washing machine, kettle, cooking and coffee-maker events remain active and are added on top. The baseload values are used consistently by dashboard summary values, latest measurements, history charts, history totals, Kindle display and the current-values JSON API.
 

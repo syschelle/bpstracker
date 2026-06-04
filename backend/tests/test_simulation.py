@@ -76,3 +76,25 @@ def test_simulated_history_respects_configured_pv_peak() -> None:
 
     assert max(point.solar_power_w or 0 for point in low) <= 300
     assert max(point.solar_power_w or 0 for point in high) > max(point.solar_power_w or 0 for point in low)
+
+
+def test_simulated_consumption_respects_day_baseload() -> None:
+    daytime = datetime(2026, 6, 21, 13, 30, tzinfo=timezone.utc)
+
+    low = simulated_values_at(daytime, 'Europe/Berlin', 800, 100, 60)
+    high = simulated_values_at(daytime, 'Europe/Berlin', 800, 450, 60)
+
+    assert low.consumption_w >= 100
+    assert high.consumption_w >= 450
+    assert high.consumption_w > low.consumption_w
+
+
+def test_simulated_consumption_respects_night_baseload() -> None:
+    night = datetime(2026, 6, 21, 1, 30, tzinfo=timezone.utc)
+
+    low = simulated_values_at(night, 'Europe/Berlin', 800, 150, 40)
+    high = simulated_values_at(night, 'Europe/Berlin', 800, 150, 320)
+
+    assert low.consumption_w >= 40
+    assert high.consumption_w >= 320
+    assert high.consumption_w > low.consumption_w
