@@ -119,3 +119,46 @@ def test_raw_history_rows_keeps_newest_rows_when_limited() -> None:
         start + timedelta(minutes=8),
         start + timedelta(minutes=9),
     ]
+
+
+def test_raw_history_rows_excludes_raw_json_payloads_and_irrelevant_rows() -> None:
+    from datetime import timedelta
+
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    from sqlalchemy.pool import StaticPool
+
+    from app.database import Base
+    from app.models import Device, DeviceType
+    from app.routers.measurements import _raw_history_rows
+
+    engine = create_engine('sqlite+pysqlite://', connect_args={'check_same_thread': False}, poolclass=StaticPool)
+    Base.metadata.create_all(bind=engine)
+    SessionLocal = sessionmaker(bind=engine)
+    start = datetime(2026, 1, 1, 0, 0, tzinfo=timezone.utc)
+
+    with SessionLocal() as db:
+        device = Device(name='Grid', host='192.168.1.20', device_type=DeviceType.shelly_3em_gen1, purpose='grid')
+        db.add(device)
+        db.flush()
+        db.add(Measurement(
+            timestamp=start,
+            device_id=device.id,
+            source_type='shelly_3em_gen1_total',
+            total_power_w=123.0,
+            raw_json={'large': 'payload'},
+        ))
+        db.add(Measurement(
+            timestamp=start + timedelta(seconds=30),
+            device_id=device.id,
+            source_type='shelly_debug_voltage_only',
+            voltage_v=230.0,
+            raw_json={'ignored': True},
+        ))
+        db.commit()
+
+        rows = _raw_history_rows(db, start, start + timedelta(minutes=1), limit=10)
+
+    assert len(rows) == 1
+    assert rows[0].total_power_w == 123.0
+    assert not hasattr(rows[0], 'raw_json')

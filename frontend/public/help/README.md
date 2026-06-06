@@ -1399,10 +1399,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.15` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.16` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.15 --language en
+bash ./deploy-images.sh --regular --tag v0.9.16 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1690,4 +1690,8 @@ v0.9.13 fixes the Home Import dashboard card in dark theme so zero current home/
 v0.9.15 combines the unreleased v0.9.14 installer-language work with a compact header branding update. `deploy.sh` and `deploy-images.sh` can now run their prompts and status output in German or English, support `--language de|en` for unattended deployments, and write `BPSTRACKER_LANGUAGE` plus `BPSTRACKER_DEFAULT_LANGUAGE` into `.env`. The frontend runtime config receives this default language so the first-run web setup screen opens in the language selected during deployment. The backend install status and UI settings defaults also honor the configured deployment language until an admin saves a different UI language.
 
 The authenticated header now shows only `BPSTracker` and the app version. The localized application subtitle is no longer displayed next to the version; it is exposed as a hover tooltip and accessibility label on the `BPSTracker` wordmark, matching the compact tooltip behavior used for achievements.
+
+### v0.9.16 faster History rendering on low-resource systems
+
+v0.9.16 optimizes the History endpoint for Raspberry Pi and other low-resource deployments. History queries now load only the columns needed for charting and energy totals instead of full measurement ORM rows with `raw_json` payloads, and rows without power or energy counter values are skipped before Python aggregation. In Raspberry Pi Zero 2 W mode, the 24h chart uses 5-minute buckets, reducing the response from up to about 1440 chart points to about 288 points while preserving the 24h trend and totals.
 

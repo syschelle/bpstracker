@@ -751,10 +751,10 @@ Oder:
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.15` oder `latest`). Für unbeaufsichtigte Image-Deployments:
+`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.16` oder `latest`). Für unbeaufsichtigte Image-Deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.15 --language de
+bash ./deploy-images.sh --regular --tag v0.9.16 --language de
 bash ./deploy-images.sh --zero2w --latest --language en
 ```
 
@@ -965,4 +965,8 @@ v0.9.13 korrigiert die Hausbezug-Kachel im dunklen Theme: Aktuelle Haus-/Netzbez
 v0.9.15 fasst die nicht veröffentlichte v0.9.14-Sprachwahl für Installationsskripte mit einer kompakten Header-Anpassung zusammen. `deploy.sh` und `deploy-images.sh` können ihre Rückfragen und Statusausgaben jetzt auf Deutsch oder Englisch anzeigen, unterstützen `--language de|en` für unbeaufsichtigte Installationen und schreiben `BPSTRACKER_LANGUAGE` sowie `BPSTRACKER_DEFAULT_LANGUAGE` in `.env`. Die Frontend-Laufzeitkonfiguration erhält diese Standardsprache, sodass die Web-Ersteinrichtung direkt in der im Deployment gewählten Sprache startet. Backend-Installstatus und UI-Defaults berücksichtigen die konfigurierte Deployment-Sprache, bis ein Admin eine andere UI-Sprache speichert.
 
 Der angemeldete Header zeigt nun nur noch `BPSTracker` und die App-Version. Der lokalisierte App-Name/Untertitel wird nicht mehr sichtbar neben der Version angezeigt, sondern als sprachabhängiger Hover-Tooltip und Accessibility-Label auf dem Schriftzug `BPSTracker` bereitgestellt — ähnlich kompakt wie bei den Achievements.
+
+### v0.9.16 Schnellere Historie auf Low-Resource-Systemen
+
+v0.9.16 optimiert den History-Endpunkt für Raspberry-Pi- und andere Low-Resource-Installationen. History-Abfragen laden jetzt nur noch die für Diagramm und Energiesummen benötigten Spalten, statt vollständige Measurement-ORM-Zeilen inklusive `raw_json`-Payloads zu lesen. Zeilen ohne Leistungs- oder Energiezählerwerte werden vor der Python-Aggregation übersprungen. Im Raspberry-Pi-Zero-2-W-Modus nutzt das 24h-Diagramm 5-Minuten-Buckets und reduziert die Antwort damit von bis zu etwa 1440 Diagrammpunkten auf etwa 288 Punkte, während 24h-Trend und Summen erhalten bleiben.
 

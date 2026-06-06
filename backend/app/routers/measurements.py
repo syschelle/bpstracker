@@ -3,12 +3,14 @@ from __future__ import annotations
 import csv
 import io
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
+from ..config import get_settings
 from ..database import get_db
 from ..models import Device, DeviceStatus, Measurement, User
 from ..energy_retention import (
@@ -26,6 +28,23 @@ router = APIRouter(prefix='/api/measurements', tags=['measurements'])
 
 HISTORY_ROW_LIMIT_DEFAULT = 500000
 HISTORY_ROW_LIMIT_MAX = 500000
+
+
+@dataclass(slots=True)
+class HistoryMeasurementRow:
+    id: int
+    timestamp: datetime
+    device_id: int
+    source_type: str
+    channel: int | None = None
+    phase: str | None = None
+    power_w: float | None = None
+    voltage_v: float | None = None
+    current_a: float | None = None
+    power_factor: float | None = None
+    energy_import_wh: float | None = None
+    energy_export_wh: float | None = None
+    total_power_w: float | None = None
 
 
 def _clamp_live_window(start: datetime, end: datetime) -> tuple[datetime, datetime]:
@@ -65,7 +84,7 @@ def _device_configs(db: Session) -> dict[int, tuple[str, int | None]]:
     return configs
 
 
-def _measurement_matches_device_config(row: Measurement | MeasurementRead, configs: dict[int, tuple[str, int | None]]) -> bool:
+def _measurement_matches_device_config(row: Measurement | MeasurementRead | HistoryMeasurementRow, configs: dict[int, tuple[str, int | None]]) -> bool:
     config = configs.get(int(row.device_id))
     if config is None:
         return True
@@ -81,11 +100,11 @@ def _measurement_matches_device_config(row: Measurement | MeasurementRead, confi
     return row.channel == configured_channel
 
 
-def _purpose_for(row: Measurement | MeasurementRead, purposes: dict[int, str]) -> str:
+def _purpose_for(row: Measurement | MeasurementRead | HistoryMeasurementRow, purposes: dict[int, str]) -> str:
     return purposes.get(int(row.device_id), DEVICE_PURPOSE_AUTO)
 
 
-def _is_solar_row(row: Measurement | MeasurementRead, purposes: dict[int, str]) -> bool:
+def _is_solar_row(row: Measurement | MeasurementRead | HistoryMeasurementRow, purposes: dict[int, str]) -> bool:
     purpose = _purpose_for(row, purposes)
     if purpose == DEVICE_PURPOSE_IGNORED:
         return False
@@ -94,7 +113,7 @@ def _is_solar_row(row: Measurement | MeasurementRead, purposes: dict[int, str]) 
     return purpose == DEVICE_PURPOSE_AUTO and row.source_type in SOLAR_ENERGY_SOURCES
 
 
-def _is_grid_row(row: Measurement | MeasurementRead, purposes: dict[int, str]) -> bool:
+def _is_grid_row(row: Measurement | MeasurementRead | HistoryMeasurementRow, purposes: dict[int, str]) -> bool:
     purpose = _purpose_for(row, purposes)
     if purpose == DEVICE_PURPOSE_IGNORED:
         return False
@@ -103,12 +122,12 @@ def _is_grid_row(row: Measurement | MeasurementRead, purposes: dict[int, str]) -
     return purpose == DEVICE_PURPOSE_AUTO and row.source_type in (GRID_POWER_SOURCES | GRID_ENERGY_SOURCES)
 
 
-def _solar_power_value(row: Measurement | MeasurementRead) -> float | None:
+def _solar_power_value(row: Measurement | MeasurementRead | HistoryMeasurementRow) -> float | None:
     value = row.power_w if row.power_w is not None else row.total_power_w
     return abs(value) if value is not None else None
 
 
-def _grid_power_value(row: Measurement | MeasurementRead) -> float | None:
+def _grid_power_value(row: Measurement | MeasurementRead | HistoryMeasurementRow) -> float | None:
     if row.total_power_w is not None:
         return row.total_power_w
     return row.power_w
@@ -196,9 +215,16 @@ def _bucket_seconds(start: datetime, end: datetime) -> int:
     one row per phase and a Shelly 2PM can store multiple channels at nearly the
     same timestamp. Recharts then connects different channels vertically. The
     history chart should therefore receive one aggregated value per time bucket.
+
+    On Raspberry Pi Zero 2 W deployments the 24h view intentionally uses 5-minute
+    buckets. This reduces the JSON payload from up to 1440 chart points to about
+    288 points and noticeably lowers browser/rendering work on low-resource
+    systems while still preserving the 24h trend.
     """
     hours = max(0.0, (end - start).total_seconds() / 3600)
     if hours <= 24:
+        if get_settings().pi_zero_2w_mode:
+            return 5 * 60  # 5-minute buckets, max ~288 points on Pi Zero 2 W
         return 60          # 1-minute buckets, max ~1440 points
     if hours <= 24 * 7:
         return 15 * 60     # 15-minute buckets, max ~672 points
@@ -220,21 +246,44 @@ def _raw_history_rows(
     device_id: int | None = None,
     source_type: str | None = None,
     limit: int = HISTORY_ROW_LIMIT_DEFAULT,
-) -> list[Measurement]:
-    query = db.query(Measurement).filter(Measurement.timestamp >= start, Measurement.timestamp <= end)
+) -> list[HistoryMeasurementRow]:
+    query = (
+        db.query(
+            Measurement.id,
+            Measurement.timestamp,
+            Measurement.device_id,
+            Measurement.source_type,
+            Measurement.channel,
+            Measurement.phase,
+            Measurement.power_w,
+            Measurement.voltage_v,
+            Measurement.current_a,
+            Measurement.power_factor,
+            Measurement.energy_import_wh,
+            Measurement.energy_export_wh,
+            Measurement.total_power_w,
+        )
+        .filter(Measurement.timestamp >= start, Measurement.timestamp <= end)
+        .filter(or_(
+            Measurement.power_w.is_not(None),
+            Measurement.total_power_w.is_not(None),
+            Measurement.energy_import_wh.is_not(None),
+            Measurement.energy_export_wh.is_not(None),
+        ))
+    )
     if device_id:
         query = query.filter(Measurement.device_id == device_id)
     if source_type:
         query = query.filter(Measurement.source_type == source_type)
 
-    # History is displayed as a recent time window (24h/7d/30d). With fast polling
-    # and multi-row Shelly devices, small ascending limits could return only the
-    # oldest rows of the selected window, making the chart stop at yesterday
-    # even though newer measurements exist. Read the most recent rows within the
-    # range first and sort them back ascending for chart rendering. The default
-    # limit is intentionally high enough for typical 30-second polling over 30 days.
+    # History does not need raw_json and does not render voltage-only rows.
+    # Selecting only the columns needed for chart aggregation avoids loading large
+    # JSON payloads into Python, which was the main bottleneck on Raspberry Pi
+    # Zero 2 W systems. Read newest rows first to keep recent data when the safety
+    # limit is reached, then sort back ascending for chart rendering.
     rows = query.order_by(Measurement.timestamp.desc()).limit(limit).all()
-    return sorted(rows, key=lambda row: row.timestamp)
+    lightweight_rows = [HistoryMeasurementRow(*row) for row in rows]
+    return sorted(lightweight_rows, key=lambda row: row.timestamp)
 
 
 @router.get('/latest', response_model=list[MeasurementRead])
@@ -311,7 +360,7 @@ def _history_power_totals(points: list[HistoryPoint]) -> HistoryTotalsResponse:
 
 
 def _history_points_from_rows(
-    rows: list[Measurement],
+    rows: list[HistoryMeasurementRow],
     purposes: dict[int, str],
     configs: dict[int, tuple[str, int | None]],
     bucket_seconds: int,
@@ -373,7 +422,7 @@ def _history_points_from_rows(
 
 
 def _history_totals_from_rows(
-    rows: list[Measurement],
+    rows: list[HistoryMeasurementRow],
     purposes: dict[int, str],
     configs: dict[int, tuple[str, int | None]],
     bucket_seconds: int,
@@ -407,7 +456,7 @@ def _history_totals_from_rows(
 
 
 def _history_series_from_rows(
-    rows: list[Measurement],
+    rows: list[HistoryMeasurementRow],
     purposes: dict[int, str],
     configs: dict[int, tuple[str, int | None]],
     bucket_seconds: int,
