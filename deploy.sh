@@ -6,4 +6,4 @@ set -euo pipefail
 # der Deploy auch, wenn beim Entpacken Execute-Bits verloren gegangen sind
 # oder das Quellverzeichnis mit noexec gemountet ist.
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-exec bash "$SCRIPT_DIR/scripts/deploy-opt.sh"
+exec bash "$SCRIPT_DIR/scripts/deploy-opt.sh" "$@"

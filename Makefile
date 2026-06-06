@@ -5,7 +5,7 @@ APP_DIR := /opt/bpstracker
 .PHONY: init up up-detached down restart logs ps test backend-shell frontend-shell reset-db prepare-opt install-opt deploy-opt backup-db check-exposure
 
 init:
-	@if [ ! -f .env ]; then cp .env.example .env; echo "Created .env from .env.example"; else echo ".env already exists"; fi
+	@bash -lc 'source scripts/env-setup.sh; profile="$${BPSTRACKER_INSTALL_PROFILE:-regular}"; bpstracker_prepare_env .env "$$profile" v0.9.9'
 	@mkdir -p data/postgres data/backend backups
 
 up: init

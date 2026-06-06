@@ -216,21 +216,15 @@ git clone https://github.com/syschelle/bpstracker.git
 cd bpstracker
 ```
 
-Konfiguration anlegen:
-
-```bash
-cp .env.example .env
-```
-
-Danach `.env` anpassen.
-
-Start mit lokalem Build:
+Start mit Installationsauswahl:
 
 ```bash
 bash ./deploy.sh
 ```
 
-Bei einer frischen Datenbank öffnet sich in der Weboberfläche zuerst die Ersteinrichtung. Dort legt der erste Anwender den Admin-Benutzernamen und das Admin-Passwort fest. In `.env` werden keine Admin- oder Viewer-Zugangsdaten ausgeliefert. Vor Produktivbetrieb müssen `POSTGRES_PASSWORD`, `DATABASE_URL` und `SECRET_KEY` auf starke Werte gesetzt werden; Docker Compose verweigert den Start, wenn erforderliche Secrets fehlen.
+Das Installationsskript fragt, ob die reguläre Installation oder die Raspberry-Pi-Zero-2-W-/Low-Resource-Installation verwendet werden soll. Es erzeugt `.env` aus sicheren Zufallswerten und kopiert `.env.example` **nicht** für den Produktivbetrieb. Der generierte `SECRET_KEY` wird am Ende der Installation einmal in der Konsole angezeigt; sicher aufbewahren und nach Produktivstart nicht mehr ändern, weil damit Shelly-Passwörter und 2FA-Secrets geschützt werden.
+
+Bei einer frischen Datenbank öffnet sich in der Weboberfläche zuerst die Ersteinrichtung. Dort legt der erste Anwender den Admin-Benutzernamen und das Admin-Passwort fest. In `.env` werden keine Admin- oder Viewer-Zugangsdaten ausgeliefert.
 
 Die Weboberfläche ist anschließend erreichbar unter:
 
@@ -687,14 +681,21 @@ Dadurch kann die Datenbank klein bleiben, ohne Langzeit-Auswertungen zu verliere
 
 ### Raspberry Pi Zero 2 W Modus
 
-Für einen Raspberry Pi Zero 2 W sollte das Deployment mit vorgebauten Images und dem Low-Resource-Override verwendet werden:
+Für einen Raspberry Pi Zero 2 W kann im Installer direkt das Zero-2-W-Profil gewählt werden:
 
 ```bash
-docker compose -f docker-compose.zero2w.yml pull
-docker compose -f docker-compose.zero2w.yml up -d --force-recreate --remove-orphans
+bash ./deploy.sh --zero2w
 ```
 
-Der Override aktiviert:
+Für Deployments mit vorgebauten Images:
+
+```bash
+bash ./deploy-images.sh --zero2w
+```
+
+Fortgeschrittene Betreiber können `docker-compose.zero2w.yml` weiterhin direkt nutzen, nachdem `.env` von einem der Installationsskripte erzeugt wurde.
+
+Das Zero-2-W-Profil aktiviert:
 
 - `PI_ZERO_2W_MODE=true`
 - `LIVE_DATA_MAX_HOURS=24`
@@ -922,4 +923,8 @@ v0.9.8 ergänzt mit `docker-compose.zero2w.yml` einen optionalen Raspberry-Pi-Ze
 ### v0.9.8 Vollständige Raspberry-Pi-Zero-2-W-Compose-Datei
 
 v0.9.8 ersetzt das bisherige teilweise Zero-2-W-Override durch eine vollständige eigenständige `docker-compose.zero2w.yml`. Die Datei enthält jetzt den kompletten Stack aus Postgres, Backend und Frontend, aktiviert den 24h-Low-Resource-Live-Datenmodus, setzt konservative Postgres-Speichereinstellungen, reduziert tmpfs-Größen und begrenzt Container-Logs für kleine SD-Karten-Installationen. Zero-2-W-Deployments werden mit `docker compose -f docker-compose.zero2w.yml up -d` gestartet.
+
+### v0.9.9 Sichere Installations-Secrets und Profilauswahl
+
+v0.9.9 erzeugt `.env` in den Installationsskripten aus sicheren Zufallswerten, statt `.env.example` für den Produktivbetrieb zu kopieren. Der Installer fragt jetzt nach dem gewünschten Profil: regulär oder Raspberry Pi Zero 2 W / Low-Resource. Bestehende `.env`-Dateien werden geprüft, fehlende oder unsichere Platzhalter-Secrets ersetzt, `POSTGRES_PASSWORD` und `DATABASE_URL` konsistent gehalten, und ein neu erzeugter `SECRET_KEY` wird am Ende der Installation einmal in der Konsole ausgegeben, damit Betreiber ihn sicher ablegen können.
 
