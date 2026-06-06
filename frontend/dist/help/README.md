@@ -789,8 +789,8 @@ This keeps the database small while preserving important long-term values.
 For a Raspberry Pi Zero 2 W, use the prebuilt image deployment together with the low-resource override file:
 
 ```bash
-docker compose -f docker-compose.images.yml -f docker-compose.zero2w.yml pull
-docker compose -f docker-compose.images.yml -f docker-compose.zero2w.yml up -d --force-recreate --remove-orphans
+docker compose -f docker-compose.zero2w.yml pull
+docker compose -f docker-compose.zero2w.yml up -d --force-recreate --remove-orphans
 ```
 
 The override enables:
@@ -1639,7 +1639,11 @@ v0.9.5 refines the Dashboard `Home Import` card after the v0.9.4 total-consumpti
 
 v0.9.6 refines the Dashboard Home Import card layout. The value column for total consumption, grid import/export and solar is now left-aligned across rows while keeping the compact spacing introduced in v0.9.5. Positive grid import remains blue, grid export remains red and solar remains green.
 
-### v0.9.7 Raspberry Pi Zero 2 W low-resource mode
+### v0.9.8 Raspberry Pi Zero 2 W low-resource mode
 
-v0.9.7 adds an optional Raspberry Pi Zero 2 W mode through `docker-compose.zero2w.yml`. When enabled, BPSTracker keeps and serves only the latest 24 hours of raw/live measurements while preserving permanent daily aggregates for total energy balance, total cost balance and amortization. The backend clamps history/export requests to the configured live window, the History view hides longer ranges in 24h mode, and retention settings show the effective low-resource limit.
+v0.9.8 adds an optional Raspberry Pi Zero 2 W mode through `docker-compose.zero2w.yml`. When enabled, BPSTracker keeps and serves only the latest 24 hours of raw/live measurements while preserving permanent daily aggregates for total energy balance, total cost balance and amortization. The backend clamps history/export requests to the configured live window, the History view hides longer ranges in 24h mode, and retention settings show the effective low-resource limit.
+
+### v0.9.8 complete Raspberry Pi Zero 2 W compose file
+
+v0.9.8 replaces the previous partial Zero 2 W override with a complete standalone `docker-compose.zero2w.yml`. The file now contains the full Postgres, backend and frontend stack, enables the 24h low-resource live-data mode, applies conservative Postgres memory settings, keeps reduced tmpfs sizes and limits container log growth for small SD-card installations. Start Zero 2 W deployments with `docker compose -f docker-compose.zero2w.yml up -d`.
 
