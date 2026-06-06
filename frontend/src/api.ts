@@ -125,6 +125,7 @@ export const api = {
   updateRetentionSettings: (payload: RetentionSettings) => request<RetentionSettings>('/api/settings/retention', { method: 'PUT', body: JSON.stringify(payload) }),
   kindleDisplaySettings: () => request<KindleDisplaySettings>('/api/settings/kindle-display'),
   updateKindleDisplaySettings: (payload: KindleDisplaySettings) => request<KindleDisplaySettings>('/api/settings/kindle-display', { method: 'PUT', body: JSON.stringify(payload) }),
+  refreshKindleDisplay: () => request<Record<string, unknown>>('/api/kindle/refresh', { method: 'POST' }),
   publicDashboardSettings: () => request<PublicDashboardSettings>('/api/settings/public-dashboard'),
   updatePublicDashboardSettings: (settings: PublicDashboardSettings) => request<PublicDashboardSettings>('/api/settings/public-dashboard', { method: 'PUT', body: JSON.stringify(settings) }),
   currentValuesApiSettings: () => request<CurrentValuesApiSettings>('/api/settings/current-values-api'),

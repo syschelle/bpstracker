@@ -23,7 +23,7 @@ async def kindle_display_png() -> FileResponse:
     if not is_kindle_display_enabled():
         raise HTTPException(status_code=503, detail='Kindle display generation is disabled in setup')
     path = kindle_display_service.output_path
-    if not path.exists():
+    if not path.exists() or kindle_display_service.is_output_stale():
         await kindle_display_service.generate_once()
     if not path.exists():
         raise HTTPException(status_code=503, detail='Kindle display image is not available yet')

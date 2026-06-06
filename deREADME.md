@@ -938,3 +938,7 @@ v0.9.10 härtet die Ersteinrichtung: Im Web-Installationsformular muss der `SECR
 
 v0.9.11 behebt die sechs GitHub-CodeQL-Security-Findings aus der v0.9.x-Linie. Backup-Download und -Löschung arbeiten jetzt nur noch mit strikt erlaubten, vom System erzeugten Backup-Dateinamen und weisen Traversal-Pfade, Symlinks und nicht reguläre Dateien vor jeder Dateioperation ab. Der veraltete Kompatibilitätspfad für Klartext-SHA-256-Passworthashes wurde entfernt; sehr alte Testkonten mit solchen Hashes müssen über die Admin-Reset-Skripte zurückgesetzt werden. Die Kindle-Display-Metadaten geben keine rohen Exception-Meldungen mehr über API-Antworten aus; Detailfehler bleiben nur noch in den Server-Logs.
 
+### v0.9.12 Kindle-Luftsensorwerte angeglichen
+
+v0.9.12 hält die Luftsensorwerte im Kindle-Display mit dem Dashboard synchron. Vor dem Rendern des Kindle-PNG wird der gemeinsame Luftsensor-Cache über denselben gedrosselten Helfer aktualisiert, den auch das Dashboard nutzt. Die Kindle-Vorschau im Setup löst außerdem vor dem Neuladen des Bildes einen authentifizierten Refresh aus, und der öffentliche Kindle-Bildendpunkt erzeugt veraltete Bilder vor der Auslieferung neu.
+

@@ -295,6 +295,7 @@ const translations = {
     hideKindlePreview: 'Kindle-Vorschau ausblenden',
     refreshKindlePreview: 'Kindle-Vorschau aktualisieren',
     kindlePreviewHint: 'Die Vorschau zeigt das aktuelle PNG, so wie es der Kindle abrufen würde.',
+    kindleLoadFailed: 'Kindle-Display konnte nicht aktualisiert werden.',
     airSensorSettings: 'Luftdatensensor',
     airSensorHint: 'Optionaler LAN-Sensor unter /data.json. Öffentliche, Loopback- und Metadata-IP-Adressen sowie Redirects werden blockiert. Angezeigt werden Temperatur, Luftfeuchte, PM10 (SDS_P1) und PM2.5 (SDS_P2) nur im Header; es werden keine historischen Daten gespeichert.',
     enableAirSensor: 'Luftdatensensor aktivieren',
@@ -632,6 +633,7 @@ const translations = {
     hideKindlePreview: 'Hide Kindle preview',
     refreshKindlePreview: 'Refresh Kindle preview',
     kindlePreviewHint: 'The preview shows the current PNG exactly as the Kindle would fetch it.',
+    kindleLoadFailed: 'Kindle display could not be refreshed.',
     airSensorSettings: 'Air data sensor',
     airSensorHint: 'Optional sensor at /data.json. Temperature, humidity, PM10 (SDS_P1) and PM2.5 (SDS_P2) are shown only in the header; no history is stored.',
     enableAirSensor: 'Enable air data sensor',
@@ -2861,6 +2863,8 @@ function KindleDisplaySettingsPanel() {
   const [message, setMessage] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [previewNonce, setPreviewNonce] = useState(0);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
 
   async function load() {
     setSettings(await api.kindleDisplaySettings());
@@ -2874,6 +2878,25 @@ function KindleDisplaySettingsPanel() {
     setSettings(saved);
     setMessage(t('kindleDisplaySaved'));
     if (!saved.enabled) setShowPreview(false);
+  }
+
+  async function refreshPreview() {
+    setPreviewLoading(true);
+    setPreviewError(null);
+    try {
+      await api.refreshKindleDisplay();
+      setPreviewNonce(Date.now());
+    } catch (err) {
+      setPreviewError(err instanceof Error ? err.message : t('kindleLoadFailed'));
+    } finally {
+      setPreviewLoading(false);
+    }
+  }
+
+  function togglePreview() {
+    const next = !showPreview;
+    setShowPreview(next);
+    if (next) void refreshPreview();
   }
 
   const previewUrl = `${api.kindlePreviewUrl()}?preview=${previewNonce}`;
@@ -2890,17 +2913,20 @@ function KindleDisplaySettingsPanel() {
       <div className="button-row">
         <button onClick={() => void save()}>{t('saveKindleDisplay')}</button>
         {settings.enabled && (
-          <button type="button" className="secondary" onClick={() => setShowPreview(value => !value)}>
+          <button type="button" className="secondary" onClick={togglePreview}>
             {showPreview ? t('hideKindlePreview') : t('showKindlePreview')}
           </button>
         )}
         {settings.enabled && showPreview && (
-          <button type="button" className="secondary" onClick={() => setPreviewNonce(Date.now())}>{t('refreshKindlePreview')}</button>
+          <button type="button" className="secondary" disabled={previewLoading} onClick={() => void refreshPreview()}>
+            {previewLoading ? t('wait') : t('refreshKindlePreview')}
+          </button>
         )}
       </div>
       {settings.enabled && showPreview && (
         <div className="kindle-preview">
           <p className="hint">{t('kindlePreviewHint')}</p>
+          {previewError && <div className="error">{previewError}</div>}
           <img src={previewUrl} alt="Kindle display preview" />
         </div>
       )}

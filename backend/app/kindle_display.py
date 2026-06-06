@@ -79,7 +79,7 @@ KINDLE_TMP_PATH = KINDLE_OUTPUT_PATH.with_suffix('.tmp.png')
 KINDLE_WIDTH = 600
 KINDLE_HEIGHT = 800
 KINDLE_GENERATE_SECOND = 10
-KINDLE_RENDERER_VERSION = 'kindle-inline-v8-temp-only-left-favicon'
+KINDLE_RENDERER_VERSION = 'kindle-inline-v9-air-cache-refresh'
 ICON_DIR = Path(__file__).resolve().parent / 'assets' / 'icons'
 _ICON_CACHE: dict[tuple[str, int], Image.Image] = {}
 
@@ -161,6 +161,7 @@ class KindleDisplayService:
             self.last_error_detail = None
             return
         try:
+            await refresh_air_sensor_cache_for_kindle()
             await asyncio.to_thread(self._generate_sync)
             self.last_generated_at = datetime.now(timezone.utc)
             self.last_error = None
@@ -176,6 +177,14 @@ class KindleDisplayService:
             values = collect_kindle_values(db)
         render_kindle_png(values, self.tmp_path)
         self.tmp_path.replace(self.output_path)
+
+    def is_output_stale(self, max_age_seconds: int = 90) -> bool:
+        try:
+            stat = self.output_path.stat()
+        except FileNotFoundError:
+            return True
+        age_seconds = datetime.now(timezone.utc).timestamp() - stat.st_mtime
+        return age_seconds > max(1, max_age_seconds)
 
     def meta(self) -> dict[str, Any]:
         stat = self.output_path.stat() if self.output_path.exists() else None
@@ -193,6 +202,34 @@ class KindleDisplayService:
             'height': KINDLE_HEIGHT,
             'renderer_version': KINDLE_RENDERER_VERSION,
         }
+
+
+
+async def refresh_air_sensor_cache_for_kindle() -> None:
+    """Refresh the shared air-sensor cache before rendering the Kindle image.
+
+    The dashboard air widget and the public air widget call the settings router's
+    air-sensor current helper, which both reads the sensor and updates the
+    shared cache. The Kindle renderer used to read only that cache, so an
+    otherwise unused Kindle display could show stale air values until somebody
+    opened the dashboard. Refreshing through the same helper keeps Kindle,
+    dashboard and public dashboard values aligned while preserving the existing
+    throttling and last-good-value behavior.
+    """
+    try:
+        with SessionLocal() as db:
+            if _simulation_enabled(db):
+                return
+            # Local import avoids a module-level dependency from the renderer to
+            # the API router and prevents import cycles during app startup/tests.
+            from .routers.settings import fetch_air_sensor_current, get_air_sensor_settings_from_db
+
+            await fetch_air_sensor_current(get_air_sensor_settings_from_db(db), db)
+    except Exception:
+        # Rendering should still use the last cached values if the sensor refresh
+        # encounters an unexpected issue. The concrete error is logged only on the
+        # server side to avoid exposing details through /api/kindle/meta.
+        logger.exception('Failed to refresh air sensor cache for Kindle display')
 
 
 def is_kindle_display_enabled() -> bool:

@@ -706,7 +706,7 @@ BPSTracker uses:
 | `SDS_P1` | PM10 |
 | `SDS_P2` | PM2.5 |
 
-The air sensor values are not stored historically. They are shown only in the UI header and Kindle display.
+The air sensor values are not stored historically. They are shown only in the UI header and Kindle display. The Kindle renderer refreshes the same shared air-sensor cache before generating the PNG, so dashboard, public dashboard and Kindle display values stay aligned while still respecting the conservative sensor polling interval.
 
 ### Air sensor polling behavior
 
@@ -1662,4 +1662,8 @@ v0.9.10 hardens first-run setup by requiring the `SECRET_KEY` from `.env` in the
 ### v0.9.11 CodeQL security hardening
 
 v0.9.11 addresses the six GitHub CodeQL security findings reported against the v0.9.x line. Backup download and delete now resolve files through a strict allowlist of generated backup filenames and reject traversal, symlinks and non-regular files before any file operation. The deprecated plain SHA-256 password compatibility verifier has been removed; old accounts that still use early test-build SHA-256 hashes must be reset with the admin reset scripts. Kindle display generation metadata no longer exposes raw exception messages to API responses; detailed errors remain in server logs only.
+
+### v0.9.12 Kindle air sensor cache alignment
+
+v0.9.12 keeps the Kindle display air sensor values aligned with the dashboard. Kindle PNG generation now refreshes the shared air-sensor cache through the same throttled helper used by the dashboard before rendering, and the setup preview explicitly triggers an authenticated Kindle refresh before reloading the image. The public Kindle image endpoint also regenerates stale images before returning them.
 

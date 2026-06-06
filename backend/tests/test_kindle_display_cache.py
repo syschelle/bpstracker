@@ -38,3 +38,17 @@ async def test_kindle_meta_does_not_expose_exception_details(tmp_path, monkeypat
     assert meta['last_error'] == 'Kindle display generation failed'
     assert 'secret internal filesystem detail' not in str(meta)
     assert 'last_error_detail' not in meta
+
+
+def test_kindle_output_stale_detection(tmp_path) -> None:
+    output = tmp_path / 'kindle-display.png'
+    output.write_bytes(b'not-a-real-png')
+    service = KindleDisplayService(output)
+
+    assert service.is_output_stale(max_age_seconds=3600) is False
+
+
+def test_kindle_missing_output_is_stale(tmp_path) -> None:
+    service = KindleDisplayService(tmp_path / 'missing.png')
+
+    assert service.is_output_stale() is True
