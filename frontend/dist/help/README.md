@@ -927,10 +927,15 @@ Most settings are configured in the web interface under **Setup**.
 
 ### Language
 
-Supported languages:
+The web UI translations are stored as locale files with metadata in:
 
-- German
-- English
+```text
+frontend/src/i18n/locales/
+```
+
+Available UI languages are derived from those files. Each locale file contains a `meta` block with the language code, native name, browser locale and help file, plus the `translations` object used by the React app. The build runs `npm run check-i18n` to verify that every locale provides the same translation keys as the English baseline.
+
+To add another UI language, add a new file such as `frontend/src/i18n/locales/fr.json` with matching translation keys and metadata. The language switcher and setup language dropdown will pick it up automatically.
 
 ### Timezone
 
@@ -1399,10 +1404,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.16` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.17` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.16 --language en
+bash ./deploy-images.sh --regular --tag v0.9.17 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1694,4 +1699,8 @@ The authenticated header now shows only `BPSTracker` and the app version. The lo
 ### v0.9.16 faster History rendering on low-resource systems
 
 v0.9.16 optimizes the History endpoint for Raspberry Pi and other low-resource deployments. History queries now load only the columns needed for charting and energy totals instead of full measurement ORM rows with `raw_json` payloads, and rows without power or energy counter values are skipped before Python aggregation. In Raspberry Pi Zero 2 W mode, the 24h chart uses 5-minute buckets, reducing the response from up to about 1440 chart points to about 288 points while preserving the 24h trend and totals.
+
+### v0.9.17 locale files with language metadata
+
+v0.9.17 moves the React UI translations out of `App.tsx` into per-language locale files under `frontend/src/i18n/locales/`. Each locale now carries metadata such as language code, native name, browser locale and help document. The frontend derives the available language list from those files, so the setup language dropdown, header language switcher and help-document lookup no longer hard-code only German and English. A new `npm run check-i18n` build step validates that every locale provides the same translation keys as the English baseline. Backend language validation now accepts future locale-style language codes while the frontend falls back safely when an unavailable language is configured.
 

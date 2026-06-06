@@ -1,13 +1,14 @@
 {
   "name": "bpstracker-frontend",
-  "version": "0.9.16",
+  "version": "0.9.17",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "npm run sync-help && vite",
-    "build": "npm run sync-help && tsc && vite build",
+    "build": "npm run check-i18n && npm run sync-help && tsc && vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "sync-help": "node scripts/sync-help-docs.mjs"
+    "sync-help": "node scripts/sync-help-docs.mjs",
+    "check-i18n": "node scripts/check-i18n.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",

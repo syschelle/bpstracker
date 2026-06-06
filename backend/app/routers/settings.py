@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+import re
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -33,11 +34,12 @@ DEFAULT_KWH_PRICE_EUR = 0.30
 DEFAULT_INVESTMENT_COST_EUR = 0.0
 DEFAULT_BATTERY_ROUNDTRIP_EFFICIENCY = 0.85
 DEFAULT_LANGUAGE = 'de'
+LANGUAGE_RE = re.compile(r'^[a-z]{2}([_-][a-z0-9]+)?$')
 
 
 def get_default_language() -> str:
     language = str(get_settings().default_language or DEFAULT_LANGUAGE).strip().lower()
-    return language if language in {'de', 'en'} else DEFAULT_LANGUAGE
+    return language if LANGUAGE_RE.fullmatch(language) else DEFAULT_LANGUAGE
 
 
 DEFAULT_CURRENCY_CODE = 'EUR'
@@ -126,7 +128,7 @@ def _normalize_ui_value(value: dict | None) -> UiSettings:
     value = value or {}
     default_language = get_default_language()
     language = str(value.get('language', default_language) or default_language).lower()
-    if language not in {'de', 'en'}:
+    if not LANGUAGE_RE.fullmatch(language):
         language = default_language
     return UiSettings(language=language, timezone=_normalize_timezone(value.get('timezone', DEFAULT_TIMEZONE)))
 

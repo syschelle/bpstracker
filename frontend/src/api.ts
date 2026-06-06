@@ -1,4 +1,4 @@
-import type { AirSensorCurrent, AirSensorSettings, BackupCreateResponse, BackupInfo, CurrentValuesApiSettings, Device, FinanceSettings, KindleDisplaySettings, Measurement, HistorySeries, HistoryTotals, PublicDashboardSettings, RetentionSettings, ResetValuesResponse, SimulationSettings, Summary, UiSettings, User } from './types';
+import type { AirSensorCurrent, AirSensorSettings, BackupCreateResponse, BackupInfo, CurrentValuesApiSettings, Device, FinanceSettings, KindleDisplaySettings, Language, Measurement, HistorySeries, HistoryTotals, PublicDashboardSettings, RetentionSettings, ResetValuesResponse, SimulationSettings, Summary, UiSettings, User } from './types';
 
 type RuntimeConfig = {
   API_BASE_URL?: string;
@@ -106,8 +106,8 @@ async function download(path: string): Promise<Blob> {
 }
 
 export const api = {
-  installStatus: () => request<{ install_required: boolean; default_language?: 'de' | 'en' }>('/api/install/status'),
-  installAdmin: (username: string, password: string, confirm_password: string, secret_key: string, language: 'de' | 'en') => request<{ ok: boolean }>('/api/install/admin', { method: 'POST', body: JSON.stringify({ username, password, confirm_password, secret_key, language }) }),
+  installStatus: () => request<{ install_required: boolean; default_language?: Language }>('/api/install/status'),
+  installAdmin: (username: string, password: string, confirm_password: string, secret_key: string, language: Language) => request<{ ok: boolean }>('/api/install/admin', { method: 'POST', body: JSON.stringify({ username, password, confirm_password, secret_key, language }) }),
   login: (username: string, password: string) => request<{ access_token?: string; requires_2fa: boolean; challenge_token?: string }>('/api/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
   verify2fa: (challenge_token: string, code: string) => request<{ access_token?: string; requires_2fa?: boolean }>('/api/auth/2fa/verify', { method: 'POST', body: JSON.stringify({ challenge_token, code }) }),
   logout: () => request<void>('/api/auth/logout', { method: 'POST' }),

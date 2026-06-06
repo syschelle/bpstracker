@@ -3,6 +3,7 @@ from __future__ import annotations
 import hmac
 
 from fastapi import APIRouter, Depends, HTTPException, status
+import re
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -14,6 +15,13 @@ from ..security import delete_recovery_codes, password_hash
 
 UI_SETTINGS_KEY = 'ui'
 DEFAULT_TIMEZONE = 'Europe/Berlin'
+_LANGUAGE_RE = re.compile(r'^[a-z]{2}([_-][a-z0-9]+)?$')
+
+
+def _normalize_language(value: str | None, fallback: str = 'de') -> str:
+    language = str(value or fallback).strip().lower()
+    return language if _LANGUAGE_RE.fullmatch(language) else fallback
+
 
 router = APIRouter(prefix='/api/install', tags=['install'])
 
@@ -34,8 +42,7 @@ def install_required(db: Session) -> bool:
 
 
 def _default_language() -> str:
-    language = str(get_settings().default_language or 'de').strip().lower()
-    return language if language in {'de', 'en'} else 'de'
+    return _normalize_language(get_settings().default_language, 'de')
 
 
 @router.get('/status', response_model=InstallStatusResponse)
@@ -93,9 +100,10 @@ def create_initial_admin(payload: InstallAdminRequest, db: Session = Depends(get
             delete_recovery_codes(db, duplicate)
             db.add(duplicate)
 
+    ui_language = _normalize_language(payload.language, _default_language())
     ui_row = db.get(AppSetting, UI_SETTINGS_KEY)
     ui_value = dict(ui_row.value) if ui_row and isinstance(ui_row.value, dict) else {}
-    ui_value['language'] = payload.language
+    ui_value['language'] = ui_language
     ui_value.setdefault('timezone', DEFAULT_TIMEZONE)
     if ui_row is None:
         ui_row = AppSetting(key=UI_SETTINGS_KEY, value=ui_value)
@@ -103,6 +111,6 @@ def create_initial_admin(payload: InstallAdminRequest, db: Session = Depends(get
         ui_row.value = ui_value
     db.add(ui_row)
 
-    db.add(AuditLog(actor_user_id=None, action='install.admin.created', details={'username': username, 'language': payload.language}))
+    db.add(AuditLog(actor_user_id=None, action='install.admin.created', details={'username': username, 'language': ui_language}))
     db.commit()
     return InstallCompleteResponse(ok=True)

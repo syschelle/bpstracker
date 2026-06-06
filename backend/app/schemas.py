@@ -19,7 +19,7 @@ class TokenResponse(BaseModel):
 
 class InstallStatusResponse(BaseModel):
     install_required: bool
-    default_language: str = Field(default='de', pattern=r'^(de|en)$')
+    default_language: str = Field(default='de', pattern=r'^[a-z]{2}([_-][a-z0-9]+)?$')
 
 
 class InstallAdminRequest(BaseModel):
@@ -27,7 +27,7 @@ class InstallAdminRequest(BaseModel):
     password: str = Field(min_length=8, max_length=256)
     confirm_password: str = Field(min_length=8, max_length=256)
     secret_key: str = Field(min_length=1, max_length=512)
-    language: str = Field(default='de', pattern=r'^(de|en)$')
+    language: str = Field(default='de', pattern=r'^[a-z]{2}([_-][a-z0-9]+)?$')
 
 
 class InstallCompleteResponse(BaseModel):
@@ -150,7 +150,7 @@ class FinanceSettings(BaseModel):
 
 
 class UiSettings(BaseModel):
-    language: str = Field(default='de', pattern=r'^(de|en)$')
+    language: str = Field(default='de', pattern=r'^[a-z]{2}([_-][a-z0-9]+)?$')
     timezone: str = Field(default='Europe/Berlin', max_length=64)
 
 

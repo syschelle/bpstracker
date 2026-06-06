@@ -4,10 +4,11 @@ import { Activity, Euro, Globe2, HelpCircle, History, LogOut, Menu, Moon, Plus, 
 import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api, getRuntimeConfig, setToken } from './api';
 import packageJson from '../package.json';
-import type { AirSensorCurrent, AirSensorSettings, BackupInfo, CurrencyCode, CurrentValuesApiSettings, Device, DevicePurpose, DeviceType, FinanceSettings, KindleDisplaySettings, Language, Measurement, HistoryTotals, PublicDashboardSettings, RetentionSettings, SimulationSettings, Summary, UiSettings, User } from './types';
+import type { AirSensorCurrent, AirSensorSettings, BackupInfo, CurrencyCode, CurrentValuesApiSettings, Device, DevicePurpose, DeviceType, FinanceSettings, KindleDisplaySettings, Measurement, HistoryTotals, PublicDashboardSettings, RetentionSettings, SimulationSettings, Summary, UiSettings, User } from './types';
+import { availableLanguages, DEFAULT_LANGUAGE, helpFileForLanguage, isSupportedLanguage, languageMeta, languageOptionLabel, localeForLanguage, nextLanguage, normalizeLanguage, translate } from './i18n';
+import type { Language, TranslationKey } from './i18n';
 
 type Tab = 'dashboard' | 'history' | 'setup' | 'account' | 'help';
-type TranslationKey = keyof typeof translations.de;
 type Translator = (key: TranslationKey, vars?: Record<string, string | number>) => string;
 type Theme = 'light' | 'dark';
 
@@ -19,696 +20,7 @@ type I18nContextValue = {
   t: Translator;
 };
 
-const translations = {
-  de: {
-    appSubtitle: 'Balkon-Photovoltaik-System Monitoring',
-    loginTitle: 'Einloggen',
-    installTitle: 'Ersteinrichtung',
-    installHint: 'Diese Installation hat noch keinen Admin-Zugang. Lege jetzt den ersten Admin-Benutzer an. Gib den SECRET_KEY aus der .env als Eigentümer-Nachweis ein. Der SECRET_KEY wird nicht im Browser gespeichert und nicht aus dem Formular in die .env geschrieben.',
-    installLanguage: 'Sprache der Ersteinrichtung',
-    installSecretKey: 'SECRET_KEY aus .env',
-    installSecretKeyHint: 'Diesen Wert zeigt das Installscript am Ende an. Er beweist, dass du Zugriff auf die Server-Konfiguration hast.',
-    installSecretKeyRequired: 'Bitte gib den SECRET_KEY aus der .env ein.',
-    username: 'Benutzername',
-    password: 'Passwort',
-    confirmPassword: 'Passwort wiederholen',
-    installButton: 'Admin anlegen',
-    installPasswordMismatch: 'Die Passwörter stimmen nicht überein.',
-    installCompleteLoginNow: 'Admin wurde angelegt. Bitte melde dich jetzt an.',
-    installFailed: 'Ersteinrichtung fehlgeschlagen',
-    loginButton: 'Login',
-    wait: 'Bitte warten…',
-    loginHint: 'Melde dich mit dem eingerichteten Admin- oder Viewer-Zugang an. Initiale Zugangsdaten werden nicht mehr in der .env gespeichert.',
-    loginFailed: 'Login fehlgeschlagen',
-    twoFaFailed: '2FA fehlgeschlagen',
-    twoFaCodeOrRecovery: '2FA-Code oder Recovery-Code',
-    twoFaPlaceholder: '123456 oder ABCD-EFGH-IJKL-MNOP',
-    confirm2fa: '2FA bestätigen',
-    dashboard: 'Dashboard',
-    history: 'Historie',
-    setup: 'Setup',
-    githubRepository: 'GitHub-Repository',
-    githubRepositoryHint: 'Projektseite, Quellcode und Updates findest du im GitHub-Repository.',
-    openGithubRepository: 'GitHub-Repository öffnen',
-    help: 'Hilfe',
-    helpTitle: 'Hilfe & Dokumentation',
-    helpHint: 'Diese Hilfeseite zeigt die README-Dokumentation direkt in der Anwendung. Die Sprache folgt der aktuellen Sprachwahl im Header.',
-    helpLoadFailed: 'Hilfedokumentation konnte nicht geladen werden.',
-    account2fa: 'Admin 2FA',
-    logout: 'Logout',
-    menu: 'Menü',
-    showMenu: 'Menü öffnen',
-    hideMenu: 'Menü schließen',
-    themeLight: 'Helles Theme',
-    themeDark: 'Dunkles Theme',
-    toggleTheme: 'Theme wechseln',
-    switchLanguage: 'Sprache wechseln',
-    achievementTitle: 'Energiespar-Erfolg',
-    achievementGoLive: '🪖 GoLive: Super, es läuft – aber du bist noch auf der dunklen Seite der Macht!',
-    achievementFirstSolar: '☀️ Erster Sonnenstrom: Auf dem Weg zum Stromimperium!',
-    achievementCoffee: '☕ Kaffee-Kasse geladen: Du hast schon Geld für einen Kaffee gespart!',
-    achievementCake: '🍰 Kuchen-Level erreicht: Die Sonne spendiert dir ein Stück Kuchen.',
-    achievementPizza: '🍕 Pizza-Power: Deine Anlage hat eine Pizza verdient.',
-    achievementMovie: '🎬 Kino-Abend: Die Sonne hat dir fast den Eintritt bezahlt.',
-    achievementPlant: '🌱 Pflanzenfreund: Deine Ersparnis fühlt sich schon ziemlich grün an.',
-    achievementGadget: '🔌 Technik-Bonus: Das reicht schon für ein kleines Smart-Home-Gadget.',
-    achievementDinner: '🍽️ Sonnen-Dinner: Deine PV spart sich Richtung Abendessen.',
-    achievementAmortization25: '🚀 Viertel geschafft: 25 % deiner Investition sind wieder drin.',
-    achievementAmortization50: '⚡ Halbe Macht: 50 % Amortisation erreicht.',
-    achievementAmortization75: '🛡️ Fast durch: 75 % der Investition sind zurück.',
-    achievementAmortization100: '🏆 Breakeven: Deine Anlage hat sich amortisiert!',
-    roleAdmin: 'Admin',
-    roleViewer: 'Viewer',
-    gridPower: 'Hausbezug',
-    gridPowerSubtitle: '',
-    gridShareGauge: 'Aktueller Anteil Netzbezug / Solar',
-    gridShareGaugeSubtitle: 'zeigt, welcher Anteil der aktuellen Leistung aus Netzbezug und Solar stammt',
-    gridImportShare: 'Netzbezug',
-    solarShare: 'Solar',
-    noPowerData: 'Keine aktuelle Leistung',
-    totalCurrently: 'Aktuell gesamt',
-    gridExporting: 'Einspeisung ins Netz',
-    gridNeutral: '0 Netzbezug',
-    solarSocket: 'Solar',
-    solarSocketSubtitle: 'aktuell an der Einspeisesteckdose',
-    importedToday: 'Bezug',
-    exportedToday: 'Einspeisung',
-    solarToday: 'Solar',
-    totalConsumption: 'Verbrauch gesamt',
-    currentTotalConsumption: 'Gesamtverbrauch',
-    totalBalance: 'Gesamtbilanz',
-    solarTodaySubtitle: 'an der Einspeisesteckdose',
-    dailyBalance: 'Tagesbilanz',
-    dailyCostBalance: 'Tageskostenbilanz',
-    totalCostBalance: 'Gesamtkostenbilanz',
-    consumptionCost: 'Verbrauchskosten',
-    savings: 'Einsparung',
-    savingsCalculation: 'Solar × kWh-Preis',
-    investment: 'Investition',
-    amortization: 'Amortisation',
-    breakevenProgress: 'Breakeven-Fortschritt',
-    remaining: 'Rest',
-    enterInvestment: 'Investitionskosten im Setup eintragen',
-    estimatedRemaining: 'Voraussichtlich verbleibend',
-    untilApprox: 'ca. bis {date}',
-    basedOnToday: 'auf Basis der heutigen Einsparung',
-    financeCalculationHint: 'Berechnung: Verbrauchskosten = Bezug × kWh-Preis. Einsparung = Solarproduktion × kWh-Preis. Tageswerte nutzen die Tagesbilanz, Gesamtwerte nutzen dauerhaft gespeicherte Tagesaggregate und aktuelle Zählerstände.',
-    deviceStatus: 'Gerätestatus',
-    dashboardDeviceMeasurements: 'Gerätestatus & aktuelle Messwerte',
-    refresh: 'Aktualisieren',
-    name: 'Name',
-    host: 'Host',
-    status: 'Status',
-    model: 'Modell',
-    lastPoll: 'Letzter Abruf',
-    error: 'Fehler',
-    online: 'online',
-    offline: 'offline',
-    latestMeasurements: 'Aktuelle Messwerte',
-    noLatestMeasurement: 'Noch keine Messung',
-    time: 'Zeit',
-    device: 'Gerät',
-    source: 'Quelle',
-    channel: 'Kanal',
-    phase: 'Phase',
-    power: 'Leistung',
-    total: 'Gesamt',
-    voltage: 'Spannung',
-    current: 'Strom',
-    dashboardLoadFailed: 'Dashboard konnte nicht geladen werden',
-    csvDownloaded: 'CSV wurde heruntergeladen.',
-    csvExport: 'CSV Export',
-    powerW: 'Leistung W',
-    languageSettings: 'Sprache',
-    languageHint: 'Diese Einstellung speichert die Standardsprache serverseitig, z. B. für das Kindle-Display. Die Sprache im Browser kann zusätzlich im Header per Cookie geändert werden.',
-    languageLabel: 'Oberflächensprache',
-    german: 'Deutsch',
-    english: 'English',
-    saveLanguage: 'Sprache speichern',
-    languageSaved: 'Sprache wurde gespeichert.',
-    timezoneSettings: 'Zeitzone',
-    timezoneHint: 'Die Zeitzone gilt für Zeitangaben in der Weboberfläche und für das Kindle-PNG. Sommerzeit und Winterzeit werden über die IANA-Zeitzone automatisch berücksichtigt.',
-    timezoneLabel: 'Zeitzone',
-    timezoneEuropeBerlin: 'Europa/Berlin',
-    timezoneEuropeLondon: 'Europa/London',
-    timezoneUtc: 'UTC',
-    timezoneAmericaNewYork: 'Amerika/New York',
-    timezoneSaved: 'Zeitzone wurde gespeichert.',
-    saveTimezone: 'Zeitzone speichern',
-    userAccess: 'Benutzerzugänge',
-    userAccessHint: 'Der Admin wird bei der Ersteinrichtung angelegt. Ein Viewer kann optional hier erstellt oder geändert werden; er darf Dashboard und Historie sehen, aber kein Setup öffnen. Benutzernamen werden frei vergeben und im Klartext gespeichert; Passwörter werden mit Argon2id gehasht. 2FA ist nur für den Admin vorgesehen.',
-    newPassword: 'Neues Passwort',
-    unchangedPlaceholder: 'leer lassen = unverändert',
-    saveAdmin: 'Admin speichern',
-    saveViewer: 'Viewer erstellen/speichern',
-    adminSaved: 'Admin wurde gespeichert.',
-    viewerSaved: 'Viewer wurde gespeichert.',
-    twoFaManagedInTab: '2FA verwaltest du im Reiter „Admin 2FA“.',
-    viewerNoSetup: 'Der Viewer hat keinen Zugriff auf Setup und 2FA.',
-    role: 'Rolle',
-    twoFa: '2FA',
-    active: 'Aktiv',
-    yes: 'ja',
-    no: 'nein',
-    enabled: 'aktiv',
-    disabled: 'aus',
-    financeValues: 'Finanzwerte',
-    financeHint: 'Diese Werte werden für Verbrauchskosten, Einsparung und Amortisation im Dashboard verwendet. Einspeisung wird nicht vergütet.',
-    feedInNotPaidHint: 'Einspeisung wird mit 0 vergütet. Die Akku-Bewertung nutzt den eingespeisten Überschuss als möglichen Speicher-Nutzen.',
-    enableBatteryAnalysis: 'Akku-Amortisationsberechnung aktivieren',
-    batteryAnalysisDisabled: 'Akku-Amortisationsberechnung ist deaktiviert.',
-    batteryDetails: 'Berechnungsdetails',
-    copyBatteryDetails: 'Details kopieren',
-    batteryDetailsCopied: 'Kopiert',
-    batteryCost: 'Akku-Kosten',
-    batteryCapacity: 'Akku-Kapazität',
-    batteryEfficiency: 'Akku-Wirkungsgrad',
-    batteryEfficiencyHint: 'Konservativer Standardwert: 85 %. Passe ihn an den realen Roundtrip-Wirkungsgrad deines Akkus an.',
-    batteryAnalysis: 'Akku-Bewertung',
-    batterySavingsToday: 'Potentielle Akku-Ersparnis heute',
-    batteryUsableSurplusToday: 'Nutzbarer Überschuss heute',
-    batteryPayback: 'Akku-Amortisation ohne offene BKW-Restkosten',
-    batteryCombinedPayback: 'Akku inkl. offener BKW-Amortisation',
-    batteryCombinedInvestment: 'Offene BKW-Restkosten + Akku',
-    batteryOpenBps: 'Offene BKW-Restkosten',
-    batteryWorthwhile: 'Akku lohnt sich rechnerisch',
-    batteryNotWorthwhile: 'Akku lohnt sich rechnerisch noch nicht',
-    batteryMissing: 'Akku-Preis und Kapazität im Setup eintragen.',
-    batteryAssumption: 'Annahme: Einspeisung wird nicht vergütet, der im Setup hinterlegte Akku-Wirkungsgrad wird berücksichtigt, maximal ein Lade-/Entladezyklus pro Tag. Wenn das Balkonkraftwerk noch nicht amortisiert ist, werden die offenen Restkosten mit berücksichtigt.',
-    financeSaved: 'Finanzwerte wurden gespeichert.',
-    currency: 'Währung',
-    currencyHint: 'Die Währung gilt für kWh-Preis, Investitionskosten, Einsparung und Amortisation. Es findet keine automatische Umrechnung statt.',
-    currencyEur: 'Euro (€)',
-    currencyUsd: 'US-Dollar ($)',
-    currencyGbp: 'Pfund (£)',
-    kwhPrice: 'kWh-Preis',
-    investmentCost: 'Investitionskosten',
-    saveFinance: 'Finanzwerte speichern',
-    retentionSettings: 'Datenaufbewahrung',
-    retentionHint: 'Rohmesswerte werden nur für die eingestellte Zeit behalten. Tagesaggregate bleiben dauerhaft erhalten und werden für Gesamtbilanz und Amortisation genutzt.',
-    rawRetentionDays: 'Rohdaten-Aufbewahrung',
-    daysUnit: 'Tage',
-    dailyAggregates: 'Tagesaggregate',
-    dailyAggregatesHint: 'bleiben dauerhaft erhalten',
-    saveRetention: 'Aufbewahrung speichern',
-    retentionSaved: 'Datenaufbewahrung wurde gespeichert.',
-    retentionCurrent: 'Aktuelle Rohdaten-Aufbewahrung: {days} Tage',
-    retentionEffectiveHours: 'Effektive Rohdaten-Aufbewahrung: {hours} Stunden',
-    piZeroModeActive: 'Pi Zero 2 W Modus aktiv: Livewerte und Rohdaten sind auf {hours} Stunden begrenzt. Tagesaggregate bleiben erhalten.',
-    liveDataLimitedHint: 'Dieser Modus zeigt nur die letzten {hours} Stunden Livewerte.',
-    backupSettings: 'Backup',
-    backupHint: 'Erstellt ein verschlüsseltes Backup mit Datenbank-Dump, Konfiguration und Backend-Daten. Das Passwort wird nur für dieses Backup verwendet und nicht gespeichert.',
-    backupPassword: 'Backup-Passwort',
-    backupConfirmPassword: 'Passwort wiederholen',
-    createEncryptedBackup: 'Verschlüsseltes Backup erstellen',
-    backupPasswordWarning: 'Ohne dieses Passwort kann das Backup nicht wiederhergestellt werden.',
-    backupCreated: 'Backup wurde erstellt.',
-    existingBackups: 'Vorhandene Backups',
-    download: 'Download',
-    deleteBackup: 'Löschen',
-    backupDeleteConfirm: 'Dieses Backup wirklich löschen?',
-    backupPasswordMismatch: 'Die Passwörter stimmen nicht überein.',
-    backupPasswordTooShort: 'Das Backup-Passwort muss mindestens 12 Zeichen lang sein.',
-    noBackups: 'Keine Backups vorhanden.',
-    backupSize: 'Größe',
-    created: 'Erstellt',
-    simulationSettings: 'Simulation',
-    simulationHint: 'Erzeugt realistische Demo-Werte ohne echte Geräte. Der maximale Solar-Output begrenzt die PV-Leistung; Grundlast Tag/Nacht legt den dauerhaften Verbrauch fest. Spitzen wie Waschmaschine oder Kaffeeautomat bleiben zusätzlich erhalten.',
-    simulationPvPeak: 'Maximaler Solar-Output',
-    simulationPvPeakHint: 'Watt, z. B. 800 für ein Balkonkraftwerk oder 2000 für eine größere reale Anlage.',
-    simulationBaseloadDay: 'Grundlast Tag',
-    simulationBaseloadNight: 'Grundlast Nacht',
-    simulationBaseloadHint: 'Dauerhafte Last in Watt. Simulierte Verbrauchsspitzen werden zusätzlich auf diese Grundlast addiert.',
-    enableSimulation: 'Simulation aktivieren',
-    simulationSaved: 'Simulation wurde gespeichert.',
-    saveSimulation: 'Simulation speichern',
-    simulationWarning: 'Bei aktivierter Simulation zeigt Dashboard, Historie, Kindle-Display, Luftdaten und JSON-API simulierte Werte an. Produktivdaten werden nicht verändert.',
-    matrixBanner: 'Du bist in der Matrix 😎 Simulation läuft!',
-    resetValuesSettings: 'Werte zurücksetzen',
-    resetValuesHint: 'Löscht alle Messwerte, Tagesaggregate und flüchtigen Wert-Caches. Geräte, Benutzer und Setup-Einstellungen bleiben erhalten.',
-    resetValuesWarning: 'Achtung: Diese Aktion kann nicht rückgängig gemacht werden. Gib reset ein, um zu bestätigen.',
-    resetConfirmationLabel: 'Bestätigung',
-    resetValuesButton: 'Alle Werte löschen',
-    resetValuesDone: 'Alle Werte wurden gelöscht.',
-    resetValuesConfirmPlaceholder: 'reset',
-    publicDashboardSettings: 'Öffentliches Dashboard',
-    publicDashboardHint: 'Aktiviert eine separate Smart-Meter-Zähleransicht ohne Login.',
-    enablePublicDashboard: 'Öffentliches Dashboard aktivieren',
-    publicDashboardSaved: 'Öffentliches Dashboard wurde gespeichert.',
-    publicDashboardLink: 'Öffentlicher Dashboard-Link',
-    openPublicDashboard: 'Öffentliches Dashboard öffnen',
-    publicDashboardDisabledHint: 'Nur aktivieren, wenn Besucher diese Werte ohne Anmeldung sehen dürfen.',
-    publicDashboardTitle: 'Öffentliches Dashboard',
-    publicDashboardLoadFailed: 'Öffentliches Dashboard konnte nicht geladen werden',
-    publicMeterBrand: 'BPSTracker',
-    publicMeterSeal: 'PV',
-    publicMeterLanguage: 'Sprache',
-    publicMeterNumber: 'Zählernummer',
-    publicMeterInfo: 'INFO',
-    publicMeterMode: 'MODUS',
-    publicMeterObis: 'OBIS',
-    publicMeterImportTotal: 'Bezug gesamt',
-    publicMeterExportTotal: 'Einspeisung gesamt',
-    publicMeterSolarTotal: 'Solar gesamt',
-    publicMeterSolarToday: 'Solar heute',
-    publicMeterCurrentGrid: 'Netz aktuell',
-    publicMeterCurrentSolar: 'Solar aktuell',
-    publicMeterTotalConsumption: 'Verbrauch gesamt',
-    publicMeterLastUpdate: 'Letztes Update',
-    currentValuesApiSettings: 'JSON-API',
-    currentValuesApiHint: 'Stellt aktuelle BPSTracker-Werte als JSON unter /api/current-values bereit. Deaktiviere diese Option, wenn du die Schnittstelle nicht nutzt.',
-    enableCurrentValuesApi: 'JSON-API aktivieren',
-    currentValuesApiSaved: 'JSON-API wurde gespeichert.',
-    saveCurrentValuesApi: 'JSON-API speichern',
-    currentValuesApiDisabledHint: 'Wenn deaktiviert, liefert /api/current-values keine Werte aus.',
-    showJsonPreview: 'JSON-Vorschau anzeigen',
-    refreshJsonPreview: 'JSON-Vorschau aktualisieren',
-    hideJsonPreview: 'JSON-Vorschau ausblenden',
-    jsonPreviewHint: 'Die Vorschau ruft die JSON-API direkt auf und zeigt die aktuelle Antwort.',
-    kindleDisplaySettings: 'Kindle-Display',
-    kindleDisplayHint: 'Erzeugt das Kindle-PNG unter /api/kindle/display.png. Das Bild bleibt als optional öffentlicher Cache-Endpunkt für Kindle-Abrufe verfügbar; Refresh und Meta sind Admin-only.',
-    enableKindleDisplay: 'Kindle-Display aktivieren',
-    kindleDisplaySaved: 'Kindle-Display wurde gespeichert.',
-    saveKindleDisplay: 'Kindle-Display speichern',
-    kindleDisplayDisabledHint: 'Wenn deaktiviert, wird kein neues Kindle-PNG mehr erzeugt und die API liefert deaktiviert zurück.',
-    showKindlePreview: 'Kindle-Vorschau anzeigen',
-    hideKindlePreview: 'Kindle-Vorschau ausblenden',
-    refreshKindlePreview: 'Kindle-Vorschau aktualisieren',
-    kindlePreviewHint: 'Die Vorschau zeigt das aktuelle PNG, so wie es der Kindle abrufen würde.',
-    kindleLoadFailed: 'Kindle-Display konnte nicht aktualisiert werden.',
-    airSensorSettings: 'Luftdatensensor',
-    airSensorHint: 'Optionaler LAN-Sensor unter /data.json. Öffentliche, Loopback- und Metadata-IP-Adressen sowie Redirects werden blockiert. Angezeigt werden Temperatur, Luftfeuchte, PM10 (SDS_P1) und PM2.5 (SDS_P2) nur im Header; es werden keine historischen Daten gespeichert.',
-    enableAirSensor: 'Luftdatensensor aktivieren',
-    airSensorHost: 'IP/Hostname des Luftdatensensors',
-    airSensorSaved: 'Luftdatensensor wurde gespeichert.',
-    saveAirSensor: 'Luftdatensensor speichern',
-    temperature: 'Temperatur',
-    humidity: 'Luftfeuchte',
-    fineDust: 'Feinstaub',
-    newShellyDevice: 'Neues Shelly-Gerät',
-    devicePurpose: 'Zweck',
-    devicePurposeAuto: 'Automatisch erkennen',
-    devicePurposeGrid: 'Hausbezug / Netz',
-    devicePurposeSolar: 'Solar / Einspeisung',
-    devicePurposeConsumer: 'Verbraucher / Sonstiges',
-    devicePurposeIgnored: 'Ignorieren',
-    devicePurposeHint: 'Der Zweck steuert, ob ein Shelly als Netz-/Hausbezug, Solar-Einspeisung oder nur als Rohmessgerät gezählt wird. Mehrere Solar-/Einspeisegeräte werden summiert.',
-    type: 'Typ',
-    autoDetection: 'Auto-Erkennung',
-    ipHostname: 'IP/Hostname',
-    shellyUserOptional: 'Shelly-Benutzer optional',
-    shellyPasswordOptional: 'Shelly-Passwort optional',
-    pollingSeconds: 'Polling Sekunden',
-    addDevice: 'Gerät hinzufügen',
-    configuredDevices: 'Konfigurierte Geräte',
-    polling: 'Polling',
-    actions: 'Aktionen',
-    all: 'alle',
-    deviceSaved: 'Gerät gespeichert.',
-    pollStarted: 'Poll gestartet und gespeichert.',
-    deleteConfirm: 'Gerät wirklich löschen?',
-    edit: 'Bearbeiten',
-    saveChanges: 'Änderungen speichern',
-    cancel: 'Abbrechen',
-    test: 'Test',
-    pollNow: 'Jetzt pollen',
-    deviceUpdated: 'Gerät wurde aktualisiert.',
-    clearShellyPassword: 'Shelly-Passwort löschen',
-    passwordEditHint: 'Leer lassen = Shelly-Passwort bleibt unverändert.',
-    editDevice: 'Gerät bearbeiten',
-    ok: 'OK',
-    accountRole: 'Rolle',
-    twoFaStatus: '2FA',
-    notActive: 'nicht aktiv',
-    twoFaHint: 'Das TOTP-Secret wird verschlüsselt gespeichert. Recovery-Codes werden nur gehasht gespeichert und können einmalig statt des 2FA-Codes verwendet werden.',
-    setup2fa: '2FA einrichten',
-    regenerateRecoveryCodes: 'Recovery-Codes neu erzeugen',
-    disable2fa: '2FA deaktivieren',
-    authenticatorCode: 'Code aus Authenticator-App',
-    enable2fa: '2FA aktivieren',
-    twoFaEnabledMessage: '2FA wurde aktiviert. Sichere die Recovery-Codes jetzt; sie werden später nicht erneut angezeigt.',
-    twoFaDisabledMessage: '2FA wurde deaktiviert. Alle Recovery-Codes wurden gelöscht.',
-    recoveryRegenerated: 'Neue Recovery-Codes wurden erzeugt. Die alten Codes sind ungültig.',
-    recoveryCodes: 'Recovery-Codes',
-    recoveryHint: 'Speichere diese Codes sicher ab. Jeder Code ist nur einmal verwendbar und wird nicht im Klartext gespeichert.',
-    reached: 'erreicht',
-    lessThanOneDay: '< 1 Tag',
-    days: 'Tage',
-    months: 'Monate',
-    years: 'Jahre',
-    none: '—'
-  },
-  en: {
-    appSubtitle: 'Balcony Photovoltaic System Monitoring',
-    loginTitle: 'Sign in',
-    installTitle: 'Initial setup',
-    installHint: 'This installation does not have an admin account yet. Create the first admin user now. Enter the SECRET_KEY from the .env file as the owner proof. The SECRET_KEY is not stored in the browser and is not written from the form into .env.',
-    installLanguage: 'Initial setup language',
-    installSecretKey: 'SECRET_KEY from .env',
-    installSecretKeyHint: 'The install script prints this value at the end. It proves that you have access to the server configuration.',
-    installSecretKeyRequired: 'Please enter the SECRET_KEY from the .env file.',
-    username: 'Username',
-    password: 'Password',
-    confirmPassword: 'Repeat password',
-    installButton: 'Create admin',
-    installPasswordMismatch: 'The passwords do not match.',
-    installCompleteLoginNow: 'Admin has been created. Please sign in now.',
-    installFailed: 'Initial setup failed',
-    loginButton: 'Sign in',
-    wait: 'Please wait…',
-    loginHint: 'Sign in with the configured admin or viewer account. Initial credentials are no longer stored in the .env file.',
-    loginFailed: 'Login failed',
-    twoFaFailed: '2FA failed',
-    twoFaCodeOrRecovery: '2FA code or recovery code',
-    twoFaPlaceholder: '123456 or ABCD-EFGH-IJKL-MNOP',
-    confirm2fa: 'Confirm 2FA',
-    dashboard: 'Dashboard',
-    history: 'History',
-    setup: 'Setup',
-    githubRepository: 'GitHub repository',
-    githubRepositoryHint: 'Project page, source code and updates are available in the GitHub repository.',
-    openGithubRepository: 'Open GitHub repository',
-    help: 'Help',
-    helpTitle: 'Help & documentation',
-    helpHint: 'This help page shows the README documentation directly inside the application. The language follows the current language selection in the header.',
-    helpLoadFailed: 'Help documentation could not be loaded.',
-    account2fa: 'Admin 2FA',
-    logout: 'Logout',
-    menu: 'Menu',
-    showMenu: 'Open menu',
-    hideMenu: 'Close menu',
-    themeLight: 'Light theme',
-    themeDark: 'Dark theme',
-    toggleTheme: 'Toggle theme',
-    switchLanguage: 'Change language',
-    achievementTitle: 'Solar saving achievement',
-    achievementGoLive: '🪖 Go-live: great, it runs — but you are still on the dark side of the power!',
-    achievementFirstSolar: '☀️ First solar power: on the way to your electricity empire!',
-    achievementCoffee: '☕ Coffee fund unlocked: you have already saved enough for a coffee!',
-    achievementCake: '🍰 Cake level reached: the sun is buying you a slice of cake.',
-    achievementPizza: '🍕 Pizza power: your system has earned a pizza.',
-    achievementMovie: '🎬 Movie night: the sun nearly paid your ticket.',
-    achievementPlant: '🌱 Plant friend: your savings are looking nicely green.',
-    achievementGadget: '🔌 Gadget bonus: enough for a small smart-home gadget.',
-    achievementDinner: '🍽️ Solar dinner: your PV is saving its way toward dinner.',
-    achievementAmortization25: '🚀 Quarter complete: 25% of your investment is back.',
-    achievementAmortization50: '⚡ Half power: 50% amortization reached.',
-    achievementAmortization75: '🛡️ Almost there: 75% of the investment is back.',
-    achievementAmortization100: '🏆 Break-even: your system has paid for itself!',
-    roleAdmin: 'Admin',
-    roleViewer: 'Viewer',
-    gridPower: 'Home import',
-    gridPowerSubtitle: '',
-    gridShareGauge: 'Current grid / solar share',
-    gridShareGaugeSubtitle: 'shows how much of the current power comes from grid import and solar',
-    gridImportShare: 'Grid import',
-    solarShare: 'Solar',
-    noPowerData: 'No current power',
-    totalCurrently: 'Current total',
-    gridExporting: 'Grid export',
-    gridNeutral: 'Zero grid import',
-    solarSocket: 'Solar',
-    solarSocketSubtitle: 'current at the feed-in socket',
-    importedToday: 'Import',
-    exportedToday: 'Export',
-    solarToday: 'Solar',
-    totalConsumption: 'Total consumption',
-    currentTotalConsumption: 'Total consumption',
-    totalBalance: 'Total energy balance',
-    solarTodaySubtitle: 'at the feed-in socket',
-    dailyBalance: 'Daily energy balance',
-    dailyCostBalance: 'Daily cost balance',
-    totalCostBalance: 'Total cost balance',
-    consumptionCost: 'Consumption cost',
-    savings: 'Savings',
-    savingsCalculation: 'Solar × kWh price',
-    investment: 'Investment',
-    amortization: 'Amortization',
-    breakevenProgress: 'Breakeven progress',
-    remaining: 'Remaining',
-    enterInvestment: 'Enter investment costs in Setup',
-    estimatedRemaining: 'Estimated remaining',
-    untilApprox: 'approx. until {date}',
-    basedOnToday: 'based on today’s savings',
-    financeCalculationHint: 'Calculation: consumption cost = import × kWh price. Savings = solar production × kWh price. Daily values use the daily balance; total values use permanently stored daily aggregates and current counters.',
-    deviceStatus: 'Device status',
-    dashboardDeviceMeasurements: 'Device status & latest measurements',
-    refresh: 'Refresh',
-    name: 'Name',
-    host: 'Host',
-    status: 'Status',
-    model: 'Model',
-    lastPoll: 'Last poll',
-    error: 'Error',
-    online: 'online',
-    offline: 'offline',
-    latestMeasurements: 'Latest measurements',
-    noLatestMeasurement: 'No measurement yet',
-    time: 'Time',
-    device: 'Device',
-    source: 'Source',
-    channel: 'Channel',
-    phase: 'Phase',
-    power: 'Power',
-    total: 'Total',
-    voltage: 'Voltage',
-    current: 'Current',
-    dashboardLoadFailed: 'Dashboard could not be loaded',
-    csvDownloaded: 'CSV has been downloaded.',
-    csvExport: 'CSV export',
-    powerW: 'Power W',
-    languageSettings: 'Language',
-    languageHint: 'This setting applies to the entire web interface. German is the default language.',
-    languageLabel: 'Interface language',
-    german: 'Deutsch',
-    english: 'English',
-    saveLanguage: 'Save language',
-    languageSaved: 'Language has been saved.',
-    timezoneSettings: 'Time zone',
-    timezoneHint: 'The time zone is used for time values in the web interface and for the Kindle PNG. Daylight saving time / winter time is handled automatically by the IANA time zone.',
-    timezoneLabel: 'Time zone',
-    timezoneEuropeBerlin: 'Europe/Berlin',
-    timezoneEuropeLondon: 'Europe/London',
-    timezoneUtc: 'UTC',
-    timezoneAmericaNewYork: 'America/New York',
-    timezoneSaved: 'Time zone has been saved.',
-    saveTimezone: 'Save time zone',
-    userAccess: 'User access',
-    userAccessHint: 'The admin is created during initial setup. A viewer can optionally be created or changed here; the viewer may see Dashboard and History, but cannot open Setup. Usernames are freely configurable and stored in plain text; passwords are hashed with Argon2id. 2FA is intended only for the admin.',
-    newPassword: 'New password',
-    unchangedPlaceholder: 'leave empty = unchanged',
-    saveAdmin: 'Save admin',
-    saveViewer: 'Create/save viewer',
-    adminSaved: 'Admin has been saved.',
-    viewerSaved: 'Viewer has been saved.',
-    twoFaManagedInTab: 'Manage 2FA in the “Admin 2FA” tab.',
-    viewerNoSetup: 'The viewer has no access to Setup or 2FA.',
-    role: 'Role',
-    twoFa: '2FA',
-    active: 'Active',
-    yes: 'yes',
-    no: 'no',
-    enabled: 'enabled',
-    disabled: 'off',
-    financeValues: 'Financial values',
-    financeHint: 'These values are used for consumption costs, savings and amortization in the dashboard. Grid export is not compensated.',
-    feedInNotPaidHint: 'Grid export is valued at 0. The battery analysis uses exported surplus as potential battery benefit.',
-    enableBatteryAnalysis: 'Enable battery amortization calculation',
-    batteryAnalysisDisabled: 'Battery amortization calculation is disabled.',
-    batteryDetails: 'Calculation details',
-    copyBatteryDetails: 'Copy details',
-    batteryDetailsCopied: 'Copied',
-    batteryCost: 'Battery cost',
-    batteryCapacity: 'Battery capacity',
-    batteryEfficiency: 'Battery efficiency',
-    batteryEfficiencyHint: "Conservative default: 85%. Adjust it to your battery's real round-trip efficiency.",
-    batteryAnalysis: 'Battery analysis',
-    batterySavingsToday: 'Potential battery savings today',
-    batteryUsableSurplusToday: 'Usable surplus today',
-    batteryPayback: 'Battery payback without open BPS remainder',
-    batteryCombinedPayback: 'Battery incl. open BPS amortization',
-    batteryCombinedInvestment: 'Open BPS remainder + battery',
-    batteryOpenBps: 'Open BPS remainder',
-    batteryWorthwhile: 'Battery appears worthwhile',
-    batteryNotWorthwhile: 'Battery does not appear worthwhile yet',
-    batteryMissing: 'Enter battery price and capacity in setup.',
-    batteryAssumption: 'Assumption: grid export is unpaid, the battery round-trip efficiency configured in Setup is used, maximum one charge/discharge cycle per day. If the balcony PV system has not paid for itself yet, the open remainder is included.',
-    financeSaved: 'Financial values have been saved.',
-    currency: 'Currency',
-    currencyHint: 'The currency is used for kWh price, investment costs, savings and amortization. No automatic conversion is performed.',
-    currencyEur: 'Euro (€)',
-    currencyUsd: 'US dollar ($)',
-    currencyGbp: 'Pound (£)',
-    kwhPrice: 'kWh price',
-    investmentCost: 'Investment costs',
-    saveFinance: 'Save financial values',
-    retentionSettings: 'Data retention',
-    retentionHint: 'Raw measurements are kept only for the configured period. Daily aggregates are kept permanently and are used for total balance and amortization.',
-    rawRetentionDays: 'Raw data retention',
-    daysUnit: 'days',
-    dailyAggregates: 'Daily aggregates',
-    dailyAggregatesHint: 'kept permanently',
-    saveRetention: 'Save retention',
-    retentionSaved: 'Data retention has been saved.',
-    retentionCurrent: 'Current raw data retention: {days} days',
-    retentionEffectiveHours: 'Effective raw data retention: {hours} hours',
-    piZeroModeActive: 'Pi Zero 2 W mode active: live values and raw data are limited to {hours} hours. Daily aggregates are preserved.',
-    liveDataLimitedHint: 'This mode shows only the latest {hours} hours of live values.',
-    backupSettings: 'Backup',
-    backupHint: 'Creates an encrypted backup with database dump, configuration and backend data. The password is used only for this backup and is not stored.',
-    backupPassword: 'Backup password',
-    backupConfirmPassword: 'Repeat password',
-    createEncryptedBackup: 'Create encrypted backup',
-    backupPasswordWarning: 'Without this password the backup cannot be restored.',
-    backupCreated: 'Backup has been created.',
-    existingBackups: 'Existing backups',
-    download: 'Download',
-    deleteBackup: 'Delete',
-    backupDeleteConfirm: 'Really delete this backup?',
-    backupPasswordMismatch: 'The passwords do not match.',
-    backupPasswordTooShort: 'The backup password must be at least 12 characters long.',
-    noBackups: 'No backups available.',
-    backupSize: 'Size',
-    created: 'Created',
-    simulationSettings: 'Simulation',
-    simulationHint: 'Generates realistic demo values without real devices. The maximum solar output caps PV power; day/night baseload defines the continuous household consumption. Spikes such as washing machine or coffee maker remain additional peaks.',
-    simulationPvPeak: 'Maximum solar output',
-    simulationPvPeakHint: 'Watts, for example 800 for a balcony PV system or 2000 for a larger real installation.',
-    simulationBaseloadDay: 'Day baseload',
-    simulationBaseloadNight: 'Night baseload',
-    simulationBaseloadHint: 'Continuous load in watts. Simulated consumption spikes are added on top of this baseload.',
-    enableSimulation: 'Enable simulation',
-    simulationSaved: 'Simulation has been saved.',
-    saveSimulation: 'Save simulation',
-    simulationWarning: 'When simulation is enabled, dashboard, history, Kindle display, air data and JSON API show simulated values. Production data is not changed.',
-    matrixBanner: 'You are in the Matrix 😎 Simulation is running!',
-    resetValuesSettings: 'Reset values',
-    resetValuesHint: 'Deletes all measurements, daily aggregates and volatile value caches. Devices, users and setup settings are kept.',
-    resetValuesWarning: 'Warning: This action cannot be undone. Type reset to confirm.',
-    resetConfirmationLabel: 'Confirmation',
-    resetValuesButton: 'Delete all values',
-    resetValuesDone: 'All values have been deleted.',
-    resetValuesConfirmPlaceholder: 'reset',
-    publicDashboardSettings: 'Public dashboard',
-    publicDashboardHint: 'Enables a separate smart-meter style public meter view without login.',
-    enablePublicDashboard: 'Enable public dashboard',
-    publicDashboardSaved: 'Public dashboard has been saved.',
-    publicDashboardLink: 'Public dashboard link',
-    openPublicDashboard: 'Open public dashboard',
-    publicDashboardDisabledHint: 'Only enable this if visitors may see these values without signing in.',
-    publicDashboardTitle: 'Public dashboard',
-    publicDashboardLoadFailed: 'Public dashboard could not be loaded',
-    publicMeterBrand: 'BPSTracker',
-    publicMeterSeal: 'PV',
-    publicMeterLanguage: 'Language',
-    publicMeterNumber: 'Meter number',
-    publicMeterInfo: 'INFO',
-    publicMeterMode: 'MODE',
-    publicMeterObis: 'OBIS',
-    publicMeterImportTotal: 'Total import',
-    publicMeterExportTotal: 'Total export',
-    publicMeterSolarTotal: 'Total solar',
-    publicMeterSolarToday: 'Solar today',
-    publicMeterCurrentGrid: 'Grid now',
-    publicMeterCurrentSolar: 'Solar now',
-    publicMeterTotalConsumption: 'Total consumption',
-    publicMeterLastUpdate: 'Last update',
-    currentValuesApiSettings: 'JSON API',
-    currentValuesApiHint: 'Provides current BPSTracker values as JSON at /api/current-values. Disable this option if you do not use the endpoint.',
-    enableCurrentValuesApi: 'Enable JSON API',
-    currentValuesApiSaved: 'JSON API has been saved.',
-    saveCurrentValuesApi: 'Save JSON API',
-    currentValuesApiDisabledHint: 'When disabled, /api/current-values does not return values.',
-    showJsonPreview: 'Show JSON preview',
-    refreshJsonPreview: 'Refresh JSON preview',
-    hideJsonPreview: 'Hide JSON preview',
-    jsonPreviewHint: 'The preview calls the JSON API directly and shows the current response.',
-    kindleDisplaySettings: 'Kindle display',
-    kindleDisplayHint: 'Generates the Kindle PNG at /api/kindle/display.png. The image remains an optional public cache endpoint for Kindle fetches; refresh and meta are admin-only.',
-    enableKindleDisplay: 'Enable Kindle display',
-    kindleDisplaySaved: 'Kindle display has been saved.',
-    saveKindleDisplay: 'Save Kindle display',
-    kindleDisplayDisabledHint: 'When disabled, no new Kindle PNG is generated and the API reports that the display is disabled.',
-    showKindlePreview: 'Show Kindle preview',
-    hideKindlePreview: 'Hide Kindle preview',
-    refreshKindlePreview: 'Refresh Kindle preview',
-    kindlePreviewHint: 'The preview shows the current PNG exactly as the Kindle would fetch it.',
-    kindleLoadFailed: 'Kindle display could not be refreshed.',
-    airSensorSettings: 'Air data sensor',
-    airSensorHint: 'Optional sensor at /data.json. Temperature, humidity, PM10 (SDS_P1) and PM2.5 (SDS_P2) are shown only in the header; no history is stored.',
-    enableAirSensor: 'Enable air data sensor',
-    airSensorHost: 'Air sensor IP/hostname',
-    airSensorSaved: 'Air data sensor has been saved.',
-    saveAirSensor: 'Save air data sensor',
-    temperature: 'Temperature',
-    humidity: 'Humidity',
-    fineDust: 'Particulate matter',
-    newShellyDevice: 'New Shelly device',
-    devicePurpose: 'Purpose',
-    devicePurposeAuto: 'Auto detect',
-    devicePurposeGrid: 'Home/grid import',
-    devicePurposeSolar: 'Solar/feed-in',
-    devicePurposeConsumer: 'Consumer/other',
-    devicePurposeIgnored: 'Ignore',
-    devicePurposeHint: 'The purpose controls whether a Shelly is counted as grid/home import, solar feed-in, or only as a raw measuring device. Multiple solar/feed-in devices are summed.',
-    type: 'Type',
-    autoDetection: 'Auto detection',
-    ipHostname: 'IP/hostname',
-    shellyUserOptional: 'Shelly username optional',
-    shellyPasswordOptional: 'Shelly password optional',
-    pollingSeconds: 'Polling seconds',
-    addDevice: 'Add device',
-    configuredDevices: 'Configured devices',
-    polling: 'Polling',
-    actions: 'Actions',
-    all: 'all',
-    deviceSaved: 'Device has been saved.',
-    pollStarted: 'Poll started and saved.',
-    deleteConfirm: 'Really delete this device?',
-    edit: 'Edit',
-    saveChanges: 'Save changes',
-    cancel: 'Cancel',
-    test: 'Test',
-    pollNow: 'Poll now',
-    deviceUpdated: 'Device has been updated.',
-    clearShellyPassword: 'Clear Shelly password',
-    passwordEditHint: 'Leave empty = Shelly password remains unchanged.',
-    editDevice: 'Edit device',
-    ok: 'OK',
-    accountRole: 'Role',
-    twoFaStatus: '2FA',
-    notActive: 'not active',
-    twoFaHint: 'The TOTP secret is stored encrypted. Recovery codes are stored only as hashes and can be used once instead of the 2FA code.',
-    setup2fa: 'Set up 2FA',
-    regenerateRecoveryCodes: 'Regenerate recovery codes',
-    disable2fa: 'Disable 2FA',
-    authenticatorCode: 'Code from authenticator app',
-    enable2fa: 'Enable 2FA',
-    twoFaEnabledMessage: '2FA has been enabled. Save the recovery codes now; they will not be shown again later.',
-    twoFaDisabledMessage: '2FA has been disabled. All recovery codes have been deleted.',
-    recoveryRegenerated: 'New recovery codes have been generated. Old codes are invalid.',
-    recoveryCodes: 'Recovery codes',
-    recoveryHint: 'Store these codes safely. Each code can be used only once and is not stored in plain text.',
-    reached: 'reached',
-    lessThanOneDay: '< 1 day',
-    days: 'days',
-    months: 'months',
-    years: 'years',
-    none: '—'
-  }
-} as const;
-
 const I18nContext = createContext<I18nContextValue | null>(null);
-
-function translate(language: Language, key: TranslationKey, vars?: Record<string, string | number>): string {
-  let value: string = translations[language]?.[key] || translations.de[key] || String(key);
-  if (vars) {
-    for (const [name, replacement] of Object.entries(vars)) {
-      value = value.split(`{${name}}`).join(String(replacement));
-    }
-  }
-  return value;
-}
 
 function useI18n(): I18nContextValue {
   const value = useContext(I18nContext);
@@ -717,19 +29,17 @@ function useI18n(): I18nContextValue {
 }
 
 function readRuntimeDefaultLanguage(): Language {
-  const value = String(getRuntimeConfig().DEFAULT_LANGUAGE || '').trim().toLowerCase();
-  return value === 'en' ? 'en' : 'de';
+  return normalizeLanguage(String(getRuntimeConfig().DEFAULT_LANGUAGE || '').trim().toLowerCase(), DEFAULT_LANGUAGE);
 }
 
 function readStoredLanguage(): Language {
   const value = readCookie('bpstracker-language') || localStorage.getItem('bpstracker-language');
-  if (value === 'de' || value === 'en') return value;
-  return readRuntimeDefaultLanguage();
+  return normalizeLanguage(value, readRuntimeDefaultLanguage());
 }
 
 function hasStoredLanguage(): boolean {
   const value = readCookie('bpstracker-language') || localStorage.getItem('bpstracker-language');
-  return value === 'de' || value === 'en';
+  return isSupportedLanguage(value);
 }
 
 function readCookie(name: string): string | null {
@@ -752,7 +62,7 @@ function readStoredTheme(): Theme {
 }
 
 function localeFor(language: Language): string {
-  return language === 'en' ? 'en-US' : 'de-DE';
+  return localeForLanguage(language);
 }
 
 type DeviceForm = {
@@ -808,7 +118,7 @@ function devicePayloadFromForm(form: DeviceForm) {
 }
 
 function fmtW(value?: number | null, language: Language = 'de'): string {
-  if (value === null || value === undefined) return translations[language].none;
+  if (value === null || value === undefined) return translate(language, 'none');
   const absValue = Math.abs(value);
   if (absValue >= 1000) {
     return `${(value / 1000).toLocaleString(localeFor(language), { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kW`;
@@ -817,7 +127,7 @@ function fmtW(value?: number | null, language: Language = 'de'): string {
 }
 
 function fmtKwh(value?: number | null, language: Language = 'de'): string {
-  if (value === null || value === undefined) return translations[language].none;
+  if (value === null || value === undefined) return translate(language, 'none');
   return `${value.toLocaleString(localeFor(language), { maximumFractionDigits: 2 })} kWh`;
 }
 
@@ -828,7 +138,7 @@ function sumKwhValues(...values: Array<number | null | undefined>): number | nul
 }
 
 function fmtBytes(value?: number | null, language: Language = 'de'): string {
-  if (value === null || value === undefined) return translations[language].none;
+  if (value === null || value === undefined) return translate(language, 'none');
   const units = ['B', 'KB', 'MB', 'GB'];
   let size = value;
   let index = 0;
@@ -840,7 +150,7 @@ function fmtBytes(value?: number | null, language: Language = 'de'): string {
 }
 
 function fmtDate(value?: string | null, language: Language = 'de'): string {
-  if (!value) return translations[language].none;
+  if (!value) return translate(language, 'none');
   return new Date(value).toLocaleString(localeFor(language));
 }
 
@@ -854,22 +164,22 @@ function currencySymbol(currency?: string | null): string {
 }
 
 function fmtCurrency(value?: number | null, language: Language = 'de', currency?: string | null): string {
-  if (value === null || value === undefined) return translations[language].none;
+  if (value === null || value === undefined) return translate(language, 'none');
   return `${value.toLocaleString(localeFor(language), { style: 'currency', currency: normalizeCurrency(currency), maximumFractionDigits: 2 })}`;
 }
 
 function fmtPercent(value?: number | null, language: Language = 'de'): string {
-  if (value === null || value === undefined) return translations[language].none;
+  if (value === null || value === undefined) return translate(language, 'none');
   return `${value.toLocaleString(localeFor(language), { maximumFractionDigits: 1 })} %`;
 }
 
 function fmtTemperature(value?: number | null, language: Language = 'de'): string {
-  if (value === null || value === undefined) return translations[language].none;
+  if (value === null || value === undefined) return translate(language, 'none');
   return `${value.toLocaleString(localeFor(language), { maximumFractionDigits: 1 })} °C`;
 }
 
 function fmtMicrograms(value?: number | null, language: Language = 'de'): string {
-  if (value === null || value === undefined) return translations[language].none;
+  if (value === null || value === undefined) return translate(language, 'none');
   return `${value.toLocaleString(localeFor(language), { maximumFractionDigits: 2 })} µg/m³`;
 }
 
@@ -971,7 +281,7 @@ function achievementDefinition(id: string): AchievementDefinition | undefined {
 
 
 function fmtDays(value: number | null | undefined, language: Language, t: Translator): string {
-  if (value === null || value === undefined) return translations[language].none;
+  if (value === null || value === undefined) return translate(language, 'none');
   if (value <= 0) return t('reached');
   if (value < 1) return t('lessThanOneDay');
   if (value < 60) return `${value.toLocaleString(localeFor(language), { maximumFractionDigits: 0 })} ${t('days')}`;
@@ -1029,10 +339,11 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const setLanguage = useCallback((nextLanguage: Language) => {
-    setLanguageState(nextLanguage);
-    localStorage.setItem('bpstracker-language', nextLanguage);
-    writeCookie('bpstracker-language', nextLanguage);
-    document.documentElement.lang = nextLanguage;
+    const normalizedLanguage = normalizeLanguage(nextLanguage, readRuntimeDefaultLanguage());
+    setLanguageState(normalizedLanguage);
+    localStorage.setItem('bpstracker-language', normalizedLanguage);
+    writeCookie('bpstracker-language', normalizedLanguage);
+    document.documentElement.lang = normalizedLanguage;
   }, []);
 
   const t = useCallback<Translator>((key, vars) => translate(language, key, vars), [language]);
@@ -1056,7 +367,7 @@ export default function App() {
     const [currentUser, ui] = await Promise.all([api.me(), api.uiSettings().catch(() => null)]);
     setUser(currentUser);
     const cookieLanguage = readCookie('bpstracker-language');
-    if ((cookieLanguage === 'de' || cookieLanguage === 'en')) {
+    if (isSupportedLanguage(cookieLanguage)) {
       setLanguage(cookieLanguage);
     } else if (ui?.language) {
       setLanguage(ui.language);
@@ -1093,7 +404,7 @@ export default function App() {
       .then(status => {
         setInstallRequired(status.install_required);
         if (status.install_required) {
-          if (!hasStoredLanguage() && (status.default_language === 'de' || status.default_language === 'en')) {
+          if (!hasStoredLanguage() && status.default_language) {
             setLanguage(status.default_language);
           }
           setToken(null);
@@ -1215,9 +526,8 @@ export default function App() {
                 {error && <div className="error">{error}</div>}
                 <p className="hint">{t('installHint')}</p>
                 <label>{t('installLanguage')}
-                  <select value={language} onChange={e => setLanguage(e.target.value as Language)}>
-                    <option value="de">{t('german')}</option>
-                    <option value="en">{t('english')}</option>
+                  <select value={language} onChange={e => setLanguage(e.target.value)}>
+                    {availableLanguages.map(option => <option key={option.code} value={option.code}>{languageOptionLabel(option)}</option>)}
                   </select>
                 </label>
                 <label>{t('installSecretKey')}<input type="password" value={installSecretKey} onChange={e => setInstallSecretKey(e.target.value)} /></label>
@@ -1277,11 +587,11 @@ export default function App() {
                 <AirSensorHeader />
                 <button
                   className="language-switch"
-                  onClick={() => setLanguage(language === 'de' ? 'en' : 'de')}
+                  onClick={() => setLanguage(nextLanguage(language))}
                   aria-label={t('switchLanguage')}
                   title={t('switchLanguage')}
                 >
-                  {language === 'de' ? 'EN' : 'DE'}
+                  {languageMeta(nextLanguage(language)).shortName}
                 </button>
                 <button className="icon-button theme-toggle" onClick={toggleTheme} aria-label={t('toggleTheme')} title={theme === 'dark' ? t('themeLight') : t('themeDark')}>
                   {theme === 'dark' ? <Sun size={19} /> : <Moon size={19} />}
@@ -1394,7 +704,7 @@ function HelpView() {
 
   useEffect(() => {
     let cancelled = false;
-    const fileName = language === 'de' ? 'deREADME.md' : 'README.md';
+    const fileName = helpFileForLanguage(language);
     setError(null);
     setHtml('');
 
@@ -1658,7 +968,7 @@ function PublicSmartMeterDisplay({ summary }: { summary: Summary | null }) {
   }
 
   function switchLanguage() {
-    setLanguage(language === 'de' ? 'en' : 'de');
+    setLanguage(nextLanguage(language));
   }
 
   return (
@@ -1676,7 +986,7 @@ function PublicSmartMeterDisplay({ summary }: { summary: Summary | null }) {
             aria-label={t('switchLanguage')}
             title={t('switchLanguage')}
           >
-            {language === 'de' ? 'EN' : 'DE'}
+            {languageMeta(nextLanguage(language)).shortName}
           </button>
         </div>
 
@@ -2246,8 +1556,8 @@ function HistoryView() {
       <div className="panel-head">
         <div className="row gap-small">
           {historyRanges.includes(24) && <button className={hours === 24 ? 'active small' : 'small'} onClick={() => setHours(24)}>24h</button>}
-          {historyRanges.includes(168) && <button className={hours === 168 ? 'active small' : 'small'} onClick={() => setHours(168)}>{language === 'de' ? '7 Tage' : '7 days'}</button>}
-          {historyRanges.includes(720) && <button className={hours === 720 ? 'active small' : 'small'} onClick={() => setHours(720)}>{language === 'de' ? '30 Tage' : '30 days'}</button>}
+          {historyRanges.includes(168) && <button className={hours === 168 ? 'active small' : 'small'} onClick={() => setHours(168)}>{t('history7Days')}</button>}
+          {historyRanges.includes(720) && <button className={hours === 720 ? 'active small' : 'small'} onClick={() => setHours(720)}>{t('history30Days')}</button>}
         </div>
         <button onClick={() => void exportCsv()}>{t('csvExport')}</button>
       </div>
@@ -2371,9 +1681,8 @@ function LanguageSettingsPanel() {
       {message && <div className="info">{message}</div>}
       <div className="form-grid finance-form">
         <label>{t('languageLabel')}
-          <select value={settings.language} onChange={e => setSettings({ ...settings, language: e.target.value as Language })}>
-            <option value="de">{t('german')}</option>
-            <option value="en">{t('english')}</option>
+          <select value={settings.language} onChange={e => setSettings({ ...settings, language: e.target.value })}>
+            {availableLanguages.map(option => <option key={option.code} value={option.code}>{languageOptionLabel(option)}</option>)}
           </select>
         </label>
       </div>
@@ -2385,7 +1694,7 @@ function LanguageSettingsPanel() {
 
 function TimezoneSettingsPanel() {
   const { t } = useI18n();
-  const [settings, setSettings] = useState<UiSettings>({ language: 'de', timezone: 'Europe/Berlin' });
+  const [settings, setSettings] = useState<UiSettings>({ language: DEFAULT_LANGUAGE, timezone: 'Europe/Berlin' });
   const [message, setMessage] = useState<string | null>(null);
 
   async function load() {

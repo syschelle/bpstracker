@@ -301,7 +301,15 @@ Im Setup können unter anderem konfiguriert werden:
 - Luftdatensensor
 - Geräte
 
-Die Sprache im Setup ist die serverseitige Standardsprache. Sie wird unter anderem für serverseitig erzeugte Ausgaben wie das Kindle-Display verwendet. Zusätzlich gibt es im Header einen EN/DE-Umschalter, der nur die Browser-Sprache per Cookie ändert.
+Die Sprache im Setup ist die serverseitige Standardsprache. Sie wird unter anderem für serverseitig erzeugte Ausgaben wie das Kindle-Display verwendet. Zusätzlich gibt es im Header einen Sprachumschalter, der nur die Browser-Sprache per Cookie ändert.
+
+Die Weboberflächen-Texte liegen als Locale-Dateien mit Metadaten unter:
+
+```text
+frontend/src/i18n/locales/
+```
+
+Aus diesen Dateien leitet das Frontend die verfügbaren Sprachen automatisch ab. Jede Sprache enthält einen `meta`-Block mit Sprachcode, Anzeigename, Browser-Locale und Hilfedatei sowie die eigentlichen Übersetzungen. Der Build prüft mit `npm run check-i18n`, dass alle Sprachen dieselben Schlüssel wie die englische Basissprache enthalten. Neue UI-Sprachen können dadurch über eine zusätzliche Datei, zum Beispiel `frontend/src/i18n/locales/fr.json`, ergänzt werden.
 
 Die Zeitzone wird als IANA-Zeitzone gespeichert, zum Beispiel:
 
@@ -751,10 +759,10 @@ Oder:
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.16` oder `latest`). Für unbeaufsichtigte Image-Deployments:
+`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.17` oder `latest`). Für unbeaufsichtigte Image-Deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.16 --language de
+bash ./deploy-images.sh --regular --tag v0.9.17 --language de
 bash ./deploy-images.sh --zero2w --latest --language en
 ```
 
@@ -969,4 +977,8 @@ Der angemeldete Header zeigt nun nur noch `BPSTracker` und die App-Version. Der 
 ### v0.9.16 Schnellere Historie auf Low-Resource-Systemen
 
 v0.9.16 optimiert den History-Endpunkt für Raspberry-Pi- und andere Low-Resource-Installationen. History-Abfragen laden jetzt nur noch die für Diagramm und Energiesummen benötigten Spalten, statt vollständige Measurement-ORM-Zeilen inklusive `raw_json`-Payloads zu lesen. Zeilen ohne Leistungs- oder Energiezählerwerte werden vor der Python-Aggregation übersprungen. Im Raspberry-Pi-Zero-2-W-Modus nutzt das 24h-Diagramm 5-Minuten-Buckets und reduziert die Antwort damit von bis zu etwa 1440 Diagrammpunkten auf etwa 288 Punkte, während 24h-Trend und Summen erhalten bleiben.
+
+### v0.9.17 Sprachdateien mit Metadaten
+
+v0.9.17 lagert die React-UI-Übersetzungen aus `App.tsx` in einzelne Locale-Dateien unter `frontend/src/i18n/locales/` aus. Jede Locale enthält jetzt Metadaten wie Sprachcode, nativen Namen, Browser-Locale und Hilfedokument. Das Frontend leitet die verfügbare Sprachliste aus diesen Dateien ab; Ersteinrichtung, Setup-Auswahl, Header-Umschalter und Hilfedokument-Auswahl sind damit nicht mehr fest auf Deutsch und Englisch verdrahtet. Ein neuer Build-Schritt `npm run check-i18n` prüft, dass alle Locales dieselben Übersetzungsschlüssel wie die englische Basis enthalten. Die Backend-Sprachvalidierung akzeptiert nun zukünftige Locale-artige Sprachcodes, während das Frontend bei nicht verfügbaren Sprachen sicher zurückfällt.
 

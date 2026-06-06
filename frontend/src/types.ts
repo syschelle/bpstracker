@@ -1,4 +1,4 @@
-export type Language = 'de' | 'en';
+export type Language = string;
 export type CurrencyCode = 'EUR' | 'USD' | 'GBP';
 
 export type DeviceType = 'auto' | 'shelly_3em_gen1' | 'shelly_pro_3em_gen2' | 'shelly_2pm_gen4' | 'shelly_ng_generic';
