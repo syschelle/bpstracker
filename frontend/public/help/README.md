@@ -858,7 +858,14 @@ Deploy the application:
 bash ./deploy.sh
 ```
 
-The installer asks whether you want the regular installation or the Raspberry Pi Zero 2 W / low-resource installation. It creates `.env` from generated secure values and does **not** copy `.env.example` for production use. The generated `SECRET_KEY` is shown once at the end of the install output; store it safely and do not change it after production start because it protects encrypted Shelly passwords and 2FA secrets.
+For unattended installs you can pass the language explicitly:
+
+```bash
+bash ./deploy.sh --language en
+bash ./deploy.sh --language de
+```
+
+The installer first asks for the script language and then whether you want the regular installation or the Raspberry Pi Zero 2 W / low-resource installation. It creates `.env` from generated secure values and does **not** copy `.env.example` for production use. The selected language is written to `BPSTRACKER_LANGUAGE` and `BPSTRACKER_DEFAULT_LANGUAGE`, so the first-run web setup opens in the same language. The generated `SECRET_KEY` is shown once at the end of the install output; store it safely and do not change it after production start because it protects encrypted Shelly passwords and 2FA secrets.
 
 On a fresh database, open the web interface and complete the initial setup screen. The first user sets the admin username and password there. No admin or viewer credentials are shipped in `.env`.
 
@@ -1392,6 +1399,13 @@ git pull
 bash ./deploy-images.sh
 ```
 
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.15` or `latest`). For unattended image deployments:
+
+```bash
+bash ./deploy-images.sh --regular --tag v0.9.15 --language en
+bash ./deploy-images.sh --zero2w --latest --language de
+```
+
 See also:
 
 ```text
@@ -1666,4 +1680,14 @@ v0.9.11 addresses the six GitHub CodeQL security findings reported against the v
 ### v0.9.12 Kindle air sensor cache alignment
 
 v0.9.12 keeps the Kindle display air sensor values aligned with the dashboard. Kindle PNG generation now refreshes the shared air-sensor cache through the same throttled helper used by the dashboard before rendering, and the setup preview explicitly triggers an authenticated Kindle refresh before reloading the image. The public Kindle image endpoint also regenerates stale images before returning them.
+
+### v0.9.13 dark theme home import color fix
+
+v0.9.13 fixes the Home Import dashboard card in dark theme so zero current home/grid import values remain green and are not overridden by generic dark-theme value colors. The grid import color mapping remains red for export and blue for positive grid import.
+
+### v0.9.15 installer language selection and compact header branding
+
+v0.9.15 combines the unreleased v0.9.14 installer-language work with a compact header branding update. `deploy.sh` and `deploy-images.sh` can now run their prompts and status output in German or English, support `--language de|en` for unattended deployments, and write `BPSTRACKER_LANGUAGE` plus `BPSTRACKER_DEFAULT_LANGUAGE` into `.env`. The frontend runtime config receives this default language so the first-run web setup screen opens in the language selected during deployment. The backend install status and UI settings defaults also honor the configured deployment language until an admin saves a different UI language.
+
+The authenticated header now shows only `BPSTracker` and the app version. The localized application subtitle is no longer displayed next to the version; it is exposed as a hover tooltip and accessibility label on the `BPSTracker` wordmark, matching the compact tooltip behavior used for achievements.
 

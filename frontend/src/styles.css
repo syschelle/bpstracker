@@ -273,6 +273,20 @@ button.secondary { background: #e5e7eb; color: #172033; }
   white-space: nowrap;
 }
 .grid-power-value-row.solar strong { color: #0d9488; }
+.metric-grid-power .grid-power-current-value.zero,
+html[data-theme='dark'] .metric-grid-power .grid-power-current-value.zero,
+.metric-grid-power .home-import-value.zero,
+html[data-theme='dark'] .metric-grid-power .home-import-value.zero {
+  color: #16a34a !important;
+}
+.metric-grid-power .home-import-value.positive,
+html[data-theme='dark'] .metric-grid-power .home-import-value.positive {
+  color: #2563eb !important;
+}
+.metric-grid-power .home-import-value.negative,
+html[data-theme='dark'] .metric-grid-power .home-import-value.negative {
+  color: #dc2626 !important;
+}
 .amortization-metric { grid-column: span 1; }
 .progress-line {
   width: 100%;
@@ -300,9 +314,9 @@ button.secondary { background: #e5e7eb; color: #172033; }
 .header-brand {
   display: grid;
   gap: 0.1rem;
-  min-width: 220px;
+  min-width: 140px;
 }
-.header-brand .brand { font-size: 1.05rem; }
+.header-brand .brand { font-size: 1.05rem; cursor: help; }
 .header-meta {
   min-width: 0;
   padding-left: 0.85rem;
@@ -315,7 +329,7 @@ button.secondary { background: #e5e7eb; color: #172033; }
 
 @media (max-width: 980px) {
   .header-title { align-items: center; gap: 0.75rem; flex-wrap: wrap; }
-  .header-brand { min-width: 0; flex: 1 1 180px; }
+  .header-brand { min-width: 0; flex: 1 1 140px; }
   .header-meta { flex-basis: 100%; padding-left: 0; border-left: 0; margin-left: 3.45rem; }
 }
 
@@ -822,21 +836,6 @@ html[data-theme='dark'] .language-switch {
   color: #e5e7eb;
 }
 
-
-.metric .home-import-value.negative,
-html[data-theme='dark'] .metric .home-import-value.negative {
-  color: #dc2626 !important;
-}
-
-.metric .home-import-value.zero,
-html[data-theme='dark'] .metric .home-import-value.zero {
-  color: #16a34a !important;
-}
-
-.metric .home-import-value.positive,
-html[data-theme='dark'] .metric .home-import-value.positive {
-  color: #2563eb !important;
-}
 
 
 .public-dashboard-page {

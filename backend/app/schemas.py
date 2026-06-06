@@ -19,6 +19,7 @@ class TokenResponse(BaseModel):
 
 class InstallStatusResponse(BaseModel):
     install_required: bool
+    default_language: str = Field(default='de', pattern=r'^(de|en)$')
 
 
 class InstallAdminRequest(BaseModel):

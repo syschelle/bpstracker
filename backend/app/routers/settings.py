@@ -33,6 +33,13 @@ DEFAULT_KWH_PRICE_EUR = 0.30
 DEFAULT_INVESTMENT_COST_EUR = 0.0
 DEFAULT_BATTERY_ROUNDTRIP_EFFICIENCY = 0.85
 DEFAULT_LANGUAGE = 'de'
+
+
+def get_default_language() -> str:
+    language = str(get_settings().default_language or DEFAULT_LANGUAGE).strip().lower()
+    return language if language in {'de', 'en'} else DEFAULT_LANGUAGE
+
+
 DEFAULT_CURRENCY_CODE = 'EUR'
 DEFAULT_TIMEZONE = 'Europe/Berlin'
 DEFAULT_RAW_RETENTION_DAYS = 30
@@ -117,9 +124,10 @@ def _normalize_timezone(value: object) -> str:
 
 def _normalize_ui_value(value: dict | None) -> UiSettings:
     value = value or {}
-    language = str(value.get('language', DEFAULT_LANGUAGE) or DEFAULT_LANGUAGE).lower()
+    default_language = get_default_language()
+    language = str(value.get('language', default_language) or default_language).lower()
     if language not in {'de', 'en'}:
-        language = DEFAULT_LANGUAGE
+        language = default_language
     return UiSettings(language=language, timezone=_normalize_timezone(value.get('timezone', DEFAULT_TIMEZONE)))
 
 

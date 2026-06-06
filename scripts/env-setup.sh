@@ -17,6 +17,76 @@ PY
   fi
 }
 
+
+bpstracker_normalize_language() {
+  case "${1:-}" in
+    en|EN|english|English|2) printf 'en\n' ;;
+    de|DE|german|German|deutsch|Deutsch|1|'') printf 'de\n' ;;
+    *) printf 'de\n' ;;
+  esac
+}
+
+bpstracker_is_english() {
+  [ "${BPSTRACKER_LANGUAGE:-de}" = "en" ]
+}
+
+bpstracker_env_language_or_empty() {
+  local file="${1:-}"
+  local value=""
+  if [ -n "${BPSTRACKER_LANGUAGE:-}" ]; then
+    value="$BPSTRACKER_LANGUAGE"
+  elif [ -n "$file" ] && [ -f "$file" ]; then
+    value="$(bpstracker_env_get "$file" BPSTRACKER_LANGUAGE || true)"
+    [ -n "$value" ] || value="$(bpstracker_env_get "$file" BPSTRACKER_DEFAULT_LANGUAGE || true)"
+  fi
+  case "$value" in
+    de|en) printf '%s\n' "$value" ;;
+  esac
+}
+
+bpstracker_select_language() {
+  local env_file="${1:-}"
+  local existing=""
+  existing="$(bpstracker_env_language_or_empty "$env_file" || true)"
+
+  if [ ! -t 0 ]; then
+    if [ -n "$existing" ]; then
+      printf '%s\n' "$existing"
+      return 0
+    fi
+    case "${LANG:-}" in
+      de_*|de.*|de) printf 'de\n' ;;
+      *) printf 'en\n' ;;
+    esac
+    return 0
+  fi
+
+  echo ""
+  echo "Sprache / Language"
+  echo "  1) Deutsch"
+  echo "  2) English"
+  if [ "$existing" = "en" ]; then
+    printf 'Auswahl / Selection [1/2, Standard/default: 2]: '
+  else
+    printf 'Auswahl / Selection [1/2, Standard/default: 1]: '
+  fi
+  local choice
+  read -r choice || choice=""
+  if [ -z "$choice" ] && [ -n "$existing" ]; then
+    printf '%s\n' "$existing"
+  else
+    bpstracker_normalize_language "$choice"
+  fi
+}
+
+bpstracker_profile_label() {
+  if [ "${1:-}" = "zero2w" ]; then
+    if bpstracker_is_english; then printf 'Raspberry Pi Zero 2 W / low-resource installation\n'; else printf 'Raspberry Pi Zero 2 W / Low-Resource-Installation\n'; fi
+  else
+    if bpstracker_is_english; then printf 'regular installation\n'; else printf 'reguläre Installation\n'; fi
+  fi
+}
+
 bpstracker_env_get() {
   local file="$1"
   local key="$2"
@@ -77,10 +147,17 @@ bpstracker_select_profile() {
   fi
 
   echo ""
-  echo "Welche Installation möchtest du verwenden?"
-  echo "  1) Reguläre Installation"
-  echo "  2) Raspberry Pi Zero 2 W / Low-Resource-Installation"
-  printf 'Auswahl [1/2, Standard: 1]: '
+  if bpstracker_is_english; then
+    echo "Which installation profile do you want to use?"
+    echo "  1) Regular installation"
+    echo "  2) Raspberry Pi Zero 2 W / low-resource installation"
+    printf 'Selection [1/2, default: 1]: '
+  else
+    echo "Welche Installation möchtest du verwenden?"
+    echo "  1) Reguläre Installation"
+    echo "  2) Raspberry Pi Zero 2 W / Low-Resource-Installation"
+    printf 'Auswahl [1/2, Standard: 1]: '
+  fi
   local choice
   read -r choice || choice=""
   case "$choice" in
@@ -95,6 +172,8 @@ bpstracker_write_new_env() {
   local secret_key="$3"
   local pg_password="$4"
   local image_tag="$5"
+  local language="${6:-de}"
+  language="$(bpstracker_normalize_language "$language")"
   local pi_mode="false"
   local live_hours="0"
   local raw_hours="0"
@@ -125,6 +204,8 @@ DATABASE_URL=postgresql+psycopg://bpstracker:$pg_password@postgres:5432/bpstrack
 FRONTEND_PORT=5173
 VITE_API_BASE_URL=same-origin
 BPSTRACKER_IMAGE_TAG=$image_tag
+BPSTRACKER_LANGUAGE=$language
+BPSTRACKER_DEFAULT_LANGUAGE=$language
 
 # Do not change after production start: it encrypts Shelly passwords and Admin 2FA secrets.
 SECRET_KEY=$secret_key
@@ -152,7 +233,9 @@ EOF_ENV
 bpstracker_prepare_env() {
   local env_file="$1"
   local profile="$2"
-  local image_tag="${3:-v0.9.11}"
+  local image_tag="${3:-v0.9.15}"
+  local language="${4:-${BPSTRACKER_LANGUAGE:-de}}"
+  language="$(bpstracker_normalize_language "$language")"
   local generated_secret=""
   local generated_pg=""
   local created="false"
@@ -162,7 +245,7 @@ bpstracker_prepare_env() {
   if [ ! -f "$env_file" ]; then
     generated_secret="$(bpstracker_generate_hex 32)"
     generated_pg="$(bpstracker_generate_hex 24)"
-    bpstracker_write_new_env "$env_file" "$profile" "$generated_secret" "$generated_pg" "$image_tag"
+    bpstracker_write_new_env "$env_file" "$profile" "$generated_secret" "$generated_pg" "$image_tag" "$language"
     created="true"
   else
     local secret_key pg_password db_name db_user db_url
@@ -198,6 +281,8 @@ bpstracker_prepare_env() {
     [ -n "$(bpstracker_env_get "$env_file" FRONTEND_PORT)" ] || bpstracker_env_set "$env_file" FRONTEND_PORT "5173"
     [ -n "$(bpstracker_env_get "$env_file" VITE_API_BASE_URL)" ] || bpstracker_env_set "$env_file" VITE_API_BASE_URL "same-origin"
     [ -n "$(bpstracker_env_get "$env_file" BPSTRACKER_IMAGE_TAG)" ] || bpstracker_env_set "$env_file" BPSTRACKER_IMAGE_TAG "$image_tag"
+    bpstracker_env_set "$env_file" BPSTRACKER_LANGUAGE "$language"
+    bpstracker_env_set "$env_file" BPSTRACKER_DEFAULT_LANGUAGE "$language"
     [ -n "$(bpstracker_env_get "$env_file" ACCESS_TOKEN_EXPIRE_MINUTES)" ] || bpstracker_env_set "$env_file" ACCESS_TOKEN_EXPIRE_MINUTES "720"
     [ -n "$(bpstracker_env_get "$env_file" AUTH_COOKIE_NAME)" ] || bpstracker_env_set "$env_file" AUTH_COOKIE_NAME "bpstracker_access_token"
     [ -n "$(bpstracker_env_get "$env_file" AUTH_COOKIE_SECURE)" ] || bpstracker_env_set "$env_file" AUTH_COOKIE_SECURE "false"
@@ -242,19 +327,35 @@ bpstracker_prepare_env() {
   fi
 
   echo ""
-  if [ "$created" = "true" ]; then
-    echo "Created $env_file from generated secure values. .env.example was not copied."
+  if bpstracker_is_english; then
+    if [ "$created" = "true" ]; then
+      echo "Created $env_file from generated secure values. .env.example was not copied."
+    else
+      echo "Checked $env_file and replaced missing/unsafe generated values if needed. .env.example was not copied."
+    fi
   else
-    echo "Checked $env_file and replaced missing/unsafe generated values if needed. .env.example was not copied."
+    if [ "$created" = "true" ]; then
+      echo "$env_file wurde aus sicheren Zufallswerten erzeugt. .env.example wurde nicht kopiert."
+    else
+      echo "$env_file wurde geprüft; fehlende/unsichere Werte wurden bei Bedarf ersetzt. .env.example wurde nicht kopiert."
+    fi
   fi
 
   if [ -n "$generated_secret" ]; then
     echo ""
-    echo "Generated SECRET_KEY. Store this value safely and do not change it after production start:"
+    if bpstracker_is_english; then
+      echo "Generated SECRET_KEY. Store this value safely and do not change it after production start:"
+    else
+      echo "SECRET_KEY wurde erzeugt. Bitte sicher aufbewahren und nach Produktivstart nicht mehr ändern:"
+    fi
     echo "$generated_secret"
   fi
   if [ -n "$generated_pg" ]; then
-    echo "Generated a secure POSTGRES_PASSWORD and matching DATABASE_URL."
+    if bpstracker_is_english; then
+      echo "Generated a secure POSTGRES_PASSWORD and matching DATABASE_URL."
+    else
+      echo "Sicheres POSTGRES_PASSWORD und passende DATABASE_URL wurden erzeugt."
+    fi
   fi
 }
 

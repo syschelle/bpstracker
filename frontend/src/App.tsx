@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { QRCodeSVG } from 'qrcode.react';
 import { Activity, Euro, Globe2, HelpCircle, History, LogOut, Menu, Moon, Plus, RefreshCcw, Settings, ShieldCheck, Sun, Droplets, Thermometer, Trash2, UserCog, Wind, Zap } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { api, setToken } from './api';
+import { api, getRuntimeConfig, setToken } from './api';
 import packageJson from '../package.json';
 import type { AirSensorCurrent, AirSensorSettings, BackupInfo, CurrencyCode, CurrentValuesApiSettings, Device, DevicePurpose, DeviceType, FinanceSettings, KindleDisplaySettings, Language, Measurement, HistoryTotals, PublicDashboardSettings, RetentionSettings, SimulationSettings, Summary, UiSettings, User } from './types';
 
@@ -716,9 +716,20 @@ function useI18n(): I18nContextValue {
   return value;
 }
 
+function readRuntimeDefaultLanguage(): Language {
+  const value = String(getRuntimeConfig().DEFAULT_LANGUAGE || '').trim().toLowerCase();
+  return value === 'en' ? 'en' : 'de';
+}
+
 function readStoredLanguage(): Language {
   const value = readCookie('bpstracker-language') || localStorage.getItem('bpstracker-language');
-  return value === 'en' ? 'en' : 'de';
+  if (value === 'de' || value === 'en') return value;
+  return readRuntimeDefaultLanguage();
+}
+
+function hasStoredLanguage(): boolean {
+  const value = readCookie('bpstracker-language') || localStorage.getItem('bpstracker-language');
+  return value === 'de' || value === 'en';
 }
 
 function readCookie(name: string): string | null {
@@ -1082,6 +1093,9 @@ export default function App() {
       .then(status => {
         setInstallRequired(status.install_required);
         if (status.install_required) {
+          if (!hasStoredLanguage() && (status.default_language === 'de' || status.default_language === 'en')) {
+            setLanguage(status.default_language);
+          }
           setToken(null);
           setUser(null);
         }
@@ -1273,8 +1287,8 @@ export default function App() {
                   {theme === 'dark' ? <Sun size={19} /> : <Moon size={19} />}
                 </button>
                 <div className="header-brand">
-                  <div className="brand"><Zap /> BPSTracker</div>
-                  <div className="brand-subtitle">{t('appSubtitle')} · <span className="app-version">{APP_VERSION}</span></div>
+                  <div className="brand" title={t('appSubtitle')} aria-label={`BPSTracker · ${t('appSubtitle')}`}><Zap /> BPSTracker</div>
+                  <div className="brand-subtitle"><span className="app-version">{APP_VERSION}</span></div>
                 </div>
               </div>
             </header>
@@ -1907,6 +1921,11 @@ function GridPowerMetric({ summary }: { summary: Summary | null }) {
   const gridPercent = hasPower ? clampPercent((gridImportPower / totalPower) * 100) : 0;
   const solarPercent = hasPower ? clampPercent(100 - gridPercent) : 0;
   const gridValueClass = gridPower < -0.01 ? 'negative' : Math.abs(gridPower) <= 0.01 ? 'zero' : 'positive';
+  const consumptionValueClass = currentTotalConsumption === null
+    ? ''
+    : Math.abs(currentTotalConsumption) <= 0.01
+      ? 'zero'
+      : 'active';
 
   return (
     <div className="metric metric-grid-power">
@@ -1916,7 +1935,7 @@ function GridPowerMetric({ summary }: { summary: Summary | null }) {
           <div className="grid-power-value-list">
             <div className="grid-power-value-row">
               <span>{t('currentTotalConsumption')}</span>
-              <strong>{fmtW(currentTotalConsumption, language)}</strong>
+              <strong className={`grid-power-current-value ${consumptionValueClass}`.trim()}>{fmtW(currentTotalConsumption, language)}</strong>
             </div>
             <div className="grid-power-value-row">
               <span>{t('gridImportShare')}</span>

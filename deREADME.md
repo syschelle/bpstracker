@@ -222,7 +222,14 @@ Start mit Installationsauswahl:
 bash ./deploy.sh
 ```
 
-Das Installationsskript fragt, ob die reguläre Installation oder die Raspberry-Pi-Zero-2-W-/Low-Resource-Installation verwendet werden soll. Es erzeugt `.env` aus sicheren Zufallswerten und kopiert `.env.example` **nicht** für den Produktivbetrieb. Der generierte `SECRET_KEY` wird am Ende der Installation einmal in der Konsole angezeigt; sicher aufbewahren und nach Produktivstart nicht mehr ändern, weil damit Shelly-Passwörter und 2FA-Secrets geschützt werden.
+Für unbeaufsichtigte Installationen kann die Sprache direkt übergeben werden:
+
+```bash
+bash ./deploy.sh --language de
+bash ./deploy.sh --language en
+```
+
+Das Installationsskript fragt zuerst nach der Skriptsprache und danach, ob die reguläre Installation oder die Raspberry-Pi-Zero-2-W-/Low-Resource-Installation verwendet werden soll. Es erzeugt `.env` aus sicheren Zufallswerten und kopiert `.env.example` **nicht** für den Produktivbetrieb. Die gewählte Sprache wird als `BPSTRACKER_LANGUAGE` und `BPSTRACKER_DEFAULT_LANGUAGE` gespeichert, damit die Web-Ersteinrichtung direkt in derselben Sprache startet. Der generierte `SECRET_KEY` wird am Ende der Installation einmal in der Konsole angezeigt; sicher aufbewahren und nach Produktivstart nicht mehr ändern, weil damit Shelly-Passwörter und 2FA-Secrets geschützt werden.
 
 Bei einer frischen Datenbank öffnet sich in der Weboberfläche zuerst die Ersteinrichtung. Dort legt der erste Anwender den Admin-Benutzernamen und das Admin-Passwort fest. In `.env` werden keine Admin- oder Viewer-Zugangsdaten ausgeliefert.
 
@@ -744,6 +751,13 @@ Oder:
 bash ./deploy-images.sh
 ```
 
+`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.15` oder `latest`). Für unbeaufsichtigte Image-Deployments:
+
+```bash
+bash ./deploy-images.sh --regular --tag v0.9.15 --language de
+bash ./deploy-images.sh --zero2w --latest --language en
+```
+
 Mit lokalem Build:
 
 ```bash
@@ -941,4 +955,14 @@ v0.9.11 behebt die sechs GitHub-CodeQL-Security-Findings aus der v0.9.x-Linie. B
 ### v0.9.12 Kindle-Luftsensorwerte angeglichen
 
 v0.9.12 hält die Luftsensorwerte im Kindle-Display mit dem Dashboard synchron. Vor dem Rendern des Kindle-PNG wird der gemeinsame Luftsensor-Cache über denselben gedrosselten Helfer aktualisiert, den auch das Dashboard nutzt. Die Kindle-Vorschau im Setup löst außerdem vor dem Neuladen des Bildes einen authentifizierten Refresh aus, und der öffentliche Kindle-Bildendpunkt erzeugt veraltete Bilder vor der Auslieferung neu.
+
+### v0.9.13 Farbkorrektur Hausbezug im Dark Theme
+
+v0.9.13 korrigiert die Hausbezug-Kachel im dunklen Theme: Aktuelle Haus-/Netzbezugswerte bei 0 W bleiben grün und werden nicht mehr durch allgemeine Dark-Theme-Wertfarben überschrieben. Die Farblogik bleibt rot bei Einspeisung und blau bei positivem Netzbezug.
+
+### v0.9.15 Sprachwahl für Installationsskripte und kompakter Header
+
+v0.9.15 fasst die nicht veröffentlichte v0.9.14-Sprachwahl für Installationsskripte mit einer kompakten Header-Anpassung zusammen. `deploy.sh` und `deploy-images.sh` können ihre Rückfragen und Statusausgaben jetzt auf Deutsch oder Englisch anzeigen, unterstützen `--language de|en` für unbeaufsichtigte Installationen und schreiben `BPSTRACKER_LANGUAGE` sowie `BPSTRACKER_DEFAULT_LANGUAGE` in `.env`. Die Frontend-Laufzeitkonfiguration erhält diese Standardsprache, sodass die Web-Ersteinrichtung direkt in der im Deployment gewählten Sprache startet. Backend-Installstatus und UI-Defaults berücksichtigen die konfigurierte Deployment-Sprache, bis ein Admin eine andere UI-Sprache speichert.
+
+Der angemeldete Header zeigt nun nur noch `BPSTracker` und die App-Version. Der lokalisierte App-Name/Untertitel wird nicht mehr sichtbar neben der Version angezeigt, sondern als sprachabhängiger Hover-Tooltip und Accessibility-Label auf dem Schriftzug `BPSTracker` bereitgestellt — ähnlich kompakt wie bei den Achievements.
 

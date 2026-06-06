@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -25,6 +26,7 @@ class Settings(BaseSettings):
     pi_zero_2w_mode: bool = False
     live_data_max_hours: int = 0
     raw_retention_hours: int = 0
+    default_language: str = Field(default='de', validation_alias='BPSTRACKER_DEFAULT_LANGUAGE')
 
 
 @lru_cache

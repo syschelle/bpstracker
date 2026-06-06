@@ -33,9 +33,14 @@ def install_required(db: Session) -> bool:
     return configured_admin is None
 
 
+def _default_language() -> str:
+    language = str(get_settings().default_language or 'de').strip().lower()
+    return language if language in {'de', 'en'} else 'de'
+
+
 @router.get('/status', response_model=InstallStatusResponse)
 def get_install_status(db: Session = Depends(get_db)) -> InstallStatusResponse:
-    return InstallStatusResponse(install_required=install_required(db))
+    return InstallStatusResponse(install_required=install_required(db), default_language=_default_language())
 
 
 @router.post('/admin', response_model=InstallCompleteResponse, status_code=status.HTTP_201_CREATED)
