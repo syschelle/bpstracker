@@ -102,14 +102,34 @@ def ensure_completed_daily_summaries(db: Session, now: datetime | None = None) -
     return count
 
 
-def cleanup_old_raw_measurements(db: Session, raw_retention_days: int, now: datetime | None = None) -> int:
+def cleanup_old_raw_measurements(
+    db: Session,
+    raw_retention_days: int,
+    now: datetime | None = None,
+    *,
+    raw_retention_hours: int | None = None,
+) -> int:
     now = now or datetime.now(timezone.utc)
-    raw_retention_days = max(7, min(3650, int(raw_retention_days or 30)))
-    cutoff_day = (now - timedelta(days=raw_retention_days)).date()
-    cutoff = datetime.combine(cutoff_day, time.min, tzinfo=timezone.utc)
 
-    # First materialize all complete days that will be deleted, then remove only raw rows.
-    deleted_candidate_days = raw_measurement_days(db, before_day=cutoff_day)
+    if raw_retention_hours is not None and raw_retention_hours > 0:
+        retention_hours = max(1, min(3650 * 24, int(raw_retention_hours)))
+        cutoff = now - timedelta(hours=retention_hours)
+        cutoff_day = cutoff.date()
+
+        # Hour-based cleanup is used by very small devices such as the Raspberry Pi
+        # Zero 2 W. Before deleting any rows from a completed day, materialize that
+        # whole day into DailyEnergySummary so total balance and total cost cards stay
+        # available even when raw measurements are kept for only 24 hours.
+        summarize_before_day = min(now.date(), cutoff_day + timedelta(days=1))
+        deleted_candidate_days = raw_measurement_days(db, before_day=summarize_before_day)
+    else:
+        raw_retention_days = max(7, min(3650, int(raw_retention_days or 30)))
+        cutoff_day = (now - timedelta(days=raw_retention_days)).date()
+        cutoff = datetime.combine(cutoff_day, time.min, tzinfo=timezone.utc)
+
+        # First materialize all complete days that will be deleted, then remove only raw rows.
+        deleted_candidate_days = raw_measurement_days(db, before_day=cutoff_day)
+
     for day in deleted_candidate_days:
         upsert_day_summary(db, day)
 

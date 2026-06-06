@@ -9,7 +9,7 @@ from .config import get_settings
 from .database import SessionLocal
 from .models import Device, DeviceStatus, DeviceType, Measurement, utcnow
 from .energy_retention import cleanup_old_raw_measurements, ensure_completed_daily_summaries
-from .routers.settings import get_retention_settings_from_db
+from .routers.settings import get_raw_retention_hours_override, get_retention_settings_from_db
 from .security import decrypt_secret
 from .shelly import ShellyClient, ShellyCredentials, ShellyDeviceConfig, ShellyClientError, detected_device_type
 
@@ -65,7 +65,12 @@ class Poller:
             try:
                 retention = get_retention_settings_from_db(db)
                 ensure_completed_daily_summaries(db, now)
-                cleanup_old_raw_measurements(db, retention.raw_retention_days, now)
+                cleanup_old_raw_measurements(
+                    db,
+                    retention.raw_retention_days,
+                    now,
+                    raw_retention_hours=get_raw_retention_hours_override(),
+                )
             except Exception:  # noqa: BLE001
                 db.rollback()
 

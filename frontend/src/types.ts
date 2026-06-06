@@ -85,6 +85,9 @@ export interface FinanceSettings {
 export interface RetentionSettings {
   raw_retention_days: number;
   daily_aggregates_forever: boolean;
+  effective_raw_retention_hours?: number | null;
+  live_data_max_hours?: number | null;
+  pi_zero_2w_mode?: boolean;
 }
 
 export interface KindleDisplaySettings {

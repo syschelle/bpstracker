@@ -154,6 +154,9 @@ class UiSettings(BaseModel):
 class RetentionSettings(BaseModel):
     raw_retention_days: int = Field(default=30, ge=7, le=3650)
     daily_aggregates_forever: bool = True
+    effective_raw_retention_hours: int | None = Field(default=None, ge=1, le=3650 * 24)
+    live_data_max_hours: int | None = Field(default=None, ge=1, le=3650 * 24)
+    pi_zero_2w_mode: bool = False
 
 
 class KindleDisplaySettings(BaseModel):

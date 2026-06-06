@@ -679,9 +679,30 @@ Diese Aktion kann nicht rückgängig gemacht werden.
 
 Rohmesswerte können zeitlich begrenzt gespeichert werden.
 
+Für sehr kleine Geräte unterstützt BPSTracker zusätzlich einen optionalen Low-Resource-Modus, der Roh-/Live-Messwerte auf die letzten 24 Stunden begrenzt. Dieser Modus ist für Raspberry Pi Zero 2 W Installationen gedacht.
+
 Tagesaggregate bleiben dauerhaft erhalten und werden für Langzeitwerte, Gesamtbilanz und Amortisation verwendet.
 
 Dadurch kann die Datenbank klein bleiben, ohne Langzeit-Auswertungen zu verlieren.
+
+### Raspberry Pi Zero 2 W Modus
+
+Für einen Raspberry Pi Zero 2 W sollte das Deployment mit vorgebauten Images und dem Low-Resource-Override verwendet werden:
+
+```bash
+docker compose -f docker-compose.images.yml -f docker-compose.zero2w.yml pull
+docker compose -f docker-compose.images.yml -f docker-compose.zero2w.yml up -d --force-recreate --remove-orphans
+```
+
+Der Override aktiviert:
+
+- `PI_ZERO_2W_MODE=true`
+- `LIVE_DATA_MAX_HOURS=24`
+- `RAW_RETENTION_HOURS=24`
+- niedrigere Shelly-Polling-Parallelität
+- kleinere temporäre Dateisysteme
+
+In diesem Modus sind Dashboard-/Historie-Livewerte und Rohdatenexporte auf die letzten 24 Stunden begrenzt. Die dauerhaften Tagesaggregate bleiben erhalten und versorgen weiterhin Gesamtbilanz, Gesamtkostenbilanz und Amortisation.
 
 ---
 
@@ -882,15 +903,19 @@ v0.9.2 ergänzt in den Simulationseinstellungen einen konfigurierbaren maximalen
 
 v0.9.3 ergänzt in den Simulationseinstellungen eine konfigurierbare Grundlast für Tag und Nacht. Die hinterlegten Watt-Werte bilden den dauerhaften Verbrauchssockel des Haushalts, während vorhandene simulierte Verbrauchsspitzen wie Waschmaschine, Wasserkocher, Kochen und Kaffeeautomat weiterhin aktiv bleiben und zusätzlich auf die Grundlast gerechnet werden. Die Grundlastwerte werden konsistent für Dashboard-Summary, aktuelle Messwerte, Historien-Diagramme, Historien-Summen, Kindle-Display und die Current-Values-JSON-API verwendet.
 
-### v0.9.6 Dashboard-Kachel Hausbezug überarbeitet
+### v0.9.4 Dashboard-Kachel Hausbezug überarbeitet
 
-v0.9.6 überarbeitet die Dashboard-Kachel **Hausbezug / Home import**. Die Kachel zeigt jetzt zuerst den aktuellen Gesamtverbrauch, darunter den vorzeichenbehafteten Netzbezug beziehungsweise die Einspeisung und danach die aktuelle Solarleistung. Die frühere Trennlinie vor dem Solarwert wurde entfernt, und die drei Werte werden in gleicher Schriftgröße angezeigt.
+v0.9.4 überarbeitet die Dashboard-Kachel **Hausbezug / Home import**. Die Kachel zeigt jetzt zuerst den aktuellen Gesamtverbrauch, darunter den vorzeichenbehafteten Netzbezug beziehungsweise die Einspeisung und danach die aktuelle Solarleistung. Die frühere Trennlinie vor dem Solarwert wurde entfernt, und die drei Werte werden in gleicher Schriftgröße angezeigt.
 
-### v0.9.6 Dashboard-Hausbezug-Layout verfeinert
+### v0.9.5 Dashboard-Hausbezug-Layout verfeinert
 
-v0.9.6 verfeinert die Dashboard-Kachel `Hausbezug` nach der Ergänzung des Gesamtverbrauchs in v0.9.4. Beschriftungen und Werte stehen jetzt kompakter zusammen, die kompakte Netzbezug-/Solar-Anteilszeile am unteren Rand der Kachel ist wieder vorhanden, und positive Netzbezugswerte nutzen dasselbe Blau wie die Netzbezug-Serie in der Historie. Negative Netzwerte bleiben weiterhin rot für Einspeisung.
+v0.9.5 verfeinert die Dashboard-Kachel `Hausbezug` nach der Ergänzung des Gesamtverbrauchs in v0.9.4. Beschriftungen und Werte stehen jetzt kompakter zusammen, die kompakte Netzbezug-/Solar-Anteilszeile am unteren Rand der Kachel ist wieder vorhanden, und positive Netzbezugswerte nutzen dasselbe Blau wie die Netzbezug-Serie in der Historie. Negative Netzwerte bleiben weiterhin rot für Einspeisung.
 
 ### v0.9.6 Hausbezug-Werte linksbündig ausgerichtet
 
 v0.9.6 verfeinert das Layout der Dashboard-Kachel Hausbezug. Die Wertespalte für Gesamtverbrauch, Netzbezug/Einspeisung und Solar ist jetzt zeilenübergreifend linksbündig ausgerichtet, bleibt aber kompakt wie in v0.9.5. Positiver Netzbezug bleibt blau, Einspeisung bleibt rot und Solar bleibt grün.
+
+### v0.9.7 Raspberry Pi Zero 2 W Low-Resource-Modus
+
+v0.9.7 ergänzt mit `docker-compose.zero2w.yml` einen optionalen Raspberry-Pi-Zero-2-W-Modus. Wenn er aktiviert ist, behält und liefert BPSTracker nur die letzten 24 Stunden Roh-/Live-Messwerte. Dauerhafte Tagesaggregate bleiben für Gesamtbilanz, Gesamtkostenbilanz und Amortisation erhalten. Das Backend begrenzt Historien- und Export-Anfragen auf das konfigurierte Live-Fenster, die Historie blendet längere Zeitbereiche im 24h-Modus aus, und die Datenaufbewahrung zeigt das effektive Low-Resource-Limit an.
 

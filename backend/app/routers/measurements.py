@@ -17,7 +17,7 @@ from ..energy_retention import (
     delta_energy,
     get_stored_total_kwh,
 )
-from ..routers.settings import get_finance_settings_from_db, get_public_dashboard_settings_from_db, get_retention_settings_from_db, get_simulation_settings_from_db, get_ui_settings_from_db
+from ..routers.settings import get_finance_settings_from_db, get_live_data_max_hours, get_public_dashboard_settings_from_db, get_retention_settings_from_db, get_simulation_settings_from_db, get_ui_settings_from_db
 from ..schemas import HistoryPoint, HistorySeriesResponse, HistoryTotalsResponse, MeasurementRead, SummaryResponse
 from ..simulation import simulated_history, simulated_latest, simulated_summary
 from ..security import get_current_user
@@ -26,6 +26,16 @@ router = APIRouter(prefix='/api/measurements', tags=['measurements'])
 
 HISTORY_ROW_LIMIT_DEFAULT = 500000
 HISTORY_ROW_LIMIT_MAX = 500000
+
+
+def _clamp_live_window(start: datetime, end: datetime) -> tuple[datetime, datetime]:
+    max_hours = get_live_data_max_hours()
+    if max_hours is None:
+        return start, end
+    earliest = end - timedelta(hours=max_hours)
+    if start < earliest:
+        start = earliest
+    return start, end
 
 
 def _require_public_dashboard(db: Session) -> None:
@@ -426,6 +436,7 @@ def history_totals(
     """
     end = end or datetime.now(timezone.utc)
     start = start or (end - timedelta(hours=24))
+    start, end = _clamp_live_window(start, end)
     bucket_seconds = _bucket_seconds(start, end)
     simulation = get_simulation_settings_from_db(db)
     if simulation.enabled:
@@ -451,6 +462,7 @@ def history_series(
     """Return chart-ready history points and matching totals in one database pass."""
     end = end or datetime.now(timezone.utc)
     start = start or (end - timedelta(hours=24))
+    start, end = _clamp_live_window(start, end)
     bucket_seconds = _bucket_seconds(start, end)
     simulation = get_simulation_settings_from_db(db)
     if simulation.enabled:
@@ -484,6 +496,7 @@ def history(
     """
     end = end or datetime.now(timezone.utc)
     start = start or (end - timedelta(hours=24))
+    start, end = _clamp_live_window(start, end)
     bucket_seconds = _bucket_seconds(start, end)
     simulation = get_simulation_settings_from_db(db)
     if simulation.enabled:
@@ -666,6 +679,7 @@ def export_csv(
 ) -> Response:
     end = end or datetime.now(timezone.utc)
     start = start or (end - timedelta(hours=24))
+    start, end = _clamp_live_window(start, end)
     rows = _raw_history_rows(db, start=start, end=end, limit=50000)
     output = io.StringIO()
     writer = csv.writer(output)

@@ -209,6 +209,9 @@ const translations = {
     saveRetention: 'Aufbewahrung speichern',
     retentionSaved: 'Datenaufbewahrung wurde gespeichert.',
     retentionCurrent: 'Aktuelle Rohdaten-Aufbewahrung: {days} Tage',
+    retentionEffectiveHours: 'Effektive Rohdaten-Aufbewahrung: {hours} Stunden',
+    piZeroModeActive: 'Pi Zero 2 W Modus aktiv: Livewerte und Rohdaten sind auf {hours} Stunden begrenzt. Tagesaggregate bleiben erhalten.',
+    liveDataLimitedHint: 'Dieser Modus zeigt nur die letzten {hours} Stunden Livewerte.',
     backupSettings: 'Backup',
     backupHint: 'Erstellt ein verschlüsseltes Backup mit Datenbank-Dump, Konfiguration und Backend-Daten. Das Passwort wird nur für dieses Backup verwendet und nicht gespeichert.',
     backupPassword: 'Backup-Passwort',
@@ -539,6 +542,9 @@ const translations = {
     saveRetention: 'Save retention',
     retentionSaved: 'Data retention has been saved.',
     retentionCurrent: 'Current raw data retention: {days} days',
+    retentionEffectiveHours: 'Effective raw data retention: {hours} hours',
+    piZeroModeActive: 'Pi Zero 2 W mode active: live values and raw data are limited to {hours} hours. Daily aggregates are preserved.',
+    liveDataLimitedHint: 'This mode shows only the latest {hours} hours of live values.',
     backupSettings: 'Backup',
     backupHint: 'Creates an encrypted backup with database dump, configuration and backend data. The password is used only for this backup and is not stored.',
     backupPassword: 'Backup password',
@@ -2132,7 +2138,13 @@ function HistoryView() {
   const [hours, setHours] = useState(24);
   const [history, setHistory] = useState<Measurement[]>([]);
   const [historyTotals, setHistoryTotals] = useState<HistoryTotals | null>(null);
+  const [retention, setRetention] = useState<RetentionSettings | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+
+  const liveMaxHours = retention?.live_data_max_hours ?? null;
+  const historyRanges = liveMaxHours && liveMaxHours <= 24
+    ? [24]
+    : [24, 168, 720];
 
   async function load() {
     const series = await api.historySeries(hours);
@@ -2150,6 +2162,17 @@ function HistoryView() {
     window.URL.revokeObjectURL(url);
     setMessage(t('csvDownloaded'));
   }
+
+  useEffect(() => {
+    api.retentionSettings()
+      .then(settings => {
+        setRetention(settings);
+        if (settings.live_data_max_hours && settings.live_data_max_hours <= 24 && hours !== 24) {
+          setHours(24);
+        }
+      })
+      .catch(() => setRetention(null));
+  }, []);
 
   useEffect(() => { void load(); }, [hours]);
 
@@ -2179,12 +2202,13 @@ function HistoryView() {
       {message && <div className="info">{message}</div>}
       <div className="panel-head">
         <div className="row gap-small">
-          <button className={hours === 24 ? 'active small' : 'small'} onClick={() => setHours(24)}>24h</button>
-          <button className={hours === 168 ? 'active small' : 'small'} onClick={() => setHours(168)}>{language === 'de' ? '7 Tage' : '7 days'}</button>
-          <button className={hours === 720 ? 'active small' : 'small'} onClick={() => setHours(720)}>{language === 'de' ? '30 Tage' : '30 days'}</button>
+          {historyRanges.includes(24) && <button className={hours === 24 ? 'active small' : 'small'} onClick={() => setHours(24)}>24h</button>}
+          {historyRanges.includes(168) && <button className={hours === 168 ? 'active small' : 'small'} onClick={() => setHours(168)}>{language === 'de' ? '7 Tage' : '7 days'}</button>}
+          {historyRanges.includes(720) && <button className={hours === 720 ? 'active small' : 'small'} onClick={() => setHours(720)}>{language === 'de' ? '30 Tage' : '30 days'}</button>}
         </div>
         <button onClick={() => void exportCsv()}>{t('csvExport')}</button>
       </div>
+      {liveMaxHours && liveMaxHours <= 24 && <p className="hint">{t('liveDataLimitedHint', { hours: liveMaxHours })}</p>}
       <ResponsiveContainer width="100%" height={420}>
         <AreaChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
@@ -2573,7 +2597,7 @@ function BackupSettingsPanel() {
 
 function RetentionSettingsPanel() {
   const { t } = useI18n();
-  const [settings, setSettings] = useState<RetentionSettings>({ raw_retention_days: 30, daily_aggregates_forever: true });
+  const [settings, setSettings] = useState<RetentionSettings>({ raw_retention_days: 30, daily_aggregates_forever: true, effective_raw_retention_hours: 30 * 24, live_data_max_hours: null, pi_zero_2w_mode: false });
   const [message, setMessage] = useState<string | null>(null);
 
   async function load() {
@@ -2596,6 +2620,7 @@ function RetentionSettingsPanel() {
     <section className="panel">
       <div className="panel-head"><h2><History size={20} /> {t('retentionSettings')}</h2></div>
       <p className="hint">{t('retentionHint')}</p>
+      {settings.pi_zero_2w_mode && <div className="info">{t('piZeroModeActive', { hours: settings.live_data_max_hours || settings.effective_raw_retention_hours || 24 })}</div>}
       {message && <div className="info">{message}</div>}
       <div className="form-grid finance-form">
         <label>{t('rawRetentionDays')} ({t('daysUnit')})
@@ -2606,7 +2631,8 @@ function RetentionSettingsPanel() {
         </label>
       </div>
       <p className="hint">{t('retentionCurrent', { days: settings.raw_retention_days })}</p>
-      <button onClick={() => void save()}>{t('saveRetention')}</button>
+      {settings.effective_raw_retention_hours && <p className="hint">{t('retentionEffectiveHours', { hours: settings.effective_raw_retention_hours })}</p>}
+      <button onClick={() => void save()} disabled={Boolean(settings.pi_zero_2w_mode)}>{t('saveRetention')}</button>
     </section>
   );
 }

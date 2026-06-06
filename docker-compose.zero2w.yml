@@ -1,0 +1,24 @@
+# Raspberry Pi Zero 2 W low-resource override.
+# Use together with the normal image compose file:
+#   docker compose -f docker-compose.images.yml -f docker-compose.zero2w.yml up -d
+#
+# This profile keeps only the latest 24h of raw/live measurements while permanent
+# daily aggregates preserve total balance and total cost cards.
+
+services:
+  backend:
+    environment:
+      PI_ZERO_2W_MODE: "true"
+      LIVE_DATA_MAX_HOURS: "24"
+      RAW_RETENTION_HOURS: "24"
+      POLLING_LOOP_SECONDS: ${POLLING_LOOP_SECONDS:-10}
+      SHELLY_TIMEOUT_SECONDS: ${SHELLY_TIMEOUT_SECONDS:-4}
+      SHELLY_MAX_CONCURRENCY: ${SHELLY_MAX_CONCURRENCY:-1}
+    tmpfs:
+      - /tmp:size=32m,noexec,nosuid,nodev
+
+  frontend:
+    tmpfs:
+      - /tmp:size=16m,noexec,nosuid,nodev
+      - /var/cache/nginx:size=16m,noexec,nosuid,nodev
+      - /var/run:size=8m,noexec,nosuid,nodev

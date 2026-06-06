@@ -19,6 +19,12 @@ class Settings(BaseSettings):
     polling_loop_seconds: int = 5
     shelly_timeout_seconds: float = 5.0
     shelly_max_concurrency: int = 4
+    # Optional low-resource profile for Raspberry Pi Zero 2 W deployments.
+    # When enabled, only the latest 24h of raw/live data are retained and served by default,
+    # while permanent daily aggregates keep total balances available.
+    pi_zero_2w_mode: bool = False
+    live_data_max_hours: int = 0
+    raw_retention_hours: int = 0
 
 
 @lru_cache

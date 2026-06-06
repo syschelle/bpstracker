@@ -7,6 +7,7 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from ..config import get_settings
 from ..database import get_db
 from ..models import AppSetting, AuditLog, User
 from ..schemas import AirSensorCurrent, AirSensorSettings, CurrentValuesApiSettings, PublicDashboardSettings, FinanceSettings, KindleDisplaySettings, RetentionSettings, SimulationSettings, UiSettings
@@ -37,6 +38,36 @@ DEFAULT_TIMEZONE = 'Europe/Berlin'
 DEFAULT_RAW_RETENTION_DAYS = 30
 DEFAULT_PUBLIC_METER_NUMBER: str | None = None
 ALLOWED_CURRENCIES = {'EUR', 'USD', 'GBP'}
+
+
+def _positive_int_or_none(value: object, *, max_value: int = 3650 * 24) -> int | None:
+    try:
+        parsed = int(value or 0)
+    except (TypeError, ValueError):
+        return None
+    if parsed <= 0:
+        return None
+    return max(1, min(max_value, parsed))
+
+
+def get_raw_retention_hours_override() -> int | None:
+    settings = get_settings()
+    configured = _positive_int_or_none(settings.raw_retention_hours)
+    if configured is not None:
+        return configured
+    if settings.pi_zero_2w_mode:
+        return 24
+    return None
+
+
+def get_live_data_max_hours() -> int | None:
+    settings = get_settings()
+    configured = _positive_int_or_none(settings.live_data_max_hours)
+    if configured is not None:
+        return configured
+    if settings.pi_zero_2w_mode:
+        return 24
+    return None
 
 
 def _normalize_host(value: str | None) -> str | None:
@@ -319,7 +350,16 @@ def _normalize_retention_value(value: dict | None) -> RetentionSettings:
     except (TypeError, ValueError):
         raw_days = DEFAULT_RAW_RETENTION_DAYS
     raw_days = max(7, min(3650, raw_days))
-    return RetentionSettings(raw_retention_days=raw_days, daily_aggregates_forever=True)
+    raw_hours_override = get_raw_retention_hours_override()
+    live_hours = get_live_data_max_hours()
+    effective_hours = raw_hours_override if raw_hours_override is not None else raw_days * 24
+    return RetentionSettings(
+        raw_retention_days=raw_days,
+        daily_aggregates_forever=True,
+        effective_raw_retention_hours=effective_hours,
+        live_data_max_hours=live_hours,
+        pi_zero_2w_mode=get_settings().pi_zero_2w_mode,
+    )
 
 
 def get_retention_settings_from_db(db: Session) -> RetentionSettings:
