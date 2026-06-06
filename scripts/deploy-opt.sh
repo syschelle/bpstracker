@@ -113,7 +113,7 @@ sudo chown -R "${BACKEND_UID}:${BACKEND_GID}" "$APP_DIR/data/backend"
 # shellcheck source=scripts/env-setup.sh
 source "$APP_DIR/scripts/env-setup.sh"
 export BPSTRACKER_LANGUAGE
-bpstracker_prepare_env "$APP_DIR/.env" "$PROFILE" "v0.9.15" "$BPSTRACKER_LANGUAGE"
+bpstracker_prepare_env "$APP_DIR/.env" "$PROFILE" "v0.9.18" "$BPSTRACKER_LANGUAGE"
 
 cd "$APP_DIR"
 COMPOSE_FILE="$(bpstracker_compose_file_for_profile "$PROFILE" local)"

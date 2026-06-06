@@ -18,6 +18,32 @@ PY
 }
 
 
+bpstracker_prompt_line() {
+  if [ -w /dev/tty ]; then
+    printf '%s\n' "$*" > /dev/tty
+  else
+    printf '%s\n' "$*" >&2
+  fi
+}
+
+bpstracker_prompt_text() {
+  if [ -w /dev/tty ]; then
+    printf '%s' "$*" > /dev/tty
+  else
+    printf '%s' "$*" >&2
+  fi
+}
+
+bpstracker_prompt_read() {
+  local __var="$1"
+  if [ -r /dev/tty ]; then
+    IFS= read -r "$__var" < /dev/tty || printf -v "$__var" ''
+  else
+    IFS= read -r "$__var" || printf -v "$__var" ''
+  fi
+}
+
+
 bpstracker_normalize_language() {
   case "${1:-}" in
     en|EN|english|English|2) printf 'en\n' ;;
@@ -61,17 +87,17 @@ bpstracker_select_language() {
     return 0
   fi
 
-  echo ""
-  echo "Sprache / Language"
-  echo "  1) Deutsch"
-  echo "  2) English"
+  bpstracker_prompt_line ""
+  bpstracker_prompt_line "Sprache / Language"
+  bpstracker_prompt_line "  1) Deutsch"
+  bpstracker_prompt_line "  2) English"
   if [ "$existing" = "en" ]; then
-    printf 'Auswahl / Selection [1/2, Standard/default: 2]: '
+    bpstracker_prompt_text 'Auswahl / Selection [1/2, Standard/default: 2]: '
   else
-    printf 'Auswahl / Selection [1/2, Standard/default: 1]: '
+    bpstracker_prompt_text 'Auswahl / Selection [1/2, Standard/default: 1]: '
   fi
   local choice
-  read -r choice || choice=""
+  bpstracker_prompt_read choice
   if [ -z "$choice" ] && [ -n "$existing" ]; then
     printf '%s\n' "$existing"
   else
@@ -146,20 +172,20 @@ bpstracker_select_profile() {
     return 0
   fi
 
-  echo ""
+  bpstracker_prompt_line ""
   if bpstracker_is_english; then
-    echo "Which installation profile do you want to use?"
-    echo "  1) Regular installation"
-    echo "  2) Raspberry Pi Zero 2 W / low-resource installation"
-    printf 'Selection [1/2, default: 1]: '
+    bpstracker_prompt_line "Which installation profile do you want to use?"
+    bpstracker_prompt_line "  1) Regular installation"
+    bpstracker_prompt_line "  2) Raspberry Pi Zero 2 W / low-resource installation"
+    bpstracker_prompt_text 'Selection [1/2, default: 1]: '
   else
-    echo "Welche Installation möchtest du verwenden?"
-    echo "  1) Reguläre Installation"
-    echo "  2) Raspberry Pi Zero 2 W / Low-Resource-Installation"
-    printf 'Auswahl [1/2, Standard: 1]: '
+    bpstracker_prompt_line "Welche Installation möchtest du verwenden?"
+    bpstracker_prompt_line "  1) Reguläre Installation"
+    bpstracker_prompt_line "  2) Raspberry Pi Zero 2 W / Low-Resource-Installation"
+    bpstracker_prompt_text 'Auswahl [1/2, Standard: 1]: '
   fi
   local choice
-  read -r choice || choice=""
+  bpstracker_prompt_read choice
   case "$choice" in
     2|z|Z|zero|zero2w|Zero2W) printf 'zero2w\n' ;;
     *) printf 'regular\n' ;;
@@ -233,7 +259,7 @@ EOF_ENV
 bpstracker_prepare_env() {
   local env_file="$1"
   local profile="$2"
-  local image_tag="${3:-v0.9.15}"
+  local image_tag="${3:-v0.9.18}"
   local language="${4:-${BPSTRACKER_LANGUAGE:-de}}"
   language="$(bpstracker_normalize_language "$language")"
   local generated_secret=""

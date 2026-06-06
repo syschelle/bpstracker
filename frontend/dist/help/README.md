@@ -1404,10 +1404,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.17` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.18` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.17 --language en
+bash ./deploy-images.sh --regular --tag v0.9.18 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1703,4 +1703,8 @@ v0.9.16 optimizes the History endpoint for Raspberry Pi and other low-resource d
 ### v0.9.17 locale files with language metadata
 
 v0.9.17 moves the React UI translations out of `App.tsx` into per-language locale files under `frontend/src/i18n/locales/`. Each locale now carries metadata such as language code, native name, browser locale and help document. The frontend derives the available language list from those files, so the setup language dropdown, header language switcher and help-document lookup no longer hard-code only German and English. A new `npm run check-i18n` build step validates that every locale provides the same translation keys as the English baseline. Backend language validation now accepts future locale-style language codes while the frontend falls back safely when an unavailable language is configured.
+
+### v0.9.18 interactive deploy prompt fix
+
+v0.9.18 fixes the interactive prompts in `deploy.sh` and `deploy-images.sh`. Language, installation profile and Docker image tag questions are now written to the terminal directly instead of being captured by command substitution, so interactive installs no longer appear to hang while waiting for hidden input. The default release image tag used by the deploy scripts was also updated to `v0.9.18`.
 

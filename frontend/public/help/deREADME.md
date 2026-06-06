@@ -759,10 +759,10 @@ Oder:
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.17` oder `latest`). Für unbeaufsichtigte Image-Deployments:
+`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.18` oder `latest`). Für unbeaufsichtigte Image-Deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.17 --language de
+bash ./deploy-images.sh --regular --tag v0.9.18 --language de
 bash ./deploy-images.sh --zero2w --latest --language en
 ```
 
@@ -981,4 +981,8 @@ v0.9.16 optimiert den History-Endpunkt für Raspberry-Pi- und andere Low-Resourc
 ### v0.9.17 Sprachdateien mit Metadaten
 
 v0.9.17 lagert die React-UI-Übersetzungen aus `App.tsx` in einzelne Locale-Dateien unter `frontend/src/i18n/locales/` aus. Jede Locale enthält jetzt Metadaten wie Sprachcode, nativen Namen, Browser-Locale und Hilfedokument. Das Frontend leitet die verfügbare Sprachliste aus diesen Dateien ab; Ersteinrichtung, Setup-Auswahl, Header-Umschalter und Hilfedokument-Auswahl sind damit nicht mehr fest auf Deutsch und Englisch verdrahtet. Ein neuer Build-Schritt `npm run check-i18n` prüft, dass alle Locales dieselben Übersetzungsschlüssel wie die englische Basis enthalten. Die Backend-Sprachvalidierung akzeptiert nun zukünftige Locale-artige Sprachcodes, während das Frontend bei nicht verfügbaren Sprachen sicher zurückfällt.
+
+### v0.9.18 Interaktive Deploy-Abfragen korrigiert
+
+v0.9.18 korrigiert die interaktiven Rückfragen in `deploy.sh` und `deploy-images.sh`. Sprachwahl, Installationsprofil und Docker-Image-Tag werden jetzt direkt auf dem Terminal ausgegeben, statt durch Command Substitution verschluckt zu werden. Interaktive Installationen wirken dadurch nicht mehr so, als würden sie auf eine unsichtbare Eingabe warten. Zusätzlich wurde der Standard-Release-Image-Tag der Deploy-Skripte auf `v0.9.18` aktualisiert.
 

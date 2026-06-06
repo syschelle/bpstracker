@@ -9,7 +9,7 @@ source "$SCRIPT_DIR/scripts/env-setup.sh"
 
 PROFILE="${BPSTRACKER_INSTALL_PROFILE:-}"
 IMAGE_TAG=""
-DEFAULT_IMAGE_TAG="v0.9.17"
+DEFAULT_IMAGE_TAG="v0.9.18"
 LANGUAGE_OPTION=""
 
 while [ $# -gt 0 ]; do
@@ -28,7 +28,7 @@ while [ $# -gt 0 ]; do
       ;;
     --tag)
       if [ $# -lt 2 ]; then
-        echo "ERROR: --tag requires a value, for example --tag v0.9.17 or --tag latest." >&2
+        echo "ERROR: --tag requires a value, for example --tag v0.9.18 or --tag latest." >&2
         exit 1
       fi
       IMAGE_TAG="$2"
@@ -71,19 +71,19 @@ fi
 
 if [ -z "$IMAGE_TAG" ]; then
   if [ -t 0 ]; then
-    echo ""
+    bpstracker_prompt_line ""
     if bpstracker_is_english; then
-      echo "Which Docker image tag do you want to use?"
-      echo "  1) $DEFAULT_IMAGE_TAG (recommended for reproducible releases)"
-      echo "  2) latest (always the newest published image)"
-      printf 'Selection [1/2, default: 1]: '
+      bpstracker_prompt_line "Which Docker image tag do you want to use?"
+      bpstracker_prompt_line "  1) $DEFAULT_IMAGE_TAG (recommended for reproducible releases)"
+      bpstracker_prompt_line "  2) latest (always the newest published image)"
+      bpstracker_prompt_text 'Selection [1/2, default: 1]: '
     else
-      echo "Welchen Docker-Image-Tag möchtest du verwenden?"
-      echo "  1) $DEFAULT_IMAGE_TAG (empfohlen für reproduzierbare Releases)"
-      echo "  2) latest (immer das aktuellste veröffentlichte Image)"
-      printf 'Auswahl [1/2, Standard: 1]: '
+      bpstracker_prompt_line "Welchen Docker-Image-Tag möchtest du verwenden?"
+      bpstracker_prompt_line "  1) $DEFAULT_IMAGE_TAG (empfohlen für reproduzierbare Releases)"
+      bpstracker_prompt_line "  2) latest (immer das aktuellste veröffentlichte Image)"
+      bpstracker_prompt_text 'Auswahl [1/2, Standard: 1]: '
     fi
-    read -r tag_choice || tag_choice=""
+    bpstracker_prompt_read tag_choice
     case "$tag_choice" in
       2|l|L|latest|Latest) IMAGE_TAG="latest" ;;
       *) IMAGE_TAG="$DEFAULT_IMAGE_TAG" ;;
