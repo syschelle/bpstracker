@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import base64
 import hashlib
-import hmac
 import re
 import secrets
 from datetime import datetime, timedelta, timezone
@@ -59,17 +58,10 @@ def verify_password(password: str, hashed: str) -> bool:
         except (VerifyMismatchError, VerificationError, InvalidHashError):
             return False
 
-    # DEPRECATED COMPATIBILITY: very early local test builds and the Growtent reference used
-    # plain SHA-256 hex hashes. Keep this only for the v0.7 migration window so users are not
-    # locked out; successful logins are re-hashed as Argon2id by the auth router.
-    # TODO(security): remove SHA-256 verification after the announced deprecation window.
-    normalized_hash = hashed.strip()
-    if re.fullmatch(r'[A-Fa-f0-9]{64}', normalized_hash):
-        digest = hashlib.sha256(password.encode('utf-8')).hexdigest()
-        return safe_compare(digest.lower(), normalized_hash.lower())
-
     # Legacy BPSTracker builds used passlib/bcrypt. Keep this path only for
-    # migration compatibility.
+    # migration compatibility. Plain SHA-256 password hashes from early test builds
+    # are no longer accepted; use the reset scripts for those accounts.
+    normalized_hash = hashed.strip()
     try:
         return legacy_pwd_context.verify(password, normalized_hash)
     except Exception:
@@ -292,6 +284,3 @@ def consume_recovery_code(db: Session, user: User, code: str) -> bool:
 def delete_recovery_codes(db: Session, user: User) -> None:
     db.query(RecoveryCode).filter(RecoveryCode.user_id == user.id).delete()
 
-
-def safe_compare(left: str, right: str) -> bool:
-    return hmac.compare_digest(left.encode('utf-8'), right.encode('utf-8'))

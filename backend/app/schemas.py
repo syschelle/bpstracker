@@ -25,6 +25,8 @@ class InstallAdminRequest(BaseModel):
     username: str = Field(min_length=1, max_length=80, pattern=r'^[A-Za-z0-9_.-]+$')
     password: str = Field(min_length=8, max_length=256)
     confirm_password: str = Field(min_length=8, max_length=256)
+    secret_key: str = Field(min_length=1, max_length=512)
+    language: str = Field(default='de', pattern=r'^(de|en)$')
 
 
 class InstallCompleteResponse(BaseModel):

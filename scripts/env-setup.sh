@@ -152,7 +152,7 @@ EOF_ENV
 bpstracker_prepare_env() {
   local env_file="$1"
   local profile="$2"
-  local image_tag="${3:-v0.9.9}"
+  local image_tag="${3:-v0.9.11}"
   local generated_secret=""
   local generated_pg=""
   local created="false"

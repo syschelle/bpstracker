@@ -928,3 +928,13 @@ v0.9.8 ersetzt das bisherige teilweise Zero-2-W-Override durch eine vollständig
 
 v0.9.9 erzeugt `.env` in den Installationsskripten aus sicheren Zufallswerten, statt `.env.example` für den Produktivbetrieb zu kopieren. Der Installer fragt jetzt nach dem gewünschten Profil: regulär oder Raspberry Pi Zero 2 W / Low-Resource. Bestehende `.env`-Dateien werden geprüft, fehlende oder unsichere Platzhalter-Secrets ersetzt, `POSTGRES_PASSWORD` und `DATABASE_URL` konsistent gehalten, und ein neu erzeugter `SECRET_KEY` wird am Ende der Installation einmal in der Konsole ausgegeben, damit Betreiber ihn sicher ablegen können.
 
+### v0.9.10 Installationsnachweis und Image-Tag-Auswahl
+
+v0.9.10 härtet die Ersteinrichtung: Im Web-Installationsformular muss der `SECRET_KEY` aus `.env` eingegeben werden, bevor der erste Admin-Benutzer angelegt werden kann. Der Key dient nur als Eigentümer-Nachweis, wird nicht aus dem Browser in `.env` geschrieben und nicht im Browser gespeichert. Außerdem kann die Sprache bereits in der Ersteinrichtung gewählt werden; diese Auswahl wird direkt als serverseitige UI-Sprache gespeichert und anschließend für Setup, Hilfe und Kindle-Formatierung verwendet.
+
+`deploy-images.sh` fragt nun interaktiv, ob der feste Release-Tag oder `latest` verwendet werden soll. Zusätzlich unterstützt das Skript `--latest`, `--tag TAG`, `--regular` und `--zero2w` für unbeaufsichtigte Installationen.
+
+### v0.9.11 CodeQL-Security-Hardening
+
+v0.9.11 behebt die sechs GitHub-CodeQL-Security-Findings aus der v0.9.x-Linie. Backup-Download und -Löschung arbeiten jetzt nur noch mit strikt erlaubten, vom System erzeugten Backup-Dateinamen und weisen Traversal-Pfade, Symlinks und nicht reguläre Dateien vor jeder Dateioperation ab. Der veraltete Kompatibilitätspfad für Klartext-SHA-256-Passworthashes wurde entfernt; sehr alte Testkonten mit solchen Hashes müssen über die Admin-Reset-Skripte zurückgesetzt werden. Die Kindle-Display-Metadaten geben keine rohen Exception-Meldungen mehr über API-Antworten aus; Detailfehler bleiben nur noch in den Server-Logs.
+

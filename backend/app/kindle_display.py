@@ -120,6 +120,7 @@ class KindleDisplayService:
         self._stop_event = asyncio.Event()
         self.last_generated_at: datetime | None = None
         self.last_error: str | None = None
+        self.last_error_detail: str | None = None
         self.last_minute_key: str | None = None
 
     def start(self) -> None:
@@ -157,13 +158,16 @@ class KindleDisplayService:
     async def generate_once(self, *, force: bool = False) -> None:
         if not force and not is_kindle_display_enabled():
             self.last_error = None
+            self.last_error_detail = None
             return
         try:
             await asyncio.to_thread(self._generate_sync)
             self.last_generated_at = datetime.now(timezone.utc)
             self.last_error = None
+            self.last_error_detail = None
         except Exception as exc:  # keep the previous PNG intact
-            self.last_error = str(exc)
+            self.last_error = 'Kindle display generation failed'
+            self.last_error_detail = str(exc)
             logger.exception('Failed to generate Kindle display PNG')
 
     def _generate_sync(self) -> None:

@@ -24,7 +24,11 @@ const translations = {
     appSubtitle: 'Balkon-Photovoltaik-System Monitoring',
     loginTitle: 'Einloggen',
     installTitle: 'Ersteinrichtung',
-    installHint: 'Diese Installation hat noch keinen Admin-Zugang. Lege jetzt den ersten Admin-Benutzer an. Es werden keine Benutzer oder Passwörter aus der .env übernommen.',
+    installHint: 'Diese Installation hat noch keinen Admin-Zugang. Lege jetzt den ersten Admin-Benutzer an. Gib den SECRET_KEY aus der .env als Eigentümer-Nachweis ein. Der SECRET_KEY wird nicht im Browser gespeichert und nicht aus dem Formular in die .env geschrieben.',
+    installLanguage: 'Sprache der Ersteinrichtung',
+    installSecretKey: 'SECRET_KEY aus .env',
+    installSecretKeyHint: 'Diesen Wert zeigt das Installscript am Ende an. Er beweist, dass du Zugriff auf die Server-Konfiguration hast.',
+    installSecretKeyRequired: 'Bitte gib den SECRET_KEY aus der .env ein.',
     username: 'Benutzername',
     password: 'Passwort',
     confirmPassword: 'Passwort wiederholen',
@@ -357,7 +361,11 @@ const translations = {
     appSubtitle: 'Balcony Photovoltaic System Monitoring',
     loginTitle: 'Sign in',
     installTitle: 'Initial setup',
-    installHint: 'This installation does not have an admin account yet. Create the first admin user now. No users or passwords are imported from the .env file.',
+    installHint: 'This installation does not have an admin account yet. Create the first admin user now. Enter the SECRET_KEY from the .env file as the owner proof. The SECRET_KEY is not stored in the browser and is not written from the form into .env.',
+    installLanguage: 'Initial setup language',
+    installSecretKey: 'SECRET_KEY from .env',
+    installSecretKeyHint: 'The install script prints this value at the end. It proves that you have access to the server configuration.',
+    installSecretKeyRequired: 'Please enter the SECRET_KEY from the .env file.',
     username: 'Username',
     password: 'Password',
     confirmPassword: 'Repeat password',
@@ -998,6 +1006,7 @@ export default function App() {
   const [installUsername, setInstallUsername] = useState('');
   const [installPassword, setInstallPassword] = useState('');
   const [installPasswordConfirm, setInstallPasswordConfirm] = useState('');
+  const [installSecretKey, setInstallSecretKey] = useState('');
   const [challenge, setChallenge] = useState<string | null>(null);
   const [twoFaCode, setTwoFaCode] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -1094,14 +1103,19 @@ export default function App() {
       setError(t('installPasswordMismatch'));
       return;
     }
+    if (!installSecretKey.trim()) {
+      setError(t('installSecretKeyRequired'));
+      return;
+    }
     setLoading(true);
     try {
-      await api.installAdmin(installUsername, installPassword, installPasswordConfirm);
+      await api.installAdmin(installUsername, installPassword, installPasswordConfirm, installSecretKey.trim(), language);
       setInstallRequired(false);
       setLoginUsername(installUsername);
       setLoginPassword('');
       setInstallPassword('');
       setInstallPasswordConfirm('');
+      setInstallSecretKey('');
       setInfo(t('installCompleteLoginNow'));
     } catch (err) {
       setError(err instanceof Error ? err.message : t('installFailed'));
@@ -1184,6 +1198,14 @@ export default function App() {
                 <h1>{t('installTitle')}</h1>
                 {error && <div className="error">{error}</div>}
                 <p className="hint">{t('installHint')}</p>
+                <label>{t('installLanguage')}
+                  <select value={language} onChange={e => setLanguage(e.target.value as Language)}>
+                    <option value="de">{t('german')}</option>
+                    <option value="en">{t('english')}</option>
+                  </select>
+                </label>
+                <label>{t('installSecretKey')}<input type="password" value={installSecretKey} onChange={e => setInstallSecretKey(e.target.value)} /></label>
+                <p className="hint">{t('installSecretKeyHint')}</p>
                 <label>{t('username')}<input autoFocus value={installUsername} onChange={e => setInstallUsername(e.target.value)} /></label>
                 <label>{t('password')}<input type="password" value={installPassword} onChange={e => setInstallPassword(e.target.value)} /></label>
                 <label>{t('confirmPassword')}<input type="password" value={installPasswordConfirm} onChange={e => setInstallPasswordConfirm(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') void handleInstall(); }} /></label>

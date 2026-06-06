@@ -17,3 +17,24 @@ def test_kindle_meta_includes_output_mtime(tmp_path) -> None:
     assert meta['path'] == str(output)
     assert meta['size_bytes'] == len(b'not-a-real-png')
     assert meta['updated_at'] is not None
+
+
+import pytest
+
+
+@pytest.mark.asyncio
+async def test_kindle_meta_does_not_expose_exception_details(tmp_path, monkeypatch) -> None:
+    output = tmp_path / 'kindle-display.png'
+    service = KindleDisplayService(output)
+
+    def fail_generation() -> None:
+        raise RuntimeError('secret internal filesystem detail /tmp/private')
+
+    monkeypatch.setattr(service, '_generate_sync', fail_generation)
+
+    await service.generate_once(force=True)
+    meta = service.meta()
+
+    assert meta['last_error'] == 'Kindle display generation failed'
+    assert 'secret internal filesystem detail' not in str(meta)
+    assert 'last_error_detail' not in meta

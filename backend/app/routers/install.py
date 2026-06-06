@@ -1,13 +1,19 @@
 from __future__ import annotations
 
+import hmac
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from ..config import get_settings
 from ..database import get_db
-from ..models import AuditLog, User, UserRole
+from ..models import AppSetting, AuditLog, User, UserRole
 from ..schemas import InstallAdminRequest, InstallCompleteResponse, InstallStatusResponse
 from ..security import delete_recovery_codes, password_hash
+
+UI_SETTINGS_KEY = 'ui'
+DEFAULT_TIMEZONE = 'Europe/Berlin'
 
 router = APIRouter(prefix='/api/install', tags=['install'])
 
@@ -37,6 +43,11 @@ def create_initial_admin(payload: InstallAdminRequest, db: Session = Depends(get
     if not install_required(db):
         # Behave as a disabled setup endpoint once an admin account exists.
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Install endpoint is disabled')
+
+    expected_secret_key = get_settings().secret_key
+    provided_secret_key = payload.secret_key.strip()
+    if not expected_secret_key or not hmac.compare_digest(provided_secret_key, expected_secret_key):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Invalid install secret key')
 
     username = payload.username.strip()
     password = payload.password
@@ -77,6 +88,16 @@ def create_initial_admin(payload: InstallAdminRequest, db: Session = Depends(get
             delete_recovery_codes(db, duplicate)
             db.add(duplicate)
 
-    db.add(AuditLog(actor_user_id=None, action='install.admin.created', details={'username': username}))
+    ui_row = db.get(AppSetting, UI_SETTINGS_KEY)
+    ui_value = dict(ui_row.value) if ui_row and isinstance(ui_row.value, dict) else {}
+    ui_value['language'] = payload.language
+    ui_value.setdefault('timezone', DEFAULT_TIMEZONE)
+    if ui_row is None:
+        ui_row = AppSetting(key=UI_SETTINGS_KEY, value=ui_value)
+    else:
+        ui_row.value = ui_value
+    db.add(ui_row)
+
+    db.add(AuditLog(actor_user_id=None, action='install.admin.created', details={'username': username, 'language': payload.language}))
     db.commit()
     return InstallCompleteResponse(ok=True)

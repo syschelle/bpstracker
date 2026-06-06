@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
+import stat as stat_module
 import subprocess
 import tarfile
 import tempfile
@@ -27,6 +29,7 @@ router = APIRouter(prefix='/api/backups', tags=['backups'])
 BACKUP_DIR = Path('/app/data/backups')
 BACKUP_MAGIC = b'BPSTrackerBackupV1\n'
 PBKDF2_ITERATIONS = 390_000
+BACKUP_FILENAME_RE = re.compile(r'^bpstracker-backup-\d{8}-\d{6}\.tar\.gz\.bpsenc$')
 
 
 def _backup_dir() -> Path:
@@ -34,15 +37,37 @@ def _backup_dir() -> Path:
     return BACKUP_DIR
 
 
+def _is_safe_backup_file(path: Path) -> bool:
+    if not BACKUP_FILENAME_RE.fullmatch(path.name):
+        return False
+    try:
+        file_stat = path.lstat()
+    except FileNotFoundError:
+        return False
+    return stat_module.S_ISREG(file_stat.st_mode)
+
+
 def _safe_backup_path(filename: str) -> Path:
-    if not filename.endswith('.tar.gz.bpsenc'):
+    if not BACKUP_FILENAME_RE.fullmatch(filename):
         raise HTTPException(status_code=400, detail='Invalid backup filename')
-    if '/' in filename or '\\' in filename or filename.startswith('.'):
-        raise HTTPException(status_code=400, detail='Invalid backup filename')
-    path = _backup_dir() / filename
-    if not path.exists() or not path.is_file():
-        raise HTTPException(status_code=404, detail='Backup not found')
-    return path
+
+    backup_dir = _backup_dir().resolve()
+    try:
+        candidates = list(backup_dir.iterdir())
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail='Backup not found') from None
+
+    for candidate in candidates:
+        if candidate.name != filename:
+            continue
+        resolved = candidate.resolve(strict=False)
+        if resolved.parent != backup_dir:
+            raise HTTPException(status_code=400, detail='Invalid backup filename')
+        if not _is_safe_backup_file(candidate):
+            raise HTTPException(status_code=404, detail='Backup not found')
+        return candidate
+
+    raise HTTPException(status_code=404, detail='Backup not found')
 
 
 def _database_url() -> str:
@@ -128,7 +153,8 @@ def _create_database_dump(output_file: Path) -> None:
 @router.get('/', include_in_schema=False)
 def list_backups(_: User = Depends(require_admin)) -> list[BackupInfo]:
     backups: list[BackupInfo] = []
-    for path in sorted(_backup_dir().glob('*.tar.gz.bpsenc'), key=lambda item: item.stat().st_mtime, reverse=True):
+    safe_paths = [path for path in _backup_dir().iterdir() if _is_safe_backup_file(path)]
+    for path in sorted(safe_paths, key=lambda item: item.stat().st_mtime, reverse=True):
         stat = path.stat()
         backups.append(BackupInfo(
             filename=path.name,
@@ -198,8 +224,8 @@ def download_backup(filename: str, _: User = Depends(require_admin)) -> FileResp
     return FileResponse(
         path,
         media_type='application/octet-stream',
-        filename=filename,
-        headers={'Content-Disposition': f'attachment; filename="{filename}"'},
+        filename=path.name,
+        headers={'Content-Disposition': f'attachment; filename="{path.name}"'},
     )
 
 

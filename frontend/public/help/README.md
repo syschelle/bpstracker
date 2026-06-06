@@ -1653,3 +1653,13 @@ v0.9.8 replaces the previous partial Zero 2 W override with a complete standalon
 
 v0.9.9 changes the install scripts so production `.env` files are generated from secure random values instead of being copied from `.env.example`. The installer now asks for the desired profile, either regular or Raspberry Pi Zero 2 W / low-resource mode. It validates existing `.env` files, replaces missing or unsafe placeholder secrets, keeps `POSTGRES_PASSWORD` and `DATABASE_URL` consistent, and prints a newly generated `SECRET_KEY` once at the end of the install output so operators can store it safely.
 
+### v0.9.10 install ownership proof and image tag selection
+
+v0.9.10 hardens first-run setup by requiring the `SECRET_KEY` from `.env` in the web install form before the initial admin user can be created. The key is used only as an ownership proof, is not written from the browser to `.env`, and is not stored in the browser. The install form also lets operators choose the UI language before creating the first admin; the selected language is saved immediately as the server-side UI language and is then used by setup, help and Kindle-related formatting.
+
+`deploy-images.sh` now asks interactively whether the fixed release tag or `latest` should be used, and it also supports `--latest`, `--tag TAG`, `--regular` and `--zero2w` for unattended installs.
+
+### v0.9.11 CodeQL security hardening
+
+v0.9.11 addresses the six GitHub CodeQL security findings reported against the v0.9.x line. Backup download and delete now resolve files through a strict allowlist of generated backup filenames and reject traversal, symlinks and non-regular files before any file operation. The deprecated plain SHA-256 password compatibility verifier has been removed; old accounts that still use early test-build SHA-256 hashes must be reset with the admin reset scripts. Kindle display generation metadata no longer exposes raw exception messages to API responses; detailed errors remain in server logs only.
+

@@ -68,7 +68,7 @@ sudo chown -R "${BACKEND_UID}:${BACKEND_GID}" "$APP_DIR/data/backend"
 # Re-source the copied helper from the target directory so future deploys use the installed version.
 # shellcheck source=scripts/env-setup.sh
 source "$APP_DIR/scripts/env-setup.sh"
-bpstracker_prepare_env "$APP_DIR/.env" "$PROFILE" "v0.9.9"
+bpstracker_prepare_env "$APP_DIR/.env" "$PROFILE" "v0.9.11"
 
 cd "$APP_DIR"
 COMPOSE_FILE="$(bpstracker_compose_file_for_profile "$PROFILE" local)"

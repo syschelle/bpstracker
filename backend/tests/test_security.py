@@ -23,3 +23,9 @@ def test_secret_encryption_roundtrip() -> None:
 
 def test_recovery_code_normalization() -> None:
     assert normalize_recovery_code('abcd-ef12 gh34') == 'ABCDEF12GH34'
+
+
+def test_plain_sha256_password_hashes_are_rejected() -> None:
+    legacy_sha256_hash = 'a' * 64
+
+    assert not verify_password('SehrSicher123!', legacy_sha256_hash)
