@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.database import Base
-from app.models import Device, DeviceType
+from app.models import Device, DeviceType, Measurement
 from app.poller import poll_and_store_device
 from app.shelly import NormalizedMeasurement, ShellyPollResult
 
@@ -60,3 +60,44 @@ async def test_successful_auto_poll_persists_detected_device_type(db_session) ->
     assert device.device_type == DeviceType.shelly_pro_3em_gen2
     assert device.status.online is True
     assert device.status.raw_info['detected_type'] == 'shelly_pro_3em_gen2'
+
+
+class PrecisePowerShellyClient:
+    async def poll(self, _config):
+        now = datetime.now(timezone.utc)
+        return ShellyPollResult(
+            detected_type='shelly_pro_3em_gen2',
+            generation='2',
+            model='Shelly Pro 3EM',
+            firmware='test-fw',
+            raw={},
+            measurements=[
+                NormalizedMeasurement(
+                    timestamp=now,
+                    source_type='shelly_rpc_em_total',
+                    channel=0,
+                    phase='total',
+                    power_w=123.4567,
+                    total_power_w=987.6543,
+                )
+            ],
+        )
+
+
+@pytest.mark.asyncio
+async def test_polling_rounds_stored_power_values_to_two_decimals(db_session) -> None:
+    device = Device(
+        name='Hausanschluss',
+        host='192.168.178.51',
+        device_type=DeviceType.shelly_pro_3em_gen2,
+        is_active=True,
+    )
+    db_session.add(device)
+    db_session.commit()
+    db_session.refresh(device)
+
+    await poll_and_store_device(db_session, device, PrecisePowerShellyClient())
+
+    row = db_session.query(Measurement).filter(Measurement.device_id == device.id).one()
+    assert row.power_w == 123.46
+    assert row.total_power_w == 987.65

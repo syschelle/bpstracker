@@ -759,10 +759,10 @@ Oder:
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.18` oder `latest`). Für unbeaufsichtigte Image-Deployments:
+`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.19` oder `latest`). Für unbeaufsichtigte Image-Deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.18 --language de
+bash ./deploy-images.sh --regular --tag v0.9.19 --language de
 bash ./deploy-images.sh --zero2w --latest --language en
 ```
 
@@ -986,3 +986,7 @@ v0.9.17 lagert die React-UI-Übersetzungen aus `App.tsx` in einzelne Locale-Date
 
 v0.9.18 korrigiert die interaktiven Rückfragen in `deploy.sh` und `deploy-images.sh`. Sprachwahl, Installationsprofil und Docker-Image-Tag werden jetzt direkt auf dem Terminal ausgegeben, statt durch Command Substitution verschluckt zu werden. Interaktive Installationen wirken dadurch nicht mehr so, als würden sie auf eine unsichtbare Eingabe warten. Zusätzlich wurde der Standard-Release-Image-Tag der Deploy-Skripte auf `v0.9.18` aktualisiert.
 
+
+### v0.9.19 Historie-Wattwerte mit fester Genauigkeit
+
+v0.9.19 stellt Leistungswerte in der Historie übersichtlicher dar: Wattwerte werden in Achse und Tooltip mit einer Nachkommastelle und der Einheit `W` angezeigt. Die Diagrammdaten werden vor dem Rendern konsistent gerundet. Neue Shelly-Messwerte, die der Poller speichert, normalisieren `power_w` und `total_power_w` vor dem Schreiben in die Datenbank auf zwei Nachkommastellen. Dadurch werden unnötige Fließkomma-Artefakte reduziert, ohne die Genauigkeit für Dashboard- und Historienberechnungen relevant einzuschränken.

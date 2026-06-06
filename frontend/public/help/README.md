@@ -1404,10 +1404,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.18` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.19` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.18 --language en
+bash ./deploy-images.sh --regular --tag v0.9.19 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1708,3 +1708,7 @@ v0.9.17 moves the React UI translations out of `App.tsx` into per-language local
 
 v0.9.18 fixes the interactive prompts in `deploy.sh` and `deploy-images.sh`. Language, installation profile and Docker image tag questions are now written to the terminal directly instead of being captured by command substitution, so interactive installs no longer appear to hang while waiting for hidden input. The default release image tag used by the deploy scripts was also updated to `v0.9.18`.
 
+
+### v0.9.19 History watt precision
+
+v0.9.19 makes History power values easier to read by formatting watt values with one decimal place and an explicit `W` unit on the chart axis and tooltip. The chart data is rounded consistently before rendering. New Shelly measurements stored by the poller now normalize `power_w` and `total_power_w` to two decimal places before writing to the database, reducing unnecessary floating-point noise while preserving sufficient precision for dashboard and history calculations.

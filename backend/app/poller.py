@@ -108,13 +108,13 @@ async def poll_and_store_device(db: Session, device: Device, client: ShellyClien
                     source_type=measurement.source_type,
                     channel=measurement.channel,
                     phase=measurement.phase,
-                    power_w=measurement.power_w,
+                    power_w=_round_power_w(measurement.power_w),
                     voltage_v=measurement.voltage_v,
                     current_a=measurement.current_a,
                     power_factor=measurement.power_factor,
                     energy_import_wh=measurement.energy_import_wh,
                     energy_export_wh=measurement.energy_export_wh,
-                    total_power_w=measurement.total_power_w,
+                    total_power_w=_round_power_w(measurement.total_power_w),
                     raw_json=measurement.raw_json,
                 )
             )
@@ -133,6 +133,12 @@ async def poll_and_store_device(db: Session, device: Device, client: ShellyClien
         status.last_error_at = utcnow()
         status.last_error = str(exc)
         db.commit()
+
+
+def _round_power_w(value: float | None) -> float | None:
+    if value is None:
+        return None
+    return round(float(value), 2)
 
 
 def get_or_create_status(db: Session, device_id: int) -> DeviceStatus:

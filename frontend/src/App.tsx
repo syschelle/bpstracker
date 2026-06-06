@@ -126,6 +126,16 @@ function fmtW(value?: number | null, language: Language = 'de'): string {
   return `${value.toLocaleString(localeFor(language), { maximumFractionDigits: 0 })} W`;
 }
 
+function fmtHistoryW(value?: number | null, language: Language = 'de'): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) return translate(language, 'none');
+  return `${value.toLocaleString(localeFor(language), { minimumFractionDigits: 1, maximumFractionDigits: 1 })} W`;
+}
+
+function roundHistoryW(value?: number | null): number | null {
+  if (value === null || value === undefined || !Number.isFinite(value)) return null;
+  return Math.round(value * 10) / 10;
+}
+
 function fmtKwh(value?: number | null, language: Language = 'de'): string {
   if (value === null || value === undefined) return translate(language, 'none');
   return `${value.toLocaleString(localeFor(language), { maximumFractionDigits: 2 })} kWh`;
@@ -1541,14 +1551,20 @@ function HistoryView() {
     const fallbackPower = row.power_w ?? row.total_power_w ?? null;
     return {
       time: new Date(row.timestamp).toLocaleString(localeFor(language), { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }),
-      solar: solarPower === null || solarPower === undefined ? null : Math.abs(solarPower),
-      gridImport: gridPower === null || gridPower === undefined ? null : Math.max(0, gridPower),
-      gridExport: gridPower === null || gridPower === undefined ? null : Math.abs(Math.min(0, gridPower)),
-      power: fallbackPower,
+      solar: solarPower === null || solarPower === undefined ? null : roundHistoryW(Math.abs(solarPower)),
+      gridImport: gridPower === null || gridPower === undefined ? null : roundHistoryW(Math.max(0, gridPower)),
+      gridExport: gridPower === null || gridPower === undefined ? null : roundHistoryW(Math.abs(Math.min(0, gridPower))),
+      power: roundHistoryW(fallbackPower),
       source: row.source_type,
       device: row.device_id
     };
   }), [history, language]);
+
+  const historyValueFormatter = useCallback((value: unknown) => {
+    if (typeof value === 'number') return fmtHistoryW(value, language);
+    if (typeof value === 'string' && value.trim() !== '' && Number.isFinite(Number(value))) return fmtHistoryW(Number(value), language);
+    return String(value ?? '');
+  }, [language]);
 
   return (
     <section className="panel tall">
@@ -1566,8 +1582,8 @@ function HistoryView() {
         <AreaChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="time" minTickGap={32} />
-          <YAxis />
-          <Tooltip />
+          <YAxis width={86} tickFormatter={(value: number) => fmtHistoryW(value, language)} />
+          <Tooltip formatter={historyValueFormatter} />
           <Legend />
           <Area
             type="monotone"
