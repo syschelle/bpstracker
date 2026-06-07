@@ -43,9 +43,10 @@ def test_simulated_shelly_3em_respects_configured_channel() -> None:
         (1, 'L2', 'shelly_3em_gen1_emeter'),
     ]
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
-from app.simulation import simulated_history, simulated_values_at, solar_power_at
+from app.simulation import consumption_power_at, simulated_history, simulated_values_at, solar_power_at
 
 
 def test_simulated_pv_peak_caps_current_power() -> None:
@@ -98,3 +99,29 @@ def test_simulated_consumption_respects_night_baseload() -> None:
     assert low.consumption_w >= 40
     assert high.consumption_w >= 320
     assert high.consumption_w > low.consumption_w
+
+def _local_minute(day: datetime, minute_of_day: int) -> datetime:
+    return day.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(minutes=minute_of_day)
+
+
+def test_simulated_consumption_includes_short_coffee_machine_peak() -> None:
+    local_day = datetime(2026, 6, 21, tzinfo=ZoneInfo('Europe/Berlin'))
+    seed = int(local_day.strftime('%Y%m%d'))
+    coffee_start = 7 * 60 + ((seed % 20) - 5)
+
+    before = consumption_power_at(_local_minute(local_day, coffee_start - 6), 155, 90)
+    during = consumption_power_at(_local_minute(local_day, coffee_start + 1), 155, 90)
+
+    assert during > before + 1000
+
+
+def test_simulated_consumption_includes_evening_stove_session_peak() -> None:
+    local_day = datetime(2026, 6, 21, tzinfo=ZoneInfo('Europe/Berlin'))
+    seed = int(local_day.strftime('%Y%m%d'))
+    stove_start = 18 * 60 + 10 + (seed % 65)
+
+    before = consumption_power_at(_local_minute(local_day, stove_start - 8), 155, 90)
+    during = consumption_power_at(_local_minute(local_day, stove_start + 2), 155, 90)
+
+    assert during > before + 1200
+

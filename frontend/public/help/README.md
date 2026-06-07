@@ -640,7 +640,7 @@ Setup -> Simulation
 
 When enabled, the dashboard, history chart and JSON API return simulated values instead of real device measurements.
 
-The simulation settings include a configurable maximum solar output in watts. This value caps the generated PV curve so the simulated output matches what the real installation could actually deliver. You can also configure separate day and night baseload values in watts. These baseload values define the continuous household consumption floor, while simulated peaks such as washing machine, kettle, cooking or coffee maker events are still added on top.
+The simulation settings include a configurable maximum solar output in watts. This value caps the generated PV curve so the simulated output matches what the real installation could actually deliver. You can also configure separate day and night baseload values in watts. These baseload values define the continuous household consumption floor, while simulated fridge cycles and appliance peaks such as coffee machine, stove/cooking and washing-machine events are still added on top.
 
 The simulation is based on:
 
@@ -649,7 +649,7 @@ The simulation is based on:
 - configurable day and night baseload values
 - realistic daily load curves
 - morning and evening consumption peaks
-- appliance spikes on top of the configured baseload
+- fridge cycles and appliance spikes on top of the configured baseload
 - cloud and daylight fluctuations
 - seasonal solar variation
 
@@ -1404,10 +1404,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.21` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.22` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.21 --language en
+bash ./deploy-images.sh --regular --tag v0.9.22 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1646,7 +1646,7 @@ v0.9.2 adds a configurable maximum solar output to the simulation settings. The 
 
 ### v0.9.3 configurable simulation baseload
 
-v0.9.3 adds configurable day and night baseload values to the simulation settings. The configured watt values define the continuous household consumption floor for daytime and nighttime, while existing simulated consumption peaks such as washing machine, kettle, cooking and coffee-maker events remain active and are added on top. The baseload values are used consistently by dashboard summary values, latest measurements, history charts, history totals, Kindle display and the current-values JSON API.
+v0.9.3 adds configurable day and night baseload values to the simulation settings. The configured watt values define the continuous household consumption floor for daytime and nighttime, while existing simulated consumption peaks such as fridge cycles, coffee-machine, stove/cooking and washing-machine events remain active and are added on top. The baseload values are used consistently by dashboard summary values, latest measurements, history charts, history totals, Kindle display and the current-values JSON API.
 
 ### v0.9.4 dashboard home import layout
 
@@ -1720,4 +1720,8 @@ v0.9.20 prevents the brief login-screen flicker during app startup. The frontend
 ### v0.9.21 dark theme solar value color fix
 
 v0.9.21 fixes the dark theme color override in the Home Import dashboard card. The Solar value now stays green in dark mode, matching the light theme and the existing solar color used in charts and legends.
+
+### v0.9.22 simulation household profile tuning
+
+v0.9.22 moderately refines the household simulation profile. The configurable day and night baseload values remain unchanged, while the generated load curve now includes a more realistic refrigerator cycle, short coffee-machine cup peaks, an evening stove/cooking session and the existing washing-machine style appliance peaks. The simulated PV output remains configurable separately through the maximum solar output setting.
 

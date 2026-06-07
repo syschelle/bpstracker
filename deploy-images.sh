@@ -9,7 +9,7 @@ source "$SCRIPT_DIR/scripts/env-setup.sh"
 
 PROFILE="${BPSTRACKER_INSTALL_PROFILE:-}"
 IMAGE_TAG=""
-DEFAULT_IMAGE_TAG="v0.9.21"
+DEFAULT_IMAGE_TAG="v0.9.22"
 LANGUAGE_OPTION=""
 
 while [ $# -gt 0 ]; do
@@ -28,7 +28,7 @@ while [ $# -gt 0 ]; do
       ;;
     --tag)
       if [ $# -lt 2 ]; then
-        echo "ERROR: --tag requires a value, for example --tag v0.9.21 or --tag latest." >&2
+        echo "ERROR: --tag requires a value, for example --tag v0.9.22 or --tag latest." >&2
         exit 1
       fi
       IMAGE_TAG="$2"

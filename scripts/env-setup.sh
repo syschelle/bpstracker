@@ -259,7 +259,7 @@ EOF_ENV
 bpstracker_prepare_env() {
   local env_file="$1"
   local profile="$2"
-  local image_tag="${3:-v0.9.20}"
+  local image_tag="${3:-v0.9.22}"
   local language="${4:-${BPSTRACKER_LANGUAGE:-de}}"
   language="$(bpstracker_normalize_language "$language")"
   local generated_secret=""

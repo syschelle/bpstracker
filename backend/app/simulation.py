@@ -18,6 +18,14 @@ DEFAULT_SIMULATED_NIGHT_BASELOAD_W = 90.0
 MIN_SIMULATED_BASELOAD_W = 0.0
 MAX_SIMULATED_BASELOAD_W = 5000.0
 SIMULATED_HOUSEHOLD = '2-person household'
+SIMULATED_FRIDGE_POWER_W = 70.0
+SIMULATED_FRIDGE_CYCLE_MINUTES = 40
+SIMULATED_FRIDGE_ON_MINUTES = 20
+SIMULATED_COFFEE_CUP_POWER_W = 1500.0
+SIMULATED_COFFEE_CUP_MINUTES = 4
+SIMULATED_STOVE_POWER_W = 2600.0
+SIMULATED_STOVE_SESSION_MINUTES = 36
+
 
 
 @dataclass(frozen=True)
@@ -108,6 +116,25 @@ def solar_power_at(local_dt: datetime, pv_peak_w: float | None = None) -> float:
     return round(max(0.0, power if power >= 8 else 0.0), 1)
 
 
+def _coffee_cup_load_w(minute_of_day: int, start_minute: int) -> float:
+    if start_minute <= minute_of_day < start_minute + SIMULATED_COFFEE_CUP_MINUTES:
+        return SIMULATED_COFFEE_CUP_POWER_W
+    return 0.0
+
+
+def _stove_session_load_w(minute_of_day: int, start_minute: int) -> float:
+    if not (start_minute <= minute_of_day < start_minute + SIMULATED_STOVE_SESSION_MINUTES):
+        return 0.0
+    elapsed = minute_of_day - start_minute
+    session_phase = elapsed / max(1, SIMULATED_STOVE_SESSION_MINUTES - 1)
+    warmup_envelope = 0.72 + 0.28 * math.sin(math.pi * session_phase)
+    # Electric hobs cycle thermostatically during a cooking session. This keeps
+    # 2.6 kW peaks visible without turning the full evening into a flat plateau.
+    cycle_minute = elapsed % 10
+    thermostat_factor = 1.0 if cycle_minute < 6 else 0.25
+    return SIMULATED_STOVE_POWER_W * warmup_envelope * thermostat_factor
+
+
 def consumption_power_at(
     local_dt: datetime,
     day_baseload_w: float | None = None,
@@ -118,25 +145,42 @@ def consumption_power_at(
     seed = _day_seed(local_dt)
 
     base = _simulated_baseload_w(local_dt, day_baseload_w, night_baseload_w)
-    morning = _smooth_pulse(hour, 7.3, 0.75, 420.0)
-    lunch = _smooth_pulse(hour, 12.4, 0.55, 220.0)
-    evening = _smooth_pulse(hour, 19.0, 1.25, 560.0)
+    morning = _smooth_pulse(hour, 7.3, 0.75, 360.0)
+    lunch = _smooth_pulse(hour, 12.4, 0.55, 180.0)
+    evening = _smooth_pulse(hour, 19.0, 1.25, 360.0)
     tv = 100.0 if 19.5 <= hour <= 22.7 else 0.0
-    fridge_cycle = 55.0 if ((local_dt.hour * 60 + local_dt.minute + seed) % 47) < 14 else 0.0
 
-    # Deterministic occasional appliance events. These remain additional peaks
-    # on top of the configured day/night baseload.
-    appliance = 0.0
     minute_of_day = local_dt.hour * 60 + local_dt.minute
-    for offset, height, duration in (
-        ((seed * 7) % 720 + 420, 900.0, 18),   # dishwasher/washing machine around daytime/evening
-        ((seed * 11) % 300 + 1080, 650.0, 12), # kettle/cooking short evening spike
-    ):
-        if offset <= minute_of_day <= offset + duration:
-            phase = (minute_of_day - offset) / max(1, duration)
-            appliance += height * math.sin(math.pi * phase)
+    fridge_cycle = (
+        SIMULATED_FRIDGE_POWER_W
+        if ((minute_of_day + seed) % SIMULATED_FRIDGE_CYCLE_MINUTES) < SIMULATED_FRIDGE_ON_MINUTES
+        else 0.0
+    )
 
-    jitter = _noise(seed * 10000 + minute_of_day, 45.0)
+    # Deterministic appliance events. They remain additional peaks on top of the
+    # configured day/night baseload, but are kept moderate enough for demo use.
+    appliance = 0.0
+
+    # Washing machine / dishwasher style peak, usually daytime or early evening.
+    laundry_start = ((seed * 7) % 720) + 420
+    if laundry_start <= minute_of_day <= laundry_start + 18:
+        phase = (minute_of_day - laundry_start) / 18
+        appliance += 900.0 * math.sin(math.pi * phase)
+
+    # Coffee machine: one or two short 1.5 kW cup pulses in the morning, plus an
+    # occasional afternoon cup.
+    coffee_start = 7 * 60 + ((seed % 20) - 5)
+    appliance += _coffee_cup_load_w(minute_of_day, coffee_start)
+    if seed % 2 == 0:
+        appliance += _coffee_cup_load_w(minute_of_day, coffee_start + 9)
+    if seed % 3 == 0:
+        appliance += _coffee_cup_load_w(minute_of_day, 15 * 60 + 10 + (seed % 11))
+
+    # One evening cooking session with a 2.6 kW stove peak.
+    stove_start = 18 * 60 + 10 + (seed % 65)
+    appliance += _stove_session_load_w(minute_of_day, stove_start)
+
+    jitter = _noise(seed * 10000 + minute_of_day, 38.0)
     consumption = base + morning + lunch + evening + tv + fridge_cycle + appliance + jitter
     return round(max(base, consumption), 1)
 
@@ -184,7 +228,7 @@ def simulated_values_at(
     weighted_base = (day_base * 17.0 + night_base * 7.0) / 24.0
     baseload_scale = weighted_base / max(1.0, default_weighted_base)
     solar_total = simulated_days * (2.65 * pv_scale) + solar_wh / 1000.0
-    import_total = simulated_days * max(1.0, (5.75 * baseload_scale) - 1.1 * (pv_scale - 1.0)) + import_wh / 1000.0
+    import_total = simulated_days * max(1.0, (6.15 * baseload_scale) - 1.1 * (pv_scale - 1.0)) + import_wh / 1000.0
     export_total = simulated_days * max(0.05, 0.55 * pv_scale / max(0.25, baseload_scale)) + export_wh / 1000.0
 
     return SimulatedValues(

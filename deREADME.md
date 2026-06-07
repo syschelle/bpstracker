@@ -759,10 +759,10 @@ Oder:
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.21` oder `latest`). Für unbeaufsichtigte Image-Deployments:
+`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.22` oder `latest`). Für unbeaufsichtigte Image-Deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.21 --language de
+bash ./deploy-images.sh --regular --tag v0.9.22 --language de
 bash ./deploy-images.sh --zero2w --latest --language en
 ```
 
@@ -998,4 +998,8 @@ v0.9.20 verhindert das kurze Login-Flackern beim Start der App. Das Frontend zei
 ### v0.9.21 Solar-Wert im dunklen Theme korrigiert
 
 v0.9.21 behebt einen Dark-Theme-Farb-Override in der Dashboard-Kachel Hausbezug. Der Solar-Wert bleibt im dunklen Modus jetzt grün und entspricht damit dem hellen Theme sowie der Solar-Farbe in Diagrammen und Legenden.
+
+### v0.9.22 Simulation-Haushaltsprofil nachjustiert
+
+v0.9.22 verfeinert das Haushaltsprofil der Simulation moderat. Die konfigurierbaren Grundlastwerte für Tag und Nacht bleiben erhalten; zusätzlich enthält die simulierte Lastkurve jetzt einen realistischeren Kühlschrankzyklus, kurze Kaffeeautomaten-Spitzen, eine abendliche Herd-/Kochsession und die bestehenden Waschmaschinen-ähnlichen Verbrauchsspitzen. Die simulierte PV-Leistung bleibt weiterhin separat über den maximalen Solar-Output konfigurierbar.
 
