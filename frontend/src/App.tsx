@@ -714,10 +714,10 @@ function AirSensorHeader() {
 
   return (
     <div className={sensor.ok ? 'air-header-widget' : 'air-header-widget offline'} title={sensor.ok ? t('airSensorSettings') : (sensor.last_error || t('offline'))}>
-      <span className="air-header-item"><Thermometer size={17} /> {fmtTemperature(sensor.temperature_c, language)}</span>
-      <span className="air-header-item"><Droplets size={17} /> {fmtPercent(sensor.humidity_percent, language)}</span>
-      <span className="air-header-item"><Wind size={17} /> PM10 {fmtMicrograms(sensor.sds_p1, language)}</span>
-      <span className="air-header-item"><Wind size={17} /> PM2.5 {fmtMicrograms(sensor.sds_p2, language)}</span>
+      <span className="air-header-item"><Thermometer size={17} /><span className="air-header-label">{t('temperature')}</span><strong className="air-header-value">{fmtTemperature(sensor.temperature_c, language)}</strong></span>
+      <span className="air-header-item"><Droplets size={17} /><span className="air-header-label">{t('humidity')}</span><strong className="air-header-value">{fmtPercent(sensor.humidity_percent, language)}</strong></span>
+      <span className="air-header-item"><Wind size={17} /><span className="air-header-label">PM10</span><strong className="air-header-value">{fmtMicrograms(sensor.sds_p1, language)}</strong></span>
+      <span className="air-header-item"><Wind size={17} /><span className="air-header-label">PM2.5</span><strong className="air-header-value">{fmtMicrograms(sensor.sds_p2, language)}</strong></span>
     </div>
   );
 }
@@ -942,10 +942,10 @@ function PublicAirSensorWidget({ sensor }: { sensor: AirSensorCurrent | null }) 
     <section className={sensor.ok ? 'panel public-air-sensor' : 'panel public-air-sensor offline'} title={sensor.ok ? t('airSensorSettings') : (sensor.last_error || t('offline'))}>
       <div className="panel-head"><h2><Wind size={20} /> {t('airSensorSettings')}</h2></div>
       <div className="public-air-grid">
-        <span><Thermometer size={18} /> {fmtTemperature(sensor.temperature_c, language)}</span>
-        <span><Droplets size={18} /> {fmtPercent(sensor.humidity_percent, language)}</span>
-        <span><Wind size={18} /> PM10 {fmtMicrograms(sensor.sds_p1, language)}</span>
-        <span><Wind size={18} /> PM2.5 {fmtMicrograms(sensor.sds_p2, language)}</span>
+        <span className="public-air-row"><Thermometer size={18} /><span className="public-air-label">{t('temperature')}</span><strong className="public-air-value">{fmtTemperature(sensor.temperature_c, language)}</strong></span>
+        <span className="public-air-row"><Droplets size={18} /><span className="public-air-label">{t('humidity')}</span><strong className="public-air-value">{fmtPercent(sensor.humidity_percent, language)}</strong></span>
+        <span className="public-air-row"><Wind size={18} /><span className="public-air-label">PM10</span><strong className="public-air-value">{fmtMicrograms(sensor.sds_p1, language)}</strong></span>
+        <span className="public-air-row"><Wind size={18} /><span className="public-air-label">PM2.5</span><strong className="public-air-value">{fmtMicrograms(sensor.sds_p2, language)}</strong></span>
       </div>
     </section>
   );

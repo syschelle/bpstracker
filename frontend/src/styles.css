@@ -1467,3 +1467,63 @@ html[data-theme='dark'] .daily-balance-list .cost-balance-savings {
   color: #0d9488 !important;
 }
 
+
+/* v0.9.33 dashboard/air sensor label alignment: use the same label/value rhythm as the Aktuell/Gesamtverbrauch rows. */
+.dashboard-cards .daily-balance-list > div > span,
+.dashboard-cards .grid-power-value-row span,
+.air-header-label,
+.public-air-label {
+  color: #65708a !important;
+  font-size: 0.98rem;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+.air-header-label::after,
+.public-air-label::after {
+  content: ':';
+}
+
+.air-header-value,
+.public-air-value {
+  color: #172033;
+  font-size: 0.98rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.air-header-item,
+.public-air-row {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.32rem;
+}
+
+.air-header-item svg,
+.public-air-row svg {
+  align-self: center;
+  flex: 0 0 auto;
+}
+
+html[data-theme='dark'] .dashboard-cards .daily-balance-list > div > span,
+html[data-theme='dark'] .dashboard-cards .grid-power-value-row span,
+html[data-theme='dark'] .air-header-label,
+html[data-theme='dark'] .public-air-label {
+  color: #94a3b8 !important;
+}
+
+html[data-theme='dark'] .air-header-value,
+html[data-theme='dark'] .public-air-value {
+  color: #e5e7eb;
+}
+
+@media (max-width: 560px) {
+  .air-header-label,
+  .air-header-value,
+  .public-air-label,
+  .public-air-value {
+    font-size: 0.9rem;
+  }
+}

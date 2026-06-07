@@ -759,10 +759,10 @@ Oder:
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.32` oder `latest`). Für unbeaufsichtigte Image-Deployments:
+`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.33` oder `latest`). Für unbeaufsichtigte Image-Deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.32 --language de
+bash ./deploy-images.sh --regular --tag v0.9.33 --language de
 bash ./deploy-images.sh --zero2w --latest --language en
 ```
 
@@ -1043,3 +1043,8 @@ v0.9.31 bezieht auch die verschachtelte Überschrift der Dashboard-Kachel „Akt
 ### v0.9.32 Farben der Kostenbilanzwerte
 
 v0.9.32 gleicht die Farben in Tageskostenbilanz und Gesamtkostenbilanz an die Dashboard-Energiebilanz an. Die Kostenwerte werden jetzt im gleichen Blau wie Netzbezug angezeigt, die Einsparung im gleichen Grün wie Solar, auch im dunklen Modus.
+
+### v0.9.33 Luftsensor- und Dashboard-Beschriftungen angeglichen
+
+v0.9.33 gleicht die Beschriftungs-/Wertdarstellung des Luftdatensensors an die kompakten Dashboard-Wertzeilen an und vereinheitlicht die Farben der Wertbeschriftungen im Dashboard. Luftsensor-Header und öffentliches Luftsensor-Widget zeigen jetzt explizite Beschriftungen für Temperatur, Luftfeuchte, PM10 und PM2.5, ohne das kompakte Layout aufzugeben.
+

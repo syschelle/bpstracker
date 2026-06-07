@@ -1404,10 +1404,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.32` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.33` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.32 --language en
+bash ./deploy-images.sh --regular --tag v0.9.33 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1765,3 +1765,8 @@ v0.9.31 includes the nested `Aktuell`/`Current` dashboard card title in the unif
 ### v0.9.32 cost balance value colors
 
 v0.9.32 aligns the Daily cost balance and Total cost balance value colors with the Dashboard energy balance semantics. Consumption cost values now use the same blue as grid import, while savings values use the same green as solar values, including in dark mode.
+
+### v0.9.33 dashboard air sensor and label color alignment
+
+v0.9.33 aligns the air sensor label/value presentation with the compact dashboard value rows and synchronizes dashboard value-label colors across the current, balance and cost cards. The air sensor header and public air sensor widget now show explicit labels for temperature, humidity, PM10 and PM2.5 values while keeping the existing compact layout.
+
