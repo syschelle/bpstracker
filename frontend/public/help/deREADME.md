@@ -759,10 +759,10 @@ Oder:
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.25` oder `latest`). Für unbeaufsichtigte Image-Deployments:
+`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.26` oder `latest`). Für unbeaufsichtigte Image-Deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.25 --language de
+bash ./deploy-images.sh --regular --tag v0.9.26 --language de
 bash ./deploy-images.sh --zero2w --latest --language en
 ```
 
@@ -1014,4 +1014,8 @@ v0.9.24 verfeinert die Bilanzzeilen im Dashboard. Die Prozentanteile in Tagesbil
 ### v0.9.25 Dashboard-Bilanzwerte korrigiert
 
 v0.9.25 korrigiert die Darstellung der Bilanzwerte im Dashboard. Die kWh-Werte in Tagesbilanz und Gesamtbilanz behalten ihre normale Schriftgröße; nur die Prozentanteile werden kleiner dargestellt. Außerdem werden die Farben konsistent gesetzt: Netzbezug blau, Solar grün und Einspeisung rot, jeweils im hellen und dunklen Theme.
+
+### v0.9.26 Reihenfolge der Dashboard-Bilanzwerte
+
+v0.9.26 verfeinert die Anzeige in Tagesbilanz und Gesamtbilanz. Die Prozentanteile stehen jetzt vor den kWh-Werten und verwenden 75 % der kWh-Schrifthöhe, während die kWh-Werte ihre normale Größe und die bestehende Farbcodierung behalten.
 

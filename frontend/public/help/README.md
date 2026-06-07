@@ -1404,10 +1404,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.25` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.26` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.25 --language en
+bash ./deploy-images.sh --regular --tag v0.9.26 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1736,4 +1736,8 @@ v0.9.24 refines the dashboard balance rows. The percentage shares in the daily a
 ### v0.9.25 dashboard balance value styling
 
 v0.9.25 corrects the dashboard balance value styling. The kWh values in Daily balance and Total balance keep their normal size, only the percentage share is rendered smaller, and the value colors are applied consistently: grid import blue, solar green and grid export red in both light and dark themes.
+
+### v0.9.26 dashboard balance percentage order
+
+v0.9.26 refines the dashboard Daily balance and Total balance display. Percentage shares are shown before the kWh values and use 75% of the kWh font size, while the kWh values keep their normal size and existing color coding.
 

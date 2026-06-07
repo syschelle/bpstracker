@@ -1374,8 +1374,8 @@ function BalanceValue({ value, total, language, tone, showShare = true }: { valu
   const share = showShare ? balanceSharePercent(value, total) : null;
   return (
     <strong className={`balance-value ${tone}`}>
+      {showShare && <span className="balance-share-percent">{share === null ? translate(language, 'noPowerData') : fmtPercent(share, language)}</span>}
       <span className="balance-value-main">{fmtKwh(value ?? 0, language)}</span>
-      {showShare && <span className="balance-share-percent"> · {share === null ? translate(language, 'noPowerData') : fmtPercent(share, language)}</span>}
     </strong>
   );
 }
