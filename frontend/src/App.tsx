@@ -1432,8 +1432,8 @@ function CostBalanceMetric({ summary, mode }: { summary: Summary | null; mode: '
     <div className="metric daily-balance-metric">
       <p>{mode === 'daily' ? t('dailyCostBalance') : t('totalCostBalance')}</p>
       <div className="daily-balance-list">
-        <div><span>{t('consumptionCost')}</span><strong>{fmtCurrency(consumptionCost, language, currency)}</strong></div>
-        <div><span>{t('savings')}</span><strong>{fmtCurrency(savings, language, currency)}</strong></div>
+        <div><span>{t('consumptionCost')}</span><strong className="cost-balance-value cost-balance-consumption">{fmtCurrency(consumptionCost, language, currency)}</strong></div>
+        <div><span>{t('savings')}</span><strong className="cost-balance-value cost-balance-savings">{fmtCurrency(savings, language, currency)}</strong></div>
       </div>
       <small>{fmtCurrency(price, language, currency)} / kWh</small>
     </div>

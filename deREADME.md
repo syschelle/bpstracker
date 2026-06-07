@@ -759,10 +759,10 @@ Oder:
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.31` oder `latest`). Für unbeaufsichtigte Image-Deployments:
+`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.32` oder `latest`). Für unbeaufsichtigte Image-Deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.31 --language de
+bash ./deploy-images.sh --regular --tag v0.9.32 --language de
 bash ./deploy-images.sh --zero2w --latest --language en
 ```
 
@@ -1036,3 +1036,10 @@ v0.9.29 gleicht die Schriftgrößen der Bilanzzeilen im Dashboard an die kompakt
 
 v0.9.30 gleicht die Überschriften der Dashboard-Kacheln und des Gerätestatus-Bereichs an die kompakte Aktuell-Kachel an. Dashboard-Überschriften verwenden jetzt das BPSTracker-Grün, eine fette Schrift und eine einheitliche Größe. Die Akku-Überschrift wurde von Akku-Bewertung auf Batterieamortisation umbenannt.
 
+### v0.9.31 Aktuell-Überschrift im Dashboard korrigiert
+
+v0.9.31 bezieht auch die verschachtelte Überschrift der Dashboard-Kachel „Aktuell“ in den einheitlichen Dashboard-Überschriftenstil ein, damit sie wie die übrigen Dashboard-Überschriften fett, kompakt und im BPSTracker-Grün dargestellt wird.
+
+### v0.9.32 Farben der Kostenbilanzwerte
+
+v0.9.32 gleicht die Farben in Tageskostenbilanz und Gesamtkostenbilanz an die Dashboard-Energiebilanz an. Die Kostenwerte werden jetzt im gleichen Blau wie Netzbezug angezeigt, die Einsparung im gleichen Grün wie Solar, auch im dunklen Modus.

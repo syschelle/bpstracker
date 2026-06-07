@@ -1404,10 +1404,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.31` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.32` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.31 --language en
+bash ./deploy-images.sh --regular --tag v0.9.32 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1762,3 +1762,6 @@ v0.9.30 aligns the Dashboard card and device-section headings with the compact c
 
 v0.9.31 includes the nested `Aktuell`/`Current` dashboard card title in the unified dashboard heading style so it matches the other dashboard section headings: bold, compact and BPSTracker green.
 
+### v0.9.32 cost balance value colors
+
+v0.9.32 aligns the Daily cost balance and Total cost balance value colors with the Dashboard energy balance semantics. Consumption cost values now use the same blue as grid import, while savings values use the same green as solar values, including in dark mode.

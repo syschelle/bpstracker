@@ -1451,3 +1451,19 @@ html[data-theme='dark'] .dashboard-cards .battery-analysis > p,
 html[data-theme='dark'] .dashboard-device-measurements > .panel-head h2 {
   color: #2dd4bf !important;
 }
+
+/* v0.9.32 cost balance colors: match dashboard balance color semantics. */
+.daily-balance-list .cost-balance-value {
+  font-size: 0.98rem;
+  margin: 0;
+  white-space: nowrap;
+}
+.daily-balance-list .cost-balance-consumption,
+html[data-theme='dark'] .daily-balance-list .cost-balance-consumption {
+  color: #2563eb !important;
+}
+.daily-balance-list .cost-balance-savings,
+html[data-theme='dark'] .daily-balance-list .cost-balance-savings {
+  color: #0d9488 !important;
+}
+
