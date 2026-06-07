@@ -84,6 +84,15 @@ header p { margin: 0.2rem 0 0; color: #68728a; }
 .daily-balance-total-row { border-bottom: 1px solid #e8edf5; margin-bottom: 0.1rem; padding-bottom: 0.45rem !important; }
 .daily-balance-total-row span, .daily-balance-total-row strong { color: #172033; }
 .daily-balance-total-row strong { font-size: 1.18rem; }
+
+.balance-value { display: inline-flex; align-items: baseline; gap: 0; font-variant-numeric: tabular-nums; }
+.balance-value.grid-import,
+html[data-theme='dark'] .daily-balance-list .balance-value.grid-import { color: #2563eb !important; }
+.balance-value.solar,
+html[data-theme='dark'] .daily-balance-list .balance-value.solar { color: #0d9488 !important; }
+.balance-value.grid-export,
+html[data-theme='dark'] .daily-balance-list .balance-value.grid-export { color: #dc2626 !important; }
+.balance-share-percent { font-size: 0.5em; font-weight: 800; line-height: 1; }
 .panel h2 { margin: 0 0 1rem; }
 .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
 .panel-head h2 { margin: 0; }

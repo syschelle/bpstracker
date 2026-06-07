@@ -759,10 +759,10 @@ Oder:
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.23` oder `latest`). Für unbeaufsichtigte Image-Deployments:
+`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.24` oder `latest`). Für unbeaufsichtigte Image-Deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.23 --language de
+bash ./deploy-images.sh --regular --tag v0.9.24 --language de
 bash ./deploy-images.sh --zero2w --latest --language en
 ```
 
@@ -1006,4 +1006,8 @@ v0.9.22 verfeinert das Haushaltsprofil der Simulation moderat. Die konfigurierba
 ### v0.9.23 Dashboard-Bilanzbeschriftungen und Anteile
 
 v0.9.23 ergänzt in der Tagesbilanz und Gesamtbilanz die prozentualen Anteile für Netzbezug und Solar. Die bisherige Beschriftung Bezug heißt in diesen Bilanzkacheln jetzt Netzbezug; die bisherige Hausbezug-Kachel wird auf Aktuell verkürzt.
+
+### v0.9.24 Dashboard-Bilanzfarben verfeinert
+
+v0.9.24 verfeinert die Bilanzzeilen im Dashboard. Die Prozentanteile in Tagesbilanz und Gesamtbilanz werden mit halber Wertegröße angezeigt, Netzbezug nutzt dasselbe Blau wie Aktuell/Historie, Solarwerte bleiben grün und Einspeisung nutzt das Rot der Historie.
 

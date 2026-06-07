@@ -1404,10 +1404,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.23` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.24` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.23 --language en
+bash ./deploy-images.sh --regular --tag v0.9.24 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1728,4 +1728,8 @@ v0.9.22 moderately refines the household simulation profile. The configurable da
 ### v0.9.23 dashboard balance labels and shares
 
 v0.9.23 adds grid-import and solar percentages to the Daily Balance and Total Balance dashboard cards. The former Import label in these balance cards now reads Grid import, while the current power card is shortened from Home import to Current.
+
+### v0.9.24 dashboard balance color refinement
+
+v0.9.24 refines the dashboard balance rows. The percentage shares in the daily and total balance cards are shown at half the value font size, grid import uses the same blue as the current/history grid import display, solar values use the solar green, and export values use the history export red.
 
