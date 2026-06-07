@@ -1434,8 +1434,9 @@ html[data-theme='dark'] .daily-balance-list .balance-value.grid-export {
   font-size: 0.75em;
 }
 
-/* v0.9.30 dashboard heading styling: same compact size as Aktuell, bold and BPSTracker green. */
+/* v0.9.31 dashboard heading styling: include nested Aktuell card title, bold and BPSTracker green. */
 .dashboard-cards > .metric > p,
+.dashboard-cards .metric-grid-power .grid-power-values > p,
 .dashboard-cards .battery-analysis > p,
 .dashboard-device-measurements > .panel-head h2 {
   color: #0d9488 !important;
@@ -1445,6 +1446,7 @@ html[data-theme='dark'] .daily-balance-list .balance-value.grid-export {
 }
 
 html[data-theme='dark'] .dashboard-cards > .metric > p,
+html[data-theme='dark'] .dashboard-cards .metric-grid-power .grid-power-values > p,
 html[data-theme='dark'] .dashboard-cards .battery-analysis > p,
 html[data-theme='dark'] .dashboard-device-measurements > .panel-head h2 {
   color: #2dd4bf !important;
