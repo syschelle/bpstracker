@@ -272,7 +272,8 @@ button.secondary { background: #e5e7eb; color: #172033; }
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.grid-power-value-row.solar strong { color: #0d9488; }
+.grid-power-value-row.solar strong,
+html[data-theme='dark'] .metric-grid-power .grid-power-value-row.solar strong { color: #0d9488 !important; }
 .metric-grid-power .grid-power-current-value.zero,
 html[data-theme='dark'] .metric-grid-power .grid-power-current-value.zero,
 .metric-grid-power .home-import-value.zero,

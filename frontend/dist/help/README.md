@@ -1404,10 +1404,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.20` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.21` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.20 --language en
+bash ./deploy-images.sh --regular --tag v0.9.21 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1716,4 +1716,8 @@ v0.9.19 makes History power values easier to read by formatting watt values with
 ### v0.9.20 session loading and 7-day login cookie
 
 v0.9.20 prevents the brief login-screen flicker during app startup. The frontend now keeps a neutral loading state visible until the install/session check has finished, so users with a valid HttpOnly session cookie go directly to the dashboard without seeing the login form first. Successful logins now stay active for 7 days by default via `ACCESS_TOKEN_EXPIRE_MINUTES=10080`; the token is still stored only in an HttpOnly cookie and is not readable by JavaScript.
+
+### v0.9.21 dark theme solar value color fix
+
+v0.9.21 fixes the dark theme color override in the Home Import dashboard card. The Solar value now stays green in dark mode, matching the light theme and the existing solar color used in charts and legends.
 
