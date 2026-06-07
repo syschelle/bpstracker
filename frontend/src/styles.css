@@ -85,7 +85,7 @@ header p { margin: 0.2rem 0 0; color: #68728a; }
 .daily-balance-total-row > span, .daily-balance-total-row strong { color: #172033; }
 .daily-balance-total-row strong { font-size: 1.18rem; }
 
-.balance-value { display: inline-flex; align-items: baseline; gap: 0.22rem; font-variant-numeric: tabular-nums; }
+.balance-value { display: inline-flex; align-items: baseline; gap: 0; font-variant-numeric: tabular-nums; }
 .balance-value-main { color: inherit; font-size: inherit; font-weight: inherit; line-height: inherit; white-space: nowrap; }
 .balance-value.grid-import,
 html[data-theme='dark'] .daily-balance-list .balance-value.grid-import { color: #2563eb !important; }
@@ -94,6 +94,7 @@ html[data-theme='dark'] .daily-balance-list .balance-value.solar { color: #0d948
 .balance-value.grid-export,
 html[data-theme='dark'] .daily-balance-list .balance-value.grid-export { color: #dc2626 !important; }
 .balance-share-percent { font-size: 0.75em; font-weight: 800; line-height: 1; }
+.balance-value-separator { color: inherit; font-size: 0.75em; font-weight: 800; line-height: 1; white-space: pre; }
 .panel h2 { margin: 0 0 1rem; }
 .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
 .panel-head h2 { margin: 0; }
@@ -1397,6 +1398,13 @@ html[data-theme='dark'] .public-meter-language-button:focus-visible {
   font-size: 0.75em;
   font-weight: 800;
   line-height: 1;
+}
+.daily-balance-list .balance-value-separator {
+  color: inherit;
+  font-size: 0.75em;
+  font-weight: 800;
+  line-height: 1;
+  white-space: pre;
 }
 .daily-balance-list .balance-value.grid-import,
 html[data-theme='dark'] .daily-balance-list .balance-value.grid-import {

@@ -759,10 +759,10 @@ Oder:
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.26` oder `latest`). Für unbeaufsichtigte Image-Deployments:
+`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.27` oder `latest`). Für unbeaufsichtigte Image-Deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.26 --language de
+bash ./deploy-images.sh --regular --tag v0.9.27 --language de
 bash ./deploy-images.sh --zero2w --latest --language en
 ```
 
@@ -1019,3 +1019,7 @@ v0.9.25 korrigiert die Darstellung der Bilanzwerte im Dashboard. Die kWh-Werte i
 
 v0.9.26 verfeinert die Anzeige in Tagesbilanz und Gesamtbilanz. Die Prozentanteile stehen jetzt vor den kWh-Werten und verwenden 75 % der kWh-Schrifthöhe, während die kWh-Werte ihre normale Größe und die bestehende Farbcodierung behalten.
 
+
+### v0.9.27 Trennung von Prozent- und kWh-Werten in den Bilanzkarten
+
+v0.9.27 verfeinert die Darstellung der Bilanzkarten im Dashboard. In Tagesbilanz und Gesamtbilanz werden Prozentanteile und kWh-Werte jetzt mit dem gleichen ` · `-Trenner wie in der Aktuell-Kachel getrennt; die Prozentwerte bleiben bei 75% der kWh-Schrifthöhe.

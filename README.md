@@ -1404,10 +1404,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.26` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.27` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.26 --language en
+bash ./deploy-images.sh --regular --tag v0.9.27 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1741,3 +1741,7 @@ v0.9.25 corrects the dashboard balance value styling. The kWh values in Daily ba
 
 v0.9.26 refines the dashboard Daily balance and Total balance display. Percentage shares are shown before the kWh values and use 75% of the kWh font size, while the kWh values keep their normal size and existing color coding.
 
+
+### v0.9.27 dashboard balance value separator
+
+v0.9.27 refines the dashboard balance formatting. In the daily and total balance cards, percentage shares are now separated from kWh values with the same ` · ` separator style used by the current power card, while keeping the percentage text at 75% of the kWh value size.
