@@ -1404,10 +1404,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.22` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.23` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.22 --language en
+bash ./deploy-images.sh --regular --tag v0.9.23 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1724,4 +1724,8 @@ v0.9.21 fixes the dark theme color override in the Home Import dashboard card. T
 ### v0.9.22 simulation household profile tuning
 
 v0.9.22 moderately refines the household simulation profile. The configurable day and night baseload values remain unchanged, while the generated load curve now includes a more realistic refrigerator cycle, short coffee-machine cup peaks, an evening stove/cooking session and the existing washing-machine style appliance peaks. The simulated PV output remains configurable separately through the maximum solar output setting.
+
+### v0.9.23 dashboard balance labels and shares
+
+v0.9.23 adds grid-import and solar percentages to the Daily Balance and Total Balance dashboard cards. The former Import label in these balance cards now reads Grid import, while the current power card is shortened from Home import to Current.
 

@@ -1363,16 +1363,28 @@ function GridShareGauge({ summary }: { summary: Summary | null }) {
 }
 
 
+function balanceSharePercent(value: number | null | undefined, total: number | null | undefined): number | null {
+  if (total === null || total === undefined || total <= 0) return null;
+  return clampPercent((Math.max(value ?? 0, 0) / total) * 100);
+}
+
+function fmtKwhWithShare(value: number | null | undefined, total: number | null | undefined, language: Language): string {
+  const share = balanceSharePercent(value, total);
+  return `${fmtKwh(value ?? 0, language)} · ${share === null ? translate(language, 'noPowerData') : fmtPercent(share, language)}`;
+}
+
 function DailyBalanceMetric({ summary }: { summary: Summary | null }) {
   const { language, t } = useI18n();
-  const totalConsumptionTodayKwh = sumKwhValues(summary?.imported_today_kwh, summary?.solar_today_kwh);
+  const importedToday = summary?.imported_today_kwh ?? 0;
+  const solarToday = summary?.solar_today_kwh ?? 0;
+  const totalConsumptionTodayKwh = sumKwhValues(importedToday, solarToday);
   return (
     <div className="metric daily-balance-metric">
       <p>{t('dailyBalance')}</p>
       <div className="daily-balance-list">
         <div className="daily-balance-total-row"><span>{t('totalConsumption')}</span><strong>{fmtKwh(totalConsumptionTodayKwh, language)}</strong></div>
-        <div><span>{t('solarToday')}</span><strong>{fmtKwh(summary?.solar_today_kwh ?? 0, language)}</strong></div>
-        <div><span>{t('importedToday')}</span><strong>{fmtKwh(summary?.imported_today_kwh ?? 0, language)}</strong></div>
+        <div><span>{t('gridImportShare')}</span><strong>{fmtKwhWithShare(importedToday, totalConsumptionTodayKwh, language)}</strong></div>
+        <div><span>{t('solarToday')}</span><strong>{fmtKwhWithShare(solarToday, totalConsumptionTodayKwh, language)}</strong></div>
         <div><span>{t('exportedToday')}</span><strong>{fmtKwh(summary?.exported_today_kwh ?? 0, language)}</strong></div>
       </div>
     </div>
@@ -1381,14 +1393,16 @@ function DailyBalanceMetric({ summary }: { summary: Summary | null }) {
 
 function TotalBalanceMetric({ summary }: { summary: Summary | null }) {
   const { language, t } = useI18n();
-  const totalConsumptionKwh = sumKwhValues(summary?.imported_total_kwh, summary?.solar_total_kwh);
+  const importedTotal = summary?.imported_total_kwh ?? 0;
+  const solarTotal = summary?.solar_total_kwh ?? 0;
+  const totalConsumptionKwh = sumKwhValues(importedTotal, solarTotal);
   return (
     <div className="metric daily-balance-metric">
       <p>{t('totalBalance')}</p>
       <div className="daily-balance-list">
         <div className="daily-balance-total-row"><span>{t('totalConsumption')}</span><strong>{fmtKwh(totalConsumptionKwh, language)}</strong></div>
-        <div><span>{t('solarToday')}</span><strong>{fmtKwh(summary?.solar_total_kwh, language)}</strong></div>
-        <div><span>{t('importedToday')}</span><strong>{fmtKwh(summary?.imported_total_kwh, language)}</strong></div>
+        <div><span>{t('gridImportShare')}</span><strong>{fmtKwhWithShare(importedTotal, totalConsumptionKwh, language)}</strong></div>
+        <div><span>{t('solarToday')}</span><strong>{fmtKwhWithShare(solarTotal, totalConsumptionKwh, language)}</strong></div>
         <div><span>{t('exportedToday')}</span><strong>{fmtKwh(summary?.exported_total_kwh, language)}</strong></div>
       </div>
     </div>

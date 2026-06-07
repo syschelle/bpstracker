@@ -68,7 +68,7 @@
     "achievementAmortization100": "🏆 Break-even: your system has paid for itself!",
     "roleAdmin": "Admin",
     "roleViewer": "Viewer",
-    "gridPower": "Home import",
+    "gridPower": "Current",
     "gridPowerSubtitle": "",
     "gridShareGauge": "Current grid / solar share",
     "gridShareGaugeSubtitle": "shows how much of the current power comes from grid import and solar",
