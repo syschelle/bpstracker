@@ -1390,10 +1390,10 @@ function DailyBalanceMetric({ summary }: { summary: Summary | null }) {
     <div className="metric daily-balance-metric">
       <p>{t('dailyBalance')}</p>
       <div className="daily-balance-list">
-        <div className="daily-balance-total-row"><span>{t('totalConsumption')}</span><strong>{fmtKwh(totalConsumptionTodayKwh, language)}</strong></div>
-        <div><span>{t('gridImportShare')}</span><BalanceValue value={importedToday} total={totalConsumptionTodayKwh} language={language} tone="grid-import" /></div>
-        <div><span>{t('solarToday')}</span><BalanceValue value={solarToday} total={totalConsumptionTodayKwh} language={language} tone="solar" /></div>
-        <div><span>{t('exportedToday')}</span><BalanceValue value={summary?.exported_today_kwh ?? 0} language={language} tone="grid-export" showShare={false} /></div>
+        <div className="daily-balance-total-row"><span>{t('balanceTotalConsumptionLabel')}</span><strong>{fmtKwh(totalConsumptionTodayKwh, language)}</strong></div>
+        <div><span>{t('balanceGridImportLabel')}</span><BalanceValue value={importedToday} total={totalConsumptionTodayKwh} language={language} tone="grid-import" /></div>
+        <div><span>{t('balanceSolarLabel')}</span><BalanceValue value={solarToday} total={totalConsumptionTodayKwh} language={language} tone="solar" /></div>
+        <div><span>{t('balanceGridExportLabel')}</span><BalanceValue value={summary?.exported_today_kwh ?? 0} language={language} tone="grid-export" showShare={false} /></div>
       </div>
     </div>
   );
@@ -1408,10 +1408,10 @@ function TotalBalanceMetric({ summary }: { summary: Summary | null }) {
     <div className="metric daily-balance-metric">
       <p>{t('totalBalance')}</p>
       <div className="daily-balance-list">
-        <div className="daily-balance-total-row"><span>{t('totalConsumption')}</span><strong>{fmtKwh(totalConsumptionKwh, language)}</strong></div>
-        <div><span>{t('gridImportShare')}</span><BalanceValue value={importedTotal} total={totalConsumptionKwh} language={language} tone="grid-import" /></div>
-        <div><span>{t('solarToday')}</span><BalanceValue value={solarTotal} total={totalConsumptionKwh} language={language} tone="solar" /></div>
-        <div><span>{t('exportedToday')}</span><BalanceValue value={summary?.exported_total_kwh} language={language} tone="grid-export" showShare={false} /></div>
+        <div className="daily-balance-total-row"><span>{t('balanceTotalConsumptionLabel')}</span><strong>{fmtKwh(totalConsumptionKwh, language)}</strong></div>
+        <div><span>{t('balanceGridImportLabel')}</span><BalanceValue value={importedTotal} total={totalConsumptionKwh} language={language} tone="grid-import" /></div>
+        <div><span>{t('balanceSolarLabel')}</span><BalanceValue value={solarTotal} total={totalConsumptionKwh} language={language} tone="solar" /></div>
+        <div><span>{t('balanceGridExportLabel')}</span><BalanceValue value={summary?.exported_total_kwh} language={language} tone="grid-export" showShare={false} /></div>
       </div>
     </div>
   );

@@ -81,7 +81,7 @@ header p { margin: 0.2rem 0 0; color: #68728a; }
 .daily-balance-list div { display: flex; align-items: baseline; justify-content: space-between; gap: 0.9rem; min-width: 0; padding: 0.15rem 0; }
 .daily-balance-list > div > span { color: #65708a; font-size: 0.82rem; font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .daily-balance-list strong { font-size: 1.08rem; margin: 0; white-space: nowrap; }
-.daily-balance-total-row { border-bottom: 1px solid #e8edf5; margin-bottom: 0.1rem; padding-bottom: 0.45rem !important; }
+.daily-balance-total-row { border-bottom: 0; margin-bottom: 0; padding-bottom: 0.15rem !important; }
 .daily-balance-total-row > span, .daily-balance-total-row strong { color: #172033; }
 .daily-balance-total-row strong { font-size: 1.18rem; }
 
@@ -459,7 +459,7 @@ html[data-theme='dark'] header h1,
 html[data-theme='dark'] .share-legend-item strong,
 html[data-theme='dark'] .daily-balance-list strong,
 html[data-theme='dark'] .grid-power-value-row strong { color: #e5e7eb; }
-html[data-theme='dark'] .daily-balance-total-row { border-bottom-color: #334155; }
+
 html[data-theme='dark'] .daily-balance-total-row > span,
 html[data-theme='dark'] .daily-balance-total-row strong { color: #f8fafc; }
 html[data-theme='dark'] header p,

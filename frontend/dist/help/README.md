@@ -1404,10 +1404,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.27` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.28` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.27 --language en
+bash ./deploy-images.sh --regular --tag v0.9.28 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1745,3 +1745,8 @@ v0.9.26 refines the dashboard Daily balance and Total balance display. Percentag
 ### v0.9.27 dashboard balance value separator
 
 v0.9.27 refines the dashboard balance formatting. In the daily and total balance cards, percentage shares are now separated from kWh values with the same ` · ` separator style used by the current power card, while keeping the percentage text at 75% of the kWh value size.
+
+### v0.9.28 dashboard balance label cleanup
+
+v0.9.28 refines the dashboard daily and total balance cards. The balance rows now use explicit labels with colons (`Total consumption:`, `Grid import:`, `Solar:` and `Export:`), while the total-consumption separator line has been removed for a cleaner compact layout.
+
