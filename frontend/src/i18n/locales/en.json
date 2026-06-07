@@ -177,7 +177,7 @@
     "batteryCapacity": "Battery capacity",
     "batteryEfficiency": "Battery efficiency",
     "batteryEfficiencyHint": "Conservative default: 85%. Adjust it to your battery's real round-trip efficiency.",
-    "batteryAnalysis": "Battery analysis",
+    "batteryAnalysis": "Battery amortization",
     "batterySavingsToday": "Potential battery savings today",
     "batteryUsableSurplusToday": "Usable surplus today",
     "batteryPayback": "Battery payback without open BPS remainder",

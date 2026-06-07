@@ -1404,10 +1404,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.29` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.30` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.29 --language en
+bash ./deploy-images.sh --regular --tag v0.9.30 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1753,4 +1753,8 @@ v0.9.28 refines the dashboard daily and total balance cards. The balance rows no
 ### v0.9.29 dashboard typography and device status heading
 
 v0.9.29 aligns the dashboard balance row typography with the compact current-values card while keeping balance percentages at 75% of the kWh value size. The dashboard device table heading is shortened from “Device status & latest measurements” to “Device status”.
+
+### v0.9.30 dashboard heading styling
+
+v0.9.30 aligns the Dashboard card and device-section headings with the compact current-values card. Dashboard headings now use the BPSTracker brand green, bold weight and consistent sizing. The battery dashboard heading was renamed from Battery analysis to Battery amortization.
 

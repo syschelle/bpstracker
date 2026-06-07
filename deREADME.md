@@ -332,7 +332,7 @@ Das Dashboard zeigt unter anderem:
 - Tageskostenbilanz
 - Gesamtkostenbilanz
 - Amortisation
-- Akku-Bewertung, falls aktiviert
+- Batterieamortisation, falls aktiviert
 - zusammengeführter Gerätestatus mit aktuellen Messwerten
 - automatisch ausgeblendete optionale Messwertspalten, wenn sie nicht konfiguriert oder nicht vorhanden sind
 - Luftdaten im Header, falls aktiviert
@@ -759,10 +759,10 @@ Oder:
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.29` oder `latest`). Für unbeaufsichtigte Image-Deployments:
+`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.30` oder `latest`). Für unbeaufsichtigte Image-Deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.29 --language de
+bash ./deploy-images.sh --regular --tag v0.9.30 --language de
 bash ./deploy-images.sh --zero2w --latest --language en
 ```
 
@@ -1031,4 +1031,8 @@ v0.9.28 verfeinert die Tagesbilanz und Gesamtbilanz im Dashboard. Die Bilanzzeil
 ### v0.9.29 Dashboard-Schriftgrößen und Gerätestatus-Überschrift
 
 v0.9.29 gleicht die Schriftgrößen der Bilanzzeilen im Dashboard an die kompakte Kachel „Aktuell“ an. Prozentwerte bleiben dabei bei 75 % der kWh-Werte. Die Überschrift der Gerätetabelle wurde von „Gerätestatus & aktuelle Messwerte“ auf „Gerätestatus“ gekürzt.
+
+### v0.9.30 Dashboard-Überschriften vereinheitlicht
+
+v0.9.30 gleicht die Überschriften der Dashboard-Kacheln und des Gerätestatus-Bereichs an die kompakte Aktuell-Kachel an. Dashboard-Überschriften verwenden jetzt das BPSTracker-Grün, eine fette Schrift und eine einheitliche Größe. Die Akku-Überschrift wurde von Akku-Bewertung auf Batterieamortisation umbenannt.
 

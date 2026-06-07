@@ -1433,3 +1433,19 @@ html[data-theme='dark'] .daily-balance-list .balance-value.grid-export {
 .daily-balance-list .balance-value-separator {
   font-size: 0.75em;
 }
+
+/* v0.9.30 dashboard heading styling: same compact size as Aktuell, bold and BPSTracker green. */
+.dashboard-cards > .metric > p,
+.dashboard-cards .battery-analysis > p,
+.dashboard-device-measurements > .panel-head h2 {
+  color: #0d9488 !important;
+  font-size: 1rem;
+  font-weight: 850;
+  line-height: 1.25;
+}
+
+html[data-theme='dark'] .dashboard-cards > .metric > p,
+html[data-theme='dark'] .dashboard-cards .battery-analysis > p,
+html[data-theme='dark'] .dashboard-device-measurements > .panel-head h2 {
+  color: #2dd4bf !important;
+}
