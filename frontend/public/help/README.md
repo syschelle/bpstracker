@@ -1404,10 +1404,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.24` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.25` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.24 --language en
+bash ./deploy-images.sh --regular --tag v0.9.25 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1732,4 +1732,8 @@ v0.9.23 adds grid-import and solar percentages to the Daily Balance and Total Ba
 ### v0.9.24 dashboard balance color refinement
 
 v0.9.24 refines the dashboard balance rows. The percentage shares in the daily and total balance cards are shown at half the value font size, grid import uses the same blue as the current/history grid import display, solar values use the solar green, and export values use the history export red.
+
+### v0.9.25 dashboard balance value styling
+
+v0.9.25 corrects the dashboard balance value styling. The kWh values in Daily balance and Total balance keep their normal size, only the percentage share is rendered smaller, and the value colors are applied consistently: grid import blue, solar green and grid export red in both light and dark themes.
 

@@ -79,13 +79,14 @@ header p { margin: 0.2rem 0 0; color: #68728a; }
 .daily-balance-metric { grid-column: span 1; }
 .daily-balance-list { display: grid; grid-template-columns: 1fr; gap: 0.45rem; margin-top: 0.7rem; }
 .daily-balance-list div { display: flex; align-items: baseline; justify-content: space-between; gap: 0.9rem; min-width: 0; padding: 0.15rem 0; }
-.daily-balance-list span { color: #65708a; font-size: 0.82rem; font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.daily-balance-list > div > span { color: #65708a; font-size: 0.82rem; font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .daily-balance-list strong { font-size: 1.08rem; margin: 0; white-space: nowrap; }
 .daily-balance-total-row { border-bottom: 1px solid #e8edf5; margin-bottom: 0.1rem; padding-bottom: 0.45rem !important; }
-.daily-balance-total-row span, .daily-balance-total-row strong { color: #172033; }
+.daily-balance-total-row > span, .daily-balance-total-row strong { color: #172033; }
 .daily-balance-total-row strong { font-size: 1.18rem; }
 
-.balance-value { display: inline-flex; align-items: baseline; gap: 0; font-variant-numeric: tabular-nums; }
+.balance-value { display: inline-flex; align-items: baseline; gap: 0.16rem; font-variant-numeric: tabular-nums; }
+.balance-value-main { color: inherit; font-size: inherit; font-weight: inherit; line-height: inherit; white-space: nowrap; }
 .balance-value.grid-import,
 html[data-theme='dark'] .daily-balance-list .balance-value.grid-import { color: #2563eb !important; }
 .balance-value.solar,
@@ -458,13 +459,13 @@ html[data-theme='dark'] .share-legend-item strong,
 html[data-theme='dark'] .daily-balance-list strong,
 html[data-theme='dark'] .grid-power-value-row strong { color: #e5e7eb; }
 html[data-theme='dark'] .daily-balance-total-row { border-bottom-color: #334155; }
-html[data-theme='dark'] .daily-balance-total-row span,
+html[data-theme='dark'] .daily-balance-total-row > span,
 html[data-theme='dark'] .daily-balance-total-row strong { color: #f8fafc; }
 html[data-theme='dark'] header p,
 html[data-theme='dark'] .hint,
 html[data-theme='dark'] .metric p,
 html[data-theme='dark'] .metric small,
-html[data-theme='dark'] .daily-balance-list span,
+html[data-theme='dark'] .daily-balance-list > div > span,
 html[data-theme='dark'] .brand-subtitle,
 html[data-theme='dark'] .share-legend-item small,
 html[data-theme='dark'] .share-total,
@@ -1384,3 +1385,29 @@ html[data-theme='dark'] .public-meter-language-button:focus-visible {
   color: #5eead4;
   box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.2);
 }
+
+/* Dashboard balance color hardening: only percentage is small, kWh values keep normal size/color. */
+.daily-balance-list .balance-value-main {
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+.daily-balance-list .balance-share-percent {
+  color: inherit;
+  font-size: 0.5em;
+  font-weight: 800;
+  line-height: 1;
+}
+.daily-balance-list .balance-value.grid-import,
+html[data-theme='dark'] .daily-balance-list .balance-value.grid-import {
+  color: #2563eb !important;
+}
+.daily-balance-list .balance-value.solar,
+html[data-theme='dark'] .daily-balance-list .balance-value.solar {
+  color: #0d9488 !important;
+}
+.daily-balance-list .balance-value.grid-export,
+html[data-theme='dark'] .daily-balance-list .balance-value.grid-export {
+  color: #dc2626 !important;
+}
+
