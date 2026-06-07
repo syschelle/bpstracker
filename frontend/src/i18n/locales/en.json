@@ -107,7 +107,7 @@
     "basedOnToday": "based on today’s savings",
     "financeCalculationHint": "Calculation: consumption cost = import × kWh price. Savings = solar production × kWh price. Daily values use the daily balance; total values use permanently stored daily aggregates and current counters.",
     "deviceStatus": "Device status",
-    "dashboardDeviceMeasurements": "Device status & latest measurements",
+    "dashboardDeviceMeasurements": "Device status",
     "refresh": "Refresh",
     "name": "Name",
     "host": "Host",

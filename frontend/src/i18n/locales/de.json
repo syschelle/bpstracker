@@ -107,7 +107,7 @@
     "basedOnToday": "auf Basis der heutigen Einsparung",
     "financeCalculationHint": "Berechnung: Verbrauchskosten = Bezug × kWh-Preis. Einsparung = Solarproduktion × kWh-Preis. Tageswerte nutzen die Tagesbilanz, Gesamtwerte nutzen dauerhaft gespeicherte Tagesaggregate und aktuelle Zählerstände.",
     "deviceStatus": "Gerätestatus",
-    "dashboardDeviceMeasurements": "Gerätestatus & aktuelle Messwerte",
+    "dashboardDeviceMeasurements": "Gerätestatus",
     "refresh": "Aktualisieren",
     "name": "Name",
     "host": "Host",

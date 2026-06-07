@@ -759,10 +759,10 @@ Oder:
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.28` oder `latest`). Für unbeaufsichtigte Image-Deployments:
+`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.29` oder `latest`). Für unbeaufsichtigte Image-Deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.28 --language de
+bash ./deploy-images.sh --regular --tag v0.9.29 --language de
 bash ./deploy-images.sh --zero2w --latest --language en
 ```
 
@@ -1027,4 +1027,8 @@ v0.9.27 verfeinert die Darstellung der Bilanzkarten im Dashboard. In Tagesbilanz
 ### v0.9.28 Beschriftungen der Bilanzkarten bereinigt
 
 v0.9.28 verfeinert die Tagesbilanz und Gesamtbilanz im Dashboard. Die Bilanzzeilen verwenden jetzt eindeutige Beschriftungen mit Doppelpunkt (`Gesamtverbrauch:`, `Netzbezug:`, `Solar:` und `Einspeisung:`), und die Trennlinie unter dem Gesamtverbrauch wurde für ein kompakteres Layout entfernt.
+
+### v0.9.29 Dashboard-Schriftgrößen und Gerätestatus-Überschrift
+
+v0.9.29 gleicht die Schriftgrößen der Bilanzzeilen im Dashboard an die kompakte Kachel „Aktuell“ an. Prozentwerte bleiben dabei bei 75 % der kWh-Werte. Die Überschrift der Gerätetabelle wurde von „Gerätestatus & aktuelle Messwerte“ auf „Gerätestatus“ gekürzt.
 

@@ -79,11 +79,11 @@ header p { margin: 0.2rem 0 0; color: #68728a; }
 .daily-balance-metric { grid-column: span 1; }
 .daily-balance-list { display: grid; grid-template-columns: 1fr; gap: 0.45rem; margin-top: 0.7rem; }
 .daily-balance-list div { display: flex; align-items: baseline; justify-content: space-between; gap: 0.9rem; min-width: 0; padding: 0.15rem 0; }
-.daily-balance-list > div > span { color: #65708a; font-size: 0.82rem; font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.daily-balance-list strong { font-size: 1.08rem; margin: 0; white-space: nowrap; }
+.daily-balance-list > div > span { color: #65708a; font-size: 0.98rem; font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.daily-balance-list strong { font-size: 0.98rem; margin: 0; white-space: nowrap; }
 .daily-balance-total-row { border-bottom: 0; margin-bottom: 0; padding-bottom: 0.15rem !important; }
 .daily-balance-total-row > span, .daily-balance-total-row strong { color: #172033; }
-.daily-balance-total-row strong { font-size: 1.18rem; }
+.daily-balance-total-row strong { font-size: 0.98rem; }
 
 .balance-value { display: inline-flex; align-items: baseline; gap: 0; font-variant-numeric: tabular-nums; }
 .balance-value-main { color: inherit; font-size: inherit; font-weight: inherit; line-height: inherit; white-space: nowrap; }
@@ -1419,3 +1419,17 @@ html[data-theme='dark'] .daily-balance-list .balance-value.grid-export {
   color: #dc2626 !important;
 }
 
+
+
+/* v0.9.29 dashboard balance typography: align balance rows with the compact Aktuell card while keeping percentages at 75%. */
+.daily-balance-list > div > span {
+  font-size: 0.98rem;
+}
+.daily-balance-list strong,
+.daily-balance-total-row strong {
+  font-size: 0.98rem;
+}
+.daily-balance-list .balance-share-percent,
+.daily-balance-list .balance-value-separator {
+  font-size: 0.75em;
+}

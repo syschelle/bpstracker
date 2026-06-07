@@ -1215,7 +1215,7 @@ function DashboardDeviceMeasurements({ devices, latest, onRefresh }: { devices: 
   return (
     <section className="panel dashboard-device-measurements">
       <div className="panel-head">
-        <h2>{t('dashboardDeviceMeasurements')}</h2>
+        <h2>{t('deviceStatus')}</h2>
         <button onClick={() => void onRefresh()}><RefreshCcw size={16} /> {t('refresh')}</button>
       </div>
       <div className="table-wrap compact-table-wrap">
