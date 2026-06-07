@@ -50,6 +50,7 @@ def test_login_sets_httponly_cookie_without_returning_access_token(client: TestC
     assert 'bpstracker_access_token=' in cookie_header
     assert 'HttpOnly' in cookie_header
     assert 'SameSite=lax' in cookie_header
+    assert 'Max-Age=604800' in cookie_header
 
     me = client.get('/api/auth/me')
     assert me.status_code == 200

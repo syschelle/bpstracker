@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     app_name: str = 'BPSTracker'
     database_url: str = 'postgresql+psycopg://bpstracker:change-me-database-password@postgres:5432/bpstracker'
     secret_key: str = 'change-me'
-    access_token_expire_minutes: int = 720
+    access_token_expire_minutes: int = 10080
     # Browser auth is stored in an HttpOnly cookie. Keep secure=False for plain HTTP/LAN installs;
     # set AUTH_COOKIE_SECURE=true when BPSTracker is served only via HTTPS.
     auth_cookie_name: str = 'bpstracker_access_token'

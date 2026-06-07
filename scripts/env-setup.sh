@@ -235,7 +235,7 @@ BPSTRACKER_DEFAULT_LANGUAGE=$language
 
 # Do not change after production start: it encrypts Shelly passwords and Admin 2FA secrets.
 SECRET_KEY=$secret_key
-ACCESS_TOKEN_EXPIRE_MINUTES=720
+ACCESS_TOKEN_EXPIRE_MINUTES=10080
 AUTH_COOKIE_NAME=bpstracker_access_token
 AUTH_COOKIE_SECURE=false
 AUTH_COOKIE_SAMESITE=lax
@@ -259,7 +259,7 @@ EOF_ENV
 bpstracker_prepare_env() {
   local env_file="$1"
   local profile="$2"
-  local image_tag="${3:-v0.9.19}"
+  local image_tag="${3:-v0.9.20}"
   local language="${4:-${BPSTRACKER_LANGUAGE:-de}}"
   language="$(bpstracker_normalize_language "$language")"
   local generated_secret=""
@@ -309,7 +309,7 @@ bpstracker_prepare_env() {
     [ -n "$(bpstracker_env_get "$env_file" BPSTRACKER_IMAGE_TAG)" ] || bpstracker_env_set "$env_file" BPSTRACKER_IMAGE_TAG "$image_tag"
     bpstracker_env_set "$env_file" BPSTRACKER_LANGUAGE "$language"
     bpstracker_env_set "$env_file" BPSTRACKER_DEFAULT_LANGUAGE "$language"
-    [ -n "$(bpstracker_env_get "$env_file" ACCESS_TOKEN_EXPIRE_MINUTES)" ] || bpstracker_env_set "$env_file" ACCESS_TOKEN_EXPIRE_MINUTES "720"
+    [ -n "$(bpstracker_env_get "$env_file" ACCESS_TOKEN_EXPIRE_MINUTES)" ] || bpstracker_env_set "$env_file" ACCESS_TOKEN_EXPIRE_MINUTES "10080"
     [ -n "$(bpstracker_env_get "$env_file" AUTH_COOKIE_NAME)" ] || bpstracker_env_set "$env_file" AUTH_COOKIE_NAME "bpstracker_access_token"
     [ -n "$(bpstracker_env_get "$env_file" AUTH_COOKIE_SECURE)" ] || bpstracker_env_set "$env_file" AUTH_COOKIE_SECURE "false"
     [ -n "$(bpstracker_env_get "$env_file" AUTH_COOKIE_SAMESITE)" ] || bpstracker_env_set "$env_file" AUTH_COOKIE_SAMESITE "lax"

@@ -345,6 +345,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const [tab, setTab] = useState<Tab>('dashboard');
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -419,6 +420,7 @@ export default function App() {
           }
           setToken(null);
           setUser(null);
+          setAuthChecked(true);
         }
       })
       .catch(() => setInstallRequired(false));
@@ -426,7 +428,13 @@ export default function App() {
 
   useEffect(() => {
     if (installRequired !== false) return;
-    loadCurrentUserAndLanguage().catch(() => setToken(null));
+    setAuthChecked(false);
+    loadCurrentUserAndLanguage()
+      .catch(() => {
+        setToken(null);
+        setUser(null);
+      })
+      .finally(() => setAuthChecked(true));
   }, [installRequired, loadCurrentUserAndLanguage]);
 
   useEffect(() => {
@@ -512,9 +520,27 @@ export default function App() {
     setMenuOpen(false);
   }
 
+  const showInitialAuthCheck = installRequired === null || (installRequired === false && !user && !authChecked);
+
   return (
     <I18nContext.Provider value={i18n}>
-      {!user ? (
+      {showInitialAuthCheck ? (
+        <main className="login-page">
+          <section className="login-card">
+            <div className="login-top">
+              <div>
+                <div className="brand"><Zap /> BPSTracker</div>
+                <div className="brand-subtitle">{t('checkingSession')} · <span className="app-version">{APP_VERSION}</span></div>
+              </div>
+              <button className="icon-button theme-toggle" onClick={toggleTheme} aria-label={t('toggleTheme')} title={theme === 'dark' ? t('themeLight') : t('themeDark')}>
+                {theme === 'dark' ? <Sun size={19} /> : <Moon size={19} />}
+              </button>
+            </div>
+            <h1>{t('wait')}</h1>
+            <p className="hint">{t('checkingSession')}</p>
+          </section>
+        </main>
+      ) : !user ? (
         <main className="login-page">
           <section className="login-card">
             <div className="login-top">

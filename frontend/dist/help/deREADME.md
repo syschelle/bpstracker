@@ -759,10 +759,10 @@ Oder:
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.19` oder `latest`). Für unbeaufsichtigte Image-Deployments:
+`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.20` oder `latest`). Für unbeaufsichtigte Image-Deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.19 --language de
+bash ./deploy-images.sh --regular --tag v0.9.20 --language de
 bash ./deploy-images.sh --zero2w --latest --language en
 ```
 
@@ -990,3 +990,8 @@ v0.9.18 korrigiert die interaktiven Rückfragen in `deploy.sh` und `deploy-image
 ### v0.9.19 Historie-Wattwerte mit fester Genauigkeit
 
 v0.9.19 stellt Leistungswerte in der Historie übersichtlicher dar: Wattwerte werden in Achse und Tooltip mit einer Nachkommastelle und der Einheit `W` angezeigt. Die Diagrammdaten werden vor dem Rendern konsistent gerundet. Neue Shelly-Messwerte, die der Poller speichert, normalisieren `power_w` und `total_power_w` vor dem Schreiben in die Datenbank auf zwei Nachkommastellen. Dadurch werden unnötige Fließkomma-Artefakte reduziert, ohne die Genauigkeit für Dashboard- und Historienberechnungen relevant einzuschränken.
+
+### v0.9.20 Session-Ladezustand und 7-Tage-Login-Cookie
+
+v0.9.20 verhindert das kurze Login-Flackern beim Start der App. Das Frontend zeigt jetzt einen neutralen Ladezustand, bis Installations- und Session-Prüfung abgeschlossen sind. Benutzer mit gültigem HttpOnly-Session-Cookie landen dadurch direkt im Dashboard, ohne vorher kurz das Login-Formular zu sehen. Erfolgreiche Logins bleiben standardmäßig 7 Tage aktiv über `ACCESS_TOKEN_EXPIRE_MINUTES=10080`; das Token bleibt weiterhin ausschließlich in einem HttpOnly-Cookie und ist nicht per JavaScript lesbar.
+
