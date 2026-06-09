@@ -714,10 +714,10 @@ function AirSensorHeader() {
 
   return (
     <div className={sensor.ok ? 'air-header-widget' : 'air-header-widget offline'} title={sensor.ok ? t('airSensorSettings') : (sensor.last_error || t('offline'))}>
-      <span className="air-header-item"><Thermometer size={17} /><span className="air-header-label">{t('temperature')}</span><strong className="air-header-value">{fmtTemperature(sensor.temperature_c, language)}</strong></span>
-      <span className="air-header-item"><Droplets size={17} /><span className="air-header-label">{t('humidity')}</span><strong className="air-header-value">{fmtPercent(sensor.humidity_percent, language)}</strong></span>
-      <span className="air-header-item"><Wind size={17} /><span className="air-header-label">PM10</span><strong className="air-header-value">{fmtMicrograms(sensor.sds_p1, language)}</strong></span>
-      <span className="air-header-item"><Wind size={17} /><span className="air-header-label">PM2.5</span><strong className="air-header-value">{fmtMicrograms(sensor.sds_p2, language)}</strong></span>
+      <span className="air-header-item" title={t('temperature')} aria-label={`${t('temperature')}: ${fmtTemperature(sensor.temperature_c, language)}`}><Thermometer size={17} /><strong className="air-header-value">{fmtTemperature(sensor.temperature_c, language)}</strong></span>
+      <span className="air-header-item" title={t('humidity')} aria-label={`${t('humidity')}: ${fmtPercent(sensor.humidity_percent, language)}`}><Droplets size={17} /><strong className="air-header-value">{fmtPercent(sensor.humidity_percent, language)}</strong></span>
+      <span className="air-header-item" title="PM10" aria-label={`PM10: ${fmtMicrograms(sensor.sds_p1, language)}`}><Wind size={17} /><span className="air-particle-size">10</span><strong className="air-header-value">{fmtMicrograms(sensor.sds_p1, language)}</strong></span>
+      <span className="air-header-item" title="PM2.5" aria-label={`PM2.5: ${fmtMicrograms(sensor.sds_p2, language)}`}><Wind size={17} /><span className="air-particle-size">2.5</span><strong className="air-header-value">{fmtMicrograms(sensor.sds_p2, language)}</strong></span>
     </div>
   );
 }
@@ -942,10 +942,10 @@ function PublicAirSensorWidget({ sensor }: { sensor: AirSensorCurrent | null }) 
     <section className={sensor.ok ? 'panel public-air-sensor' : 'panel public-air-sensor offline'} title={sensor.ok ? t('airSensorSettings') : (sensor.last_error || t('offline'))}>
       <div className="panel-head"><h2><Wind size={20} /> {t('airSensorSettings')}</h2></div>
       <div className="public-air-grid">
-        <span className="public-air-row"><Thermometer size={18} /><span className="public-air-label">{t('temperature')}</span><strong className="public-air-value">{fmtTemperature(sensor.temperature_c, language)}</strong></span>
-        <span className="public-air-row"><Droplets size={18} /><span className="public-air-label">{t('humidity')}</span><strong className="public-air-value">{fmtPercent(sensor.humidity_percent, language)}</strong></span>
-        <span className="public-air-row"><Wind size={18} /><span className="public-air-label">PM10</span><strong className="public-air-value">{fmtMicrograms(sensor.sds_p1, language)}</strong></span>
-        <span className="public-air-row"><Wind size={18} /><span className="public-air-label">PM2.5</span><strong className="public-air-value">{fmtMicrograms(sensor.sds_p2, language)}</strong></span>
+        <span className="public-air-row" title={t('temperature')} aria-label={`${t('temperature')}: ${fmtTemperature(sensor.temperature_c, language)}`}><Thermometer size={18} /><strong className="public-air-value">{fmtTemperature(sensor.temperature_c, language)}</strong></span>
+        <span className="public-air-row" title={t('humidity')} aria-label={`${t('humidity')}: ${fmtPercent(sensor.humidity_percent, language)}`}><Droplets size={18} /><strong className="public-air-value">{fmtPercent(sensor.humidity_percent, language)}</strong></span>
+        <span className="public-air-row" title="PM10" aria-label={`PM10: ${fmtMicrograms(sensor.sds_p1, language)}`}><Wind size={18} /><span className="air-particle-size">10</span><strong className="public-air-value">{fmtMicrograms(sensor.sds_p1, language)}</strong></span>
+        <span className="public-air-row" title="PM2.5" aria-label={`PM2.5: ${fmtMicrograms(sensor.sds_p2, language)}`}><Wind size={18} /><span className="air-particle-size">2.5</span><strong className="public-air-value">{fmtMicrograms(sensor.sds_p2, language)}</strong></span>
       </div>
     </section>
   );

@@ -149,6 +149,16 @@ html[data-theme='dark'] .daily-balance-list .balance-value.grid-export { color: 
   .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
+
+/* v0.9.34 compact air sensor values: labels are available via title/aria-label; PM sizes keep only the numeric particle class. */
+.air-particle-size {
+  color: #65708a;
+}
+
+html[data-theme='dark'] .air-particle-size {
+  color: #94a3b8;
+}
+
 @media (max-width: 560px) {
   .login-page { padding: 1rem; }
   .login-card { padding: 1.25rem; border-radius: 1rem; }
@@ -229,6 +239,16 @@ button.secondary { background: #e5e7eb; color: #172033; }
   .share-legend { grid-template-columns: 1fr; }
 }
 
+
+/* v0.9.34 compact air sensor values: labels are available via title/aria-label; PM sizes keep only the numeric particle class. */
+.air-particle-size {
+  color: #65708a;
+}
+
+html[data-theme='dark'] .air-particle-size {
+  color: #94a3b8;
+}
+
 @media (max-width: 560px) {
   .share-gauge-inner strong { font-size: 1.55rem; }
 }
@@ -245,6 +265,16 @@ button.secondary { background: #e5e7eb; color: #172033; }
 .mini-share-item i { width: 0.55rem; height: 0.55rem; border-radius: 50%; display: inline-block; }
 .mini-share-item.grid-import i { background: #2563eb; }
 .mini-share-item.solar i { background: #0d9488; }
+
+/* v0.9.34 compact air sensor values: labels are available via title/aria-label; PM sizes keep only the numeric particle class. */
+.air-particle-size {
+  color: #65708a;
+}
+
+html[data-theme='dark'] .air-particle-size {
+  color: #94a3b8;
+}
+
 @media (max-width: 560px) {
   .grid-power-top { align-items: flex-start; }
   .share-gauge-mini { width: 82px; min-width: 82px; }
@@ -316,6 +346,16 @@ html[data-theme='dark'] .metric-grid-power .home-import-value.negative {
   background: #0d9488;
 }
 
+
+/* v0.9.34 compact air sensor values: labels are available via title/aria-label; PM sizes keep only the numeric particle class. */
+.air-particle-size {
+  color: #65708a;
+}
+
+html[data-theme='dark'] .air-particle-size {
+  color: #94a3b8;
+}
+
 @media (max-width: 560px) {
   .grid-power-value-row,
   .grid-power-value-row span,
@@ -343,6 +383,16 @@ html[data-theme='dark'] .metric-grid-power .home-import-value.negative {
   .header-title { align-items: center; gap: 0.75rem; flex-wrap: wrap; }
   .header-brand { min-width: 0; flex: 1 1 140px; }
   .header-meta { flex-basis: 100%; padding-left: 0; border-left: 0; margin-left: 3.45rem; }
+}
+
+
+/* v0.9.34 compact air sensor values: labels are available via title/aria-label; PM sizes keep only the numeric particle class. */
+.air-particle-size {
+  color: #65708a;
+}
+
+html[data-theme='dark'] .air-particle-size {
+  color: #94a3b8;
 }
 
 @media (max-width: 560px) {
@@ -389,6 +439,16 @@ header {
     flex-basis: auto;
     margin-left: 0;
   }
+}
+
+
+/* v0.9.34 compact air sensor values: labels are available via title/aria-label; PM sizes keep only the numeric particle class. */
+.air-particle-size {
+  color: #65708a;
+}
+
+html[data-theme='dark'] .air-particle-size {
+  color: #94a3b8;
 }
 
 @media (max-width: 560px) {
@@ -509,6 +569,16 @@ html[data-theme='dark'] .app-shell { background: #0b1120; }
   .header-actions { gap: 0.55rem; }
 }
 
+
+/* v0.9.34 compact air sensor values: labels are available via title/aria-label; PM sizes keep only the numeric particle class. */
+.air-particle-size {
+  color: #65708a;
+}
+
+html[data-theme='dark'] .air-particle-size {
+  color: #94a3b8;
+}
+
 @media (max-width: 560px) {
   .header-actions { gap: 0.45rem; }
   .theme-toggle { width: 2.45rem; height: 2.45rem; }
@@ -524,6 +594,16 @@ html[data-theme='dark'] .app-shell { background: #0b1120; }
 
 @media (max-width: 980px) {
   .compact-dashboard-table { min-width: 0; }
+}
+
+
+/* v0.9.34 compact air sensor values: labels are available via title/aria-label; PM sizes keep only the numeric particle class. */
+.air-particle-size {
+  color: #65708a;
+}
+
+html[data-theme='dark'] .air-particle-size {
+  color: #94a3b8;
 }
 
 @media (max-width: 560px) {
@@ -614,6 +694,16 @@ html[data-theme='dark'] .air-header-widget {
 
 @media (max-width: 980px) {
   .air-header-widget { order: 3; flex-basis: 100%; max-width: 100%; justify-content: flex-end; }
+}
+
+
+/* v0.9.34 compact air sensor values: labels are available via title/aria-label; PM sizes keep only the numeric particle class. */
+.air-particle-size {
+  color: #65708a;
+}
+
+html[data-theme='dark'] .air-particle-size {
+  color: #94a3b8;
 }
 
 @media (max-width: 560px) {
@@ -952,6 +1042,16 @@ html[data-theme='dark'] .achievement-header-widget {
   height: 2rem;
   flex: 0 0 auto;
   border-radius: 999px;
+}
+
+
+/* v0.9.34 compact air sensor values: labels are available via title/aria-label; PM sizes keep only the numeric particle class. */
+.air-particle-size {
+  color: #65708a;
+}
+
+html[data-theme='dark'] .air-particle-size {
+  color: #94a3b8;
 }
 
 @media (max-width: 560px) {
@@ -1485,7 +1585,8 @@ html[data-theme='dark'] .daily-balance-list .cost-balance-savings {
 }
 
 .air-header-value,
-.public-air-value {
+.public-air-value,
+.air-particle-size {
   color: #172033;
   font-size: 0.98rem;
   font-weight: 800;
@@ -1515,15 +1616,27 @@ html[data-theme='dark'] .public-air-label {
 }
 
 html[data-theme='dark'] .air-header-value,
-html[data-theme='dark'] .public-air-value {
+html[data-theme='dark'] .public-air-value,
+html[data-theme='dark'] .air-particle-size {
   color: #e5e7eb;
+}
+
+
+/* v0.9.34 compact air sensor values: labels are available via title/aria-label; PM sizes keep only the numeric particle class. */
+.air-particle-size {
+  color: #65708a;
+}
+
+html[data-theme='dark'] .air-particle-size {
+  color: #94a3b8;
 }
 
 @media (max-width: 560px) {
   .air-header-label,
   .air-header-value,
   .public-air-label,
-  .public-air-value {
+  .public-air-value,
+  .air-particle-size {
     font-size: 0.9rem;
   }
 }

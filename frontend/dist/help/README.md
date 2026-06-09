@@ -1404,10 +1404,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.33` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.34` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.33 --language en
+bash ./deploy-images.sh --regular --tag v0.9.34 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1769,4 +1769,8 @@ v0.9.32 aligns the Daily cost balance and Total cost balance value colors with t
 ### v0.9.33 dashboard air sensor and label color alignment
 
 v0.9.33 aligns the air sensor label/value presentation with the compact dashboard value rows and synchronizes dashboard value-label colors across the current, balance and cost cards. The air sensor header and public air sensor widget now show explicit labels for temperature, humidity, PM10 and PM2.5 values while keeping the existing compact layout.
+
+### v0.9.34 compact air sensor values
+
+v0.9.34 makes the dashboard air data display more compact. Temperature and humidity now show only their icon and value, while particle values show the icon plus the numeric particle size (`10` or `2.5`) and the measured value. Full labels remain available through hover/tooltips and accessibility labels.
 
