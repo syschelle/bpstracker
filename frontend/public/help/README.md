@@ -313,6 +313,10 @@ The backend remains private inside the Docker network.
 
 ![BPSTracker setup overview](docs/images/setup-overview.png)
 
+### Mobile view
+
+![BPSTracker mobile view](docs/images/mobile.png)
+
 
 ## Screens and UI
 
@@ -1404,10 +1408,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.34` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.35` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.34 --language en
+bash ./deploy-images.sh --regular --tag v0.9.35 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1773,4 +1777,8 @@ v0.9.33 aligns the air sensor label/value presentation with the compact dashboar
 ### v0.9.34 compact air sensor values
 
 v0.9.34 makes the dashboard air data display more compact. Temperature and humidity now show only their icon and value, while particle values show the icon plus the numeric particle size (`10` or `2.5`) and the measured value. Full labels remain available through hover/tooltips and accessibility labels.
+
+### v0.9.35 mobile view refresh
+
+v0.9.35 refreshes the mobile dashboard presentation and the documentation mobile screenshot. Mobile dashboard cards now use the same current typography and compact value alignment as the desktop dashboard, including balance rows, cost rows, the current power card and responsive air sensor values.
 

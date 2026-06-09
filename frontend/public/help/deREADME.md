@@ -50,6 +50,10 @@ Das Projekt ist für den lokalen Betrieb im Heimnetz gedacht. Backend und Datenb
 
 ![BPSTracker setup overview](docs/images/setup-overview.png)
 
+### Mobile Ansicht
+
+![BPSTracker mobile view](docs/images/mobile.png)
+
 
 ---
 
@@ -759,10 +763,10 @@ Oder:
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.34` oder `latest`). Für unbeaufsichtigte Image-Deployments:
+`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.35` oder `latest`). Für unbeaufsichtigte Image-Deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.34 --language de
+bash ./deploy-images.sh --regular --tag v0.9.35 --language de
 bash ./deploy-images.sh --zero2w --latest --language en
 ```
 
@@ -1051,4 +1055,8 @@ v0.9.33 gleicht die Beschriftungs-/Wertdarstellung des Luftdatensensors an die k
 ### v0.9.34 Kompakte Luftdatenwerte
 
 v0.9.34 stellt die Luftdatenanzeige im Dashboard kompakter dar. Temperatur und Luftfeuchte zeigen nur noch Symbol und Wert; Feinstaubwerte zeigen Symbol, die numerische Partikelgröße (`10` oder `2.5`) und den Messwert. Die vollständigen Bezeichnungen bleiben über Hover/Tooltips und Accessibility-Labels erhalten.
+
+### v0.9.35 Mobile Ansicht aktualisiert
+
+v0.9.35 aktualisiert die mobile Dashboard-Darstellung und den mobilen Doku-Screenshot. Mobile Dashboard-Kacheln nutzen jetzt dieselbe aktuelle Typografie und kompakte Werteausrichtung wie das Desktop-Dashboard, inklusive Bilanzzeilen, Kostenzeilen, aktueller Leistungskachel und responsiver Luftsensorwerte.
 
