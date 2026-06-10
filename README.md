@@ -1408,10 +1408,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.35` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.36` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.35 --language en
+bash ./deploy-images.sh --regular --tag v0.9.36 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1781,4 +1781,8 @@ v0.9.34 makes the dashboard air data display more compact. Temperature and humid
 ### v0.9.35 mobile view refresh
 
 v0.9.35 refreshes the mobile dashboard presentation and the documentation mobile screenshot. Mobile dashboard cards now use the same current typography and compact value alignment as the desktop dashboard, including balance rows, cost rows, the current power card and responsive air sensor values.
+
+### v0.9.36 Dashboard and Kindle daily cost alignment
+
+v0.9.36 aligns the daily cost values shown on the dashboard and the Kindle display. Dashboard day totals now use the configured UI timezone instead of UTC midnight, and the Kindle renderer applies the same configured-device channel filtering as the dashboard summary for daily energy and current power values. This prevents daily import costs from diverging between the dashboard and Kindle image on timezone-offset deployments or channel-filtered Shelly setups.
 

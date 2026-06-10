@@ -763,10 +763,10 @@ Oder:
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.35` oder `latest`). Für unbeaufsichtigte Image-Deployments:
+`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.36` oder `latest`). Für unbeaufsichtigte Image-Deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.35 --language de
+bash ./deploy-images.sh --regular --tag v0.9.36 --language de
 bash ./deploy-images.sh --zero2w --latest --language en
 ```
 
@@ -1059,4 +1059,8 @@ v0.9.34 stellt die Luftdatenanzeige im Dashboard kompakter dar. Temperatur und L
 ### v0.9.35 Mobile Ansicht aktualisiert
 
 v0.9.35 aktualisiert die mobile Dashboard-Darstellung und den mobilen Doku-Screenshot. Mobile Dashboard-Kacheln nutzen jetzt dieselbe aktuelle Typografie und kompakte Werteausrichtung wie das Desktop-Dashboard, inklusive Bilanzzeilen, Kostenzeilen, aktueller Leistungskachel und responsiver Luftsensorwerte.
+
+### v0.9.36 Tageskosten zwischen Dashboard und Kindle angeglichen
+
+v0.9.36 gleicht die Tageskostenwerte zwischen Dashboard und Kindle-Display an. Die Dashboard-Tageswerte nutzen jetzt die konfigurierte UI-Zeitzone statt UTC-Mitternacht, und der Kindle-Renderer verwendet dieselbe Kanalfilterung für konfigurierte Geräte wie die Dashboard-Summary. Dadurch laufen Tages-Netzbezugskosten nicht mehr auseinander, wenn die Installation mit lokaler Zeitzone oder kanalgefilterten Shelly-Geräten betrieben wird.
 

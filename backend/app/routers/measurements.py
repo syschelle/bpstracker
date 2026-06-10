@@ -5,6 +5,7 @@ import io
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy import func, or_
@@ -56,6 +57,26 @@ def _clamp_live_window(start: datetime, end: datetime) -> tuple[datetime, dateti
         start = earliest
     return start, end
 
+
+
+
+def _local_day_bounds(now: datetime, timezone_name: str | None) -> tuple[datetime, datetime]:
+    """Return the current local day bounds as UTC datetimes.
+
+    Dashboard day values should use the configured UI timezone. The Kindle
+    renderer already uses the UI timezone, so keeping the summary endpoint on
+    UTC midnight can make daily cost values differ between Dashboard and Kindle
+    during the local/UTC offset window.
+    """
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+    try:
+        tz = ZoneInfo(str(timezone_name or 'UTC'))
+    except (ZoneInfoNotFoundError, ValueError):
+        tz = ZoneInfo('UTC')
+    start_local = now.astimezone(tz).replace(hour=0, minute=0, second=0, microsecond=0)
+    end_local = start_local + timedelta(days=1)
+    return start_local.astimezone(timezone.utc), end_local.astimezone(timezone.utc)
 
 def _require_public_dashboard(db: Session) -> None:
     if not get_public_dashboard_settings_from_db(db).enabled:
@@ -620,9 +641,15 @@ def summary(_: User = Depends(get_current_user), db: Session = Depends(get_db)) 
                 current_solar_power = (current_solar_power or 0.0) + solar_value
 
     now = datetime.now(timezone.utc)
-    today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    ui = get_ui_settings_from_db(db)
+    today_start, today_end = _local_day_bounds(now, ui.timezone)
 
-    today_rows = db.query(Measurement).filter(Measurement.timestamp >= today).order_by(Measurement.timestamp.asc()).all()
+    today_rows = (
+        db.query(Measurement)
+        .filter(Measurement.timestamp >= today_start, Measurement.timestamp < today_end)
+        .order_by(Measurement.timestamp.asc())
+        .all()
+    )
     today_rows = [row for row in today_rows if _measurement_matches_device_config(row, configs)]
     grid_today_rows = [row for row in today_rows if _is_grid_row(row, purposes)]
     solar_today_rows = [row for row in today_rows if _is_solar_row(row, purposes)]

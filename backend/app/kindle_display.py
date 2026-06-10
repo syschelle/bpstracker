@@ -42,6 +42,28 @@ def _device_purposes(db: Session) -> dict[int, str]:
     return {int(device_id): str(purpose or DEVICE_PURPOSE_AUTO) for device_id, purpose in rows}
 
 
+
+
+def _device_configs(db: Session) -> dict[int, tuple[str, int | None]]:
+    rows = db.query(Device.id, Device.device_type, Device.channel).all()
+    configs: dict[int, tuple[str, int | None]] = {}
+    for device_id, device_type, channel in rows:
+        type_value = getattr(device_type, 'value', device_type)
+        configs[int(device_id)] = (str(type_value), channel)
+    return configs
+
+
+def _measurement_matches_device_config(row: Measurement, configs: dict[int, tuple[str, int | None]]) -> bool:
+    config = configs.get(int(row.device_id))
+    if config is None:
+        return True
+    device_type, configured_channel = config
+    if configured_channel is None:
+        return True
+    if device_type == 'shelly_3em_gen1' and row.source_type == 'shelly_3em_gen1_total':
+        return False
+    return row.channel == configured_channel
+
 def _purpose_for(row: Measurement, purposes: dict[int, str]) -> str:
     return purposes.get(int(row.device_id), DEVICE_PURPOSE_AUTO)
 
@@ -306,6 +328,7 @@ def _air_cache(db: Session) -> dict[str, Any]:
 
 def _latest_home_import_w(db: Session) -> tuple[float | None, datetime | None]:
     purposes = _device_purposes(db)
+    configs = _device_configs(db)
     recent = (
         db.query(Measurement)
         .filter(Measurement.total_power_w.isnot(None) | Measurement.power_w.isnot(None))
@@ -313,13 +336,14 @@ def _latest_home_import_w(db: Session) -> tuple[float | None, datetime | None]:
         .limit(120)
         .all()
     )
-    for row in recent:
+    configured_recent = [row for row in recent if _measurement_matches_device_config(row, configs)]
+    for row in configured_recent:
         if _is_grid_row(row, purposes):
             value = row.total_power_w if row.total_power_w is not None else row.power_w
             if value is not None:
                 return value, row.timestamp
 
-    for row in recent:
+    for row in configured_recent:
         if _purpose_for(row, purposes) != DEVICE_PURPOSE_IGNORED:
             value = row.total_power_w if row.total_power_w is not None else row.power_w
             if value is not None:
@@ -354,6 +378,7 @@ def _zoneinfo(timezone_name: str) -> ZoneInfo:
 
 def _latest_solar_power_w(db: Session) -> float | None:
     purposes = _device_purposes(db)
+    configs = _device_configs(db)
     recent = (
         db.query(Measurement)
         .filter(Measurement.power_w.isnot(None))
@@ -366,6 +391,8 @@ def _latest_solar_power_w(db: Session) -> float | None:
 
     latest_by_source: dict[tuple[int, str, int | None], float] = {}
     for row in recent:
+        if not _measurement_matches_device_config(row, configs):
+            continue
         if not _is_solar_row(row, purposes):
             continue
         key = (row.device_id, row.source_type, row.channel)
@@ -388,6 +415,8 @@ def _today_energy_mix(db: Session, timezone_name: str) -> tuple[float | None, fl
         .all()
     )
     purposes = _device_purposes(db)
+    configs = _device_configs(db)
+    rows = [row for row in rows if _measurement_matches_device_config(row, configs)]
     grid_rows = [row for row in rows if _is_grid_row(row, purposes)]
     solar_rows = [row for row in rows if _is_solar_row(row, purposes)]
     imported_wh = delta_energy(grid_rows, 'energy_import_wh', None)
