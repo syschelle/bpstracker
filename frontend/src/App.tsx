@@ -1688,9 +1688,7 @@ function GithubRepositoryPanel() {
 function SetupView({ onCurrentUserChange }: { onCurrentUserChange: (user: User) => void }) {
   return (
     <div className="grid gap setup-grid">
-      <LanguageSettingsPanel />
-      <TimezoneSettingsPanel />
-      <GithubRepositoryPanel />
+      <GeneralSettingsPanel />
       <FinanceSettingsPanel />
       <SimulationSettingsPanel />
       <AirSensorSettingsPanel />
@@ -1703,6 +1701,59 @@ function SetupView({ onCurrentUserChange }: { onCurrentUserChange: (user: User) 
       <ResetValuesPanel />
       <div className="setup-wide setup-devices-wide"><DeviceSetupPanel /></div>
     </div>
+  );
+}
+
+
+function GeneralSettingsPanel() {
+  const { language, setLanguage, t } = useI18n();
+  const [settings, setSettings] = useState<UiSettings>({ language, timezone: 'Europe/Berlin' });
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function load() {
+    const loaded = await api.uiSettings();
+    setSettings(loaded);
+  }
+
+  useEffect(() => { void load(); }, []);
+
+  async function save() {
+    setMessage(null);
+    const saved = await api.updateUiSettings({
+      language: settings.language,
+      timezone: settings.timezone || 'Europe/Berlin',
+    });
+    setSettings(saved);
+    setLanguage(saved.language);
+    setMessage(t('generalSettingsSaved'));
+  }
+
+  return (
+    <section className="panel general-settings-panel setup-wide">
+      <div className="panel-head"><h2><Settings size={20} /> {t('generalSettings')}</h2></div>
+      <p className="hint">{t('generalSettingsHint')}</p>
+      {message && <div className="info">{message}</div>}
+      <div className="form-grid general-settings-grid">
+        <label>{t('languageLabel')}
+          <select value={settings.language} onChange={e => setSettings({ ...settings, language: e.target.value })}>
+            {availableLanguages.map(option => <option key={option.code} value={option.code}>{languageOptionLabel(option)}</option>)}
+          </select>
+          <small>{t('languageHint')}</small>
+        </label>
+        <label>{t('timezoneLabel')}
+          <select value={settings.timezone} onChange={e => setSettings({ ...settings, timezone: e.target.value })}>
+            {TIMEZONE_OPTIONS.map(option => <option key={option.value} value={option.value}>{t(option.labelKey)}</option>)}
+          </select>
+          <small>{t('timezoneHint')}</small>
+        </label>
+        <div className="setup-link-card">
+          <span>{t('githubRepository')}</span>
+          <small>{t('githubRepositoryHint')}</small>
+          <a className="button secondary" href="https://github.com/syschelle/bpstracker" target="_blank" rel="noreferrer">{t('openGithubRepository')}</a>
+        </div>
+      </div>
+      <button onClick={() => void save()}>{t('saveGeneralSettings')}</button>
+    </section>
   );
 }
 

@@ -1921,3 +1921,50 @@ html[data-theme='dark'] .air-particle-size {
   }
 }
 
+
+/* v0.9.39 grouped general setup settings */
+.general-settings-panel .general-settings-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.setup-link-card {
+  display: grid;
+  align-content: start;
+  gap: 0.28rem;
+  min-width: 0;
+  color: #34405a;
+  font-size: 0.8rem;
+  font-weight: 750;
+}
+
+.setup-link-card > span {
+  color: #34405a;
+  font-weight: 800;
+}
+
+.setup-link-card small {
+  color: #65708a;
+  font-size: 0.76rem;
+  line-height: 1.25;
+}
+
+.setup-link-card .button {
+  width: fit-content;
+  margin-top: 0.1rem;
+}
+
+html[data-theme='dark'] .setup-link-card,
+html[data-theme='dark'] .setup-link-card > span {
+  color: #cbd5e1;
+}
+
+html[data-theme='dark'] .setup-link-card small {
+  color: #94a3b8;
+}
+
+@media (max-width: 980px) {
+  .general-settings-panel .general-settings-grid {
+    grid-template-columns: 1fr;
+  }
+}
