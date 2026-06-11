@@ -1687,21 +1687,21 @@ function GithubRepositoryPanel() {
 
 function SetupView({ onCurrentUserChange }: { onCurrentUserChange: (user: User) => void }) {
   return (
-    <div className="grid gap">
+    <div className="grid gap setup-grid">
       <LanguageSettingsPanel />
       <TimezoneSettingsPanel />
       <GithubRepositoryPanel />
-      <KindleDisplaySettingsPanel />
+      <FinanceSettingsPanel />
       <SimulationSettingsPanel />
+      <AirSensorSettingsPanel />
       <PublicDashboardSettingsPanel />
       <CurrentValuesApiSettingsPanel />
+      <div className="setup-wide"><KindleDisplaySettingsPanel /></div>
       <UserCredentialsPanel onCurrentUserChange={onCurrentUserChange} />
-      <FinanceSettingsPanel />
       <BackupSettingsPanel />
-      <ResetValuesPanel />
       <RetentionSettingsPanel />
-      <AirSensorSettingsPanel />
-      <DeviceSetupPanel />
+      <ResetValuesPanel />
+      <div className="setup-wide"><DeviceSetupPanel /></div>
     </div>
   );
 }

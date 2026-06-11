@@ -1713,3 +1713,104 @@ html[data-theme='dark'] .air-particle-size {
     font-size: 0.92rem;
   }
 }
+
+/* v0.9.37 compact setup layout */
+.setup-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 0.8rem;
+}
+
+.setup-wide {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.setup-grid .panel {
+  border-radius: 1rem;
+  padding: 0.85rem;
+}
+
+.setup-grid .grid.gap {
+  gap: 0.8rem;
+}
+
+.setup-grid .panel-head {
+  gap: 0.65rem;
+  margin-bottom: 0.65rem;
+}
+
+.setup-grid .panel h2,
+.setup-grid .panel-head h2 {
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.setup-grid .hint {
+  margin: 0.35rem 0 0.65rem;
+  font-size: 0.83rem;
+  line-height: 1.35;
+}
+
+.setup-grid label {
+  font-size: 0.85rem;
+}
+
+.setup-grid input,
+.setup-grid select {
+  border-radius: 0.65rem;
+  margin-top: 0.25rem;
+  padding: 0.52rem 0.65rem;
+}
+
+.setup-grid .form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 0.65rem;
+}
+
+.setup-grid button,
+.setup-grid .button {
+  border-radius: 0.65rem;
+  padding: 0.55rem 0.75rem;
+}
+
+.setup-grid .credentials-grid {
+  gap: 0.65rem;
+  margin: 0.65rem 0;
+}
+
+.setup-grid .credential-card {
+  border-radius: 0.85rem;
+  gap: 0.55rem;
+  padding: 0.75rem;
+}
+
+.setup-grid .compact-table {
+  margin-top: 0.65rem;
+}
+
+.setup-grid table {
+  font-size: 0.84rem;
+}
+
+.setup-grid th,
+.setup-grid td {
+  padding: 0.45rem 0.5rem;
+}
+
+.setup-grid .kindle-preview,
+.setup-grid .api-preview {
+  margin-top: 0.65rem;
+}
+
+@media (max-width: 980px) {
+  .setup-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .setup-grid .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
