@@ -2014,3 +2014,13 @@ html[data-theme='dark'] .setup-category-head {
     grid-template-columns: 1fr;
   }
 }
+
+.setup-category-grid-two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 980px) {
+  .setup-category-grid-two {
+    grid-template-columns: 1fr;
+  }
+}

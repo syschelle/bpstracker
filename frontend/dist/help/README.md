@@ -1408,10 +1408,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.40` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.41` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.40 --language en
+bash ./deploy-images.sh --regular --tag v0.9.41 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1797,4 +1797,8 @@ v0.9.38 makes the Setup page more compact by reducing spacing, padding and form 
 ### v0.9.40 grouped setup general settings
 
 v0.9.40 groups language, time zone and GitHub repository into a first Setup category named **General**. The individual cards remain visible, but the top of the Setup page is now more clearly organized while preserving the compact layout introduced in earlier releases.
+
+### v0.9.41 setup interfaces category
+
+v0.9.41 adds a dedicated **Interfaces** category below **General** in the Setup page. The JSON API and Kindle display settings are grouped there while keeping their individual setup cards. The compact setup layout remains unchanged.
 

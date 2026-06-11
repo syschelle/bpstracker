@@ -37,6 +37,7 @@
     "history": "History",
     "setup": "Setup",
     "generalSettings": "General",
+    "interfaceSettings": "Interfaces",
     "githubRepository": "GitHub repository",
     "githubRepositoryHint": "Project page, source code and updates are available in the GitHub repository.",
     "openGithubRepository": "Open GitHub repository",

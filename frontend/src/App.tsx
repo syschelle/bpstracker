@@ -1698,12 +1698,17 @@ function SetupView({ onCurrentUserChange }: { onCurrentUserChange: (user: User) 
           <GithubRepositoryPanel />
         </div>
       </section>
+      <section className="setup-category setup-wide setup-interfaces-category">
+        <div className="setup-category-head"><h2><Globe2 size={20} /> {t('interfaceSettings')}</h2></div>
+        <div className="setup-category-grid setup-category-grid-two">
+          <CurrentValuesApiSettingsPanel />
+          <KindleDisplaySettingsPanel />
+        </div>
+      </section>
       <FinanceSettingsPanel />
       <SimulationSettingsPanel />
       <AirSensorSettingsPanel />
       <PublicDashboardSettingsPanel />
-      <CurrentValuesApiSettingsPanel />
-      <div className="setup-wide"><KindleDisplaySettingsPanel /></div>
       <UserCredentialsPanel onCurrentUserChange={onCurrentUserChange} />
       <BackupSettingsPanel />
       <RetentionSettingsPanel />

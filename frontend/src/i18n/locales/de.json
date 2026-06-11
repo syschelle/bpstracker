@@ -37,6 +37,7 @@
     "history": "Historie",
     "setup": "Setup",
     "generalSettings": "Allgemein",
+    "interfaceSettings": "Schnittstellen",
     "githubRepository": "GitHub-Repository",
     "githubRepositoryHint": "Projektseite, Quellcode und Updates findest du im GitHub-Repository.",
     "openGithubRepository": "GitHub-Repository öffnen",
