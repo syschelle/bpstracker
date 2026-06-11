@@ -1408,10 +1408,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.39` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.40` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.39 --language en
+bash ./deploy-images.sh --regular --tag v0.9.40 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1794,7 +1794,7 @@ v0.9.37 makes the Setup page more compact without removing configuration options
 
 v0.9.38 makes the Setup page more compact by reducing spacing, padding and form gaps across setup panels while keeping the configured devices section more spacious for table readability.
 
-### v0.9.39 grouped general setup settings
+### v0.9.40 grouped setup general settings
 
-v0.9.39 groups language, time zone and GitHub repository into a new first Setup category named **General**. This keeps the Setup page more compact while preserving the existing language and timezone persistence behavior.
+v0.9.40 groups language, time zone and GitHub repository into a first Setup category named **General**. The individual cards remain visible, but the top of the Setup page is now more clearly organized while preserving the compact layout introduced in earlier releases.
 

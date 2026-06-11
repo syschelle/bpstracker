@@ -1922,49 +1922,95 @@ html[data-theme='dark'] .air-particle-size {
 }
 
 
-/* v0.9.39 grouped general setup settings */
-.general-settings-panel .general-settings-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: stretch;
-}
 
-.setup-link-card {
+/* v0.9.40 grouped setup categories */
+.setup-category {
   display: grid;
-  align-content: start;
-  gap: 0.28rem;
+  gap: 0.5rem;
   min-width: 0;
-  color: #34405a;
-  font-size: 0.8rem;
-  font-weight: 750;
 }
 
-.setup-link-card > span {
-  color: #34405a;
-  font-weight: 800;
+.setup-category-head {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #0d9488;
+  font-weight: 850;
+  padding: 0 0.1rem;
 }
 
-.setup-link-card small {
-  color: #65708a;
-  font-size: 0.76rem;
+.setup-category-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.15;
+}
+
+html[data-theme='dark'] .setup-category-head {
+  color: #2dd4bf;
+}
+
+.setup-category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.setup-category-grid > .panel {
+  border-radius: 0.85rem;
+  padding: 0.62rem 0.7rem;
+}
+
+.setup-category-grid > .panel .panel-head {
+  gap: 0.45rem;
+  margin-bottom: 0.4rem;
+}
+
+.setup-category-grid > .panel h2,
+.setup-category-grid > .panel .panel-head h2 {
+  font-size: 0.94rem;
+  line-height: 1.15;
+}
+
+.setup-category-grid > .panel .hint {
+  margin: 0.18rem 0 0.42rem;
+  font-size: 0.78rem;
   line-height: 1.25;
 }
 
-.setup-link-card .button {
-  width: fit-content;
-  margin-top: 0.1rem;
+.setup-category-grid > .panel label {
+  font-size: 0.8rem;
 }
 
-html[data-theme='dark'] .setup-link-card,
-html[data-theme='dark'] .setup-link-card > span {
-  color: #cbd5e1;
+.setup-category-grid > .panel input,
+.setup-category-grid > .panel select {
+  border-radius: 0.55rem;
+  margin-top: 0.16rem;
+  padding: 0.42rem 0.55rem;
 }
 
-html[data-theme='dark'] .setup-link-card small {
-  color: #94a3b8;
+.setup-category-grid > .panel .form-grid {
+  grid-template-columns: 1fr;
+  gap: 0.45rem;
+  margin-bottom: 0.45rem;
+}
+
+.setup-category-grid > .panel button,
+.setup-category-grid > .panel .button {
+  border-radius: 0.55rem;
+  padding: 0.45rem 0.65rem;
+}
+
+@media (max-width: 1280px) {
+  .setup-category-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 980px) {
-  .general-settings-panel .general-settings-grid {
+  .setup-category-grid {
     grid-template-columns: 1fr;
   }
 }

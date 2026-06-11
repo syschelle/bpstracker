@@ -766,7 +766,7 @@ bash ./deploy-images.sh
 `deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.36` oder `latest`). Für unbeaufsichtigte Image-Deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.39 --language de
+bash ./deploy-images.sh --regular --tag v0.9.40 --language de
 bash ./deploy-images.sh --zero2w --latest --language en
 ```
 
@@ -1068,7 +1068,7 @@ v0.9.36 gleicht die Tageskostenwerte zwischen Dashboard und Kindle-Display an. D
 
 v0.9.37 macht die Setup-Seite kompakter, ohne Konfigurationsoptionen zu entfernen. Die Setup-Panels nutzen auf dem Desktop ein dichteres zweispaltiges Layout, geringere Panel-Abstände, kompaktere Formularabstände und kleinere Tabellenabstände. Breite Bereiche wie Kindle-Einstellungen und Shelly-Gerätekonfiguration bleiben weiterhin über die volle Breite lesbar.
 
-### v0.9.39 Allgemeine Setup-Einstellungen gruppiert
+### v0.9.40 Allgemeine Setup-Einstellungen gruppiert
 
-v0.9.39 fasst Sprache, Zeitzone und GitHub-Repository in der neuen ersten Setup-Kategorie **Allgemein** zusammen. Dadurch wird die Setup-Seite kompakter, während die bisherige Speicherung von Sprache und Zeitzone erhalten bleibt.
+v0.9.40 gruppiert Sprache, Zeitzone und GitHub-Repository als erste Setup-Kategorie **Allgemein**. Die einzelnen Kacheln bleiben erhalten, der obere Setup-Bereich ist dadurch aber klarer strukturiert und bleibt weiterhin kompakt.
 
