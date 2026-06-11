@@ -766,7 +766,7 @@ bash ./deploy-images.sh
 `deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.36` oder `latest`). Für unbeaufsichtigte Image-Deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.37 --language de
+bash ./deploy-images.sh --regular --tag v0.9.38 --language de
 bash ./deploy-images.sh --zero2w --latest --language en
 ```
 

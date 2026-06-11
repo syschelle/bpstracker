@@ -1814,3 +1814,110 @@ html[data-theme='dark'] .air-particle-size {
     grid-template-columns: 1fr;
   }
 }
+
+/* v0.9.38 denser setup layout, excluding configured devices */
+.setup-grid {
+  gap: 0.55rem;
+}
+
+.setup-grid > .panel,
+.setup-grid > .setup-wide:not(.setup-devices-wide) > .panel {
+  border-radius: 0.85rem;
+  padding: 0.62rem 0.7rem;
+}
+
+.setup-grid > .panel .panel-head,
+.setup-grid > .setup-wide:not(.setup-devices-wide) > .panel .panel-head {
+  gap: 0.45rem;
+  margin-bottom: 0.4rem;
+}
+
+.setup-grid > .panel h2,
+.setup-grid > .panel .panel-head h2,
+.setup-grid > .setup-wide:not(.setup-devices-wide) > .panel h2,
+.setup-grid > .setup-wide:not(.setup-devices-wide) > .panel .panel-head h2 {
+  font-size: 0.94rem;
+  line-height: 1.15;
+}
+
+.setup-grid > .panel .hint,
+.setup-grid > .setup-wide:not(.setup-devices-wide) > .panel .hint {
+  margin: 0.18rem 0 0.42rem;
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+
+.setup-grid > .panel label,
+.setup-grid > .setup-wide:not(.setup-devices-wide) > .panel label {
+  font-size: 0.8rem;
+  gap: 0.18rem;
+}
+
+.setup-grid > .panel input,
+.setup-grid > .panel select,
+.setup-grid > .setup-wide:not(.setup-devices-wide) > .panel input,
+.setup-grid > .setup-wide:not(.setup-devices-wide) > .panel select {
+  border-radius: 0.55rem;
+  margin-top: 0.16rem;
+  padding: 0.42rem 0.55rem;
+}
+
+.setup-grid > .panel .form-grid,
+.setup-grid > .setup-wide:not(.setup-devices-wide) > .panel .form-grid {
+  gap: 0.45rem;
+  margin-bottom: 0.45rem;
+}
+
+.setup-grid > .panel .grid.gap,
+.setup-grid > .setup-wide:not(.setup-devices-wide) > .panel .grid.gap {
+  gap: 0.5rem;
+}
+
+.setup-grid > .panel button,
+.setup-grid > .panel .button,
+.setup-grid > .setup-wide:not(.setup-devices-wide) > .panel button,
+.setup-grid > .setup-wide:not(.setup-devices-wide) > .panel .button {
+  border-radius: 0.55rem;
+  padding: 0.45rem 0.65rem;
+}
+
+.setup-grid > .panel .credentials-grid,
+.setup-grid > .setup-wide:not(.setup-devices-wide) > .panel .credentials-grid {
+  gap: 0.5rem;
+  margin: 0.45rem 0;
+}
+
+.setup-grid > .panel .credential-card,
+.setup-grid > .setup-wide:not(.setup-devices-wide) > .panel .credential-card {
+  border-radius: 0.72rem;
+  gap: 0.42rem;
+  padding: 0.55rem;
+}
+
+.setup-grid > .panel .compact-table,
+.setup-grid > .setup-wide:not(.setup-devices-wide) > .panel .compact-table,
+.setup-grid > .panel .kindle-preview,
+.setup-grid > .panel .api-preview,
+.setup-grid > .setup-wide:not(.setup-devices-wide) > .panel .kindle-preview,
+.setup-grid > .setup-wide:not(.setup-devices-wide) > .panel .api-preview {
+  margin-top: 0.45rem;
+}
+
+.setup-grid > .panel th,
+.setup-grid > .panel td,
+.setup-grid > .setup-wide:not(.setup-devices-wide) > .panel th,
+.setup-grid > .setup-wide:not(.setup-devices-wide) > .panel td {
+  padding: 0.34rem 0.42rem;
+}
+
+.setup-devices-wide > .panel {
+  /* Keep configured devices slightly more spacious for table readability. */
+  padding: 0.85rem;
+}
+
+@media (max-width: 980px) {
+  .setup-grid {
+    gap: 0.55rem;
+  }
+}
+

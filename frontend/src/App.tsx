@@ -1701,7 +1701,7 @@ function SetupView({ onCurrentUserChange }: { onCurrentUserChange: (user: User) 
       <BackupSettingsPanel />
       <RetentionSettingsPanel />
       <ResetValuesPanel />
-      <div className="setup-wide"><DeviceSetupPanel /></div>
+      <div className="setup-wide setup-devices-wide"><DeviceSetupPanel /></div>
     </div>
   );
 }

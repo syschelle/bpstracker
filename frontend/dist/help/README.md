@@ -1408,10 +1408,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.37` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.38` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.37 --language en
+bash ./deploy-images.sh --regular --tag v0.9.38 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1789,4 +1789,8 @@ v0.9.36 aligns the daily cost values shown on the dashboard and the Kindle displ
 ### v0.9.37 compact setup layout
 
 v0.9.37 makes the Setup page more compact without removing configuration options. Setup panels now use a denser two-column desktop layout, reduced panel padding, tighter form spacing and smaller table spacing, while wide sections such as Kindle settings and Shelly device configuration still span the full width for readability.
+
+### v0.9.38 denser setup layout
+
+v0.9.38 makes the Setup page more compact by reducing spacing, padding and form gaps across setup panels while keeping the configured devices section more spacious for table readability.
 
