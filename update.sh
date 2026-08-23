@@ -78,6 +78,7 @@ if grep -q '^BPSTRACKER_IMAGE_TAG=' .env; then
 else
   printf '\nBPSTRACKER_IMAGE_TAG=%s\n' "$IMAGE_TAG" >> .env
 fi
+export BPSTRACKER_IMAGE_TAG="$IMAGE_TAG"
 
 echo "Using BPSTracker image tag: $IMAGE_TAG"
 echo "Pulling images..."
