@@ -210,6 +210,19 @@ def _int_from_value(value: object) -> int | None:
         return None
 
 
+def _bool_from_value(value: object) -> bool | None:
+    if value is None or value == '':
+        return None
+    if isinstance(value, bool):
+        return value
+    normalized = str(value).strip().lower()
+    if normalized in {'1', 'true', 'yes', 'ja'}:
+        return True
+    if normalized in {'0', 'false', 'no', 'nein'}:
+        return False
+    return None
+
+
 def _pressure_hpa_from_value(value: object) -> float | None:
     pressure = _float_from_value(value)
     if pressure is None:
@@ -258,6 +271,10 @@ def _air_sensor_cache_from_db(db: Session, settings: AirSensorSettings, configur
         software_version=str(value.get('software_version')) if value.get('software_version') else None,
         last_success_at=_datetime_from_value(value.get('last_success_at')),
         last_error=last_error if last_error is not None else (stored_error if not ok else None),
+        weather_underground_last_ok=_bool_from_value(value.get('weather_underground_last_ok')),
+        weather_underground_last_status=_int_from_value(value.get('weather_underground_last_status')),
+        weather_underground_last_response=str(value.get('weather_underground_last_response')) if value.get('weather_underground_last_response') else None,
+        weather_underground_last_at=_datetime_from_value(value.get('weather_underground_last_at')),
     )
 
 
@@ -357,25 +374,45 @@ def _weather_underground_upload_url(settings: AirSensorSettings, current: AirSen
     return url
 
 
-async def _upload_weather_underground(settings: AirSensorSettings, current: AirSensorCurrent, db: Session, now: datetime) -> None:
-    if not settings.weather_underground_enabled or not settings.weather_underground_station_id:
+def _weather_underground_status(ok: bool, now: datetime, *, status: int | None = None, response: str | None = None) -> dict[str, object]:
+    cleaned_response = str(response or '').strip()
+    return {
+        'weather_underground_last_ok': ok,
+        'weather_underground_last_status': status,
+        'weather_underground_last_response': cleaned_response[:240] or None,
+        'weather_underground_last_at': now,
+    }
+
+
+def _apply_weather_underground_status(current: AirSensorCurrent, status: dict[str, object] | None) -> None:
+    if not status:
         return
+    for key, value in status.items():
+        setattr(current, key, value)
+
+
+async def _upload_weather_underground(settings: AirSensorSettings, current: AirSensorCurrent, db: Session, now: datetime) -> dict[str, object] | None:
+    if not settings.weather_underground_enabled or not settings.weather_underground_station_id:
+        return None
     api_key = _weather_underground_api_key_from_db(db)
     if not api_key:
-        return
+        return _weather_underground_status(False, now, response='Missing Weather Underground key')
     upload_url = _weather_underground_upload_url(settings, current, api_key, now)
     timeout = httpx.Timeout(connect=2.0, read=5.0, write=2.0, pool=2.0)
     try:
         async with httpx.AsyncClient(timeout=timeout, follow_redirects=False) as client:
             response = await client.get(upload_url)
+            response_text = response.text.strip()
             if response.is_error:
-                logger.warning('Weather Underground upload failed with HTTP %s: %s', response.status_code, response.text.strip())
-                return
-            text = response.text.strip().lower()
-            if text and not text.startswith('success'):
-                logger.warning('Weather Underground upload returned: %s', response.text.strip())
+                logger.warning('Weather Underground upload failed with HTTP %s: %s', response.status_code, response_text)
+                return _weather_underground_status(False, now, status=response.status_code, response=response_text or response.reason_phrase)
+            ok = not response_text or response_text.lower().startswith('success')
+            if not ok:
+                logger.warning('Weather Underground upload returned: %s', response_text)
+            return _weather_underground_status(ok, now, status=response.status_code, response=response_text or response.reason_phrase)
     except Exception as exc:
         logger.warning('Weather Underground upload failed: %s', exc.__class__.__name__)
+        return _weather_underground_status(False, now, response=exc.__class__.__name__)
 
 
 async def fetch_air_sensor_current(settings: AirSensorSettings, db: Session) -> AirSensorCurrent:
@@ -462,8 +499,8 @@ async def fetch_air_sensor_current(settings: AirSensorSettings, db: Session) -> 
         _save_air_sensor_failure(db, message, last_attempt_at=now)
         return _air_sensor_cache_from_db(db, settings, configured, ok=False, last_error=message)
 
+    _apply_weather_underground_status(current, await _upload_weather_underground(settings, current, db, now))
     _save_air_sensor_cache(db, current, last_attempt_at=now)
-    await _upload_weather_underground(settings, current, db, now)
     return current
 
 

@@ -205,6 +205,10 @@ class AirSensorCurrent(BaseModel):
     software_version: str | None = None
     last_success_at: datetime | None = None
     last_error: str | None = None
+    weather_underground_last_ok: bool | None = None
+    weather_underground_last_status: int | None = None
+    weather_underground_last_response: str | None = None
+    weather_underground_last_at: datetime | None = None
 
 
 class TestDeviceResponse(BaseModel):

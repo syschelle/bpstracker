@@ -172,6 +172,10 @@ export interface AirSensorCurrent {
   software_version?: string | null;
   last_success_at?: string | null;
   last_error?: string | null;
+  weather_underground_last_ok?: boolean | null;
+  weather_underground_last_status?: number | null;
+  weather_underground_last_response?: string | null;
+  weather_underground_last_at?: string | null;
 }
 
 

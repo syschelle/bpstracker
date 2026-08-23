@@ -70,7 +70,7 @@ def test_air_sensor_weather_underground_key_is_not_exposed() -> None:
 
 
 def test_weather_underground_params_include_air_sensor_values() -> None:
-    from app.routers.settings import _pressure_hpa_from_value, _weather_underground_params, _weather_underground_upload_url, _normalize_air_sensor_value
+    from app.routers.settings import _pressure_hpa_from_value, _weather_underground_params, _weather_underground_status, _weather_underground_upload_url, _normalize_air_sensor_value
 
     settings = _normalize_air_sensor_value({
         'weather_underground_enabled': True,
@@ -102,3 +102,8 @@ def test_weather_underground_params_include_air_sensor_values() -> None:
     assert 'dateutc=2026-08-23+12%3A00%3A00' in upload_url
     assert 'baromin=29.92' in upload_url
     assert _pressure_hpa_from_value('98607') == 986.07
+
+    status = _weather_underground_status(False, datetime(2026, 8, 23, 12, 1, tzinfo=timezone.utc), status=401, response='Unauthorized')
+    assert status['weather_underground_last_ok'] is False
+    assert status['weather_underground_last_status'] == 401
+    assert status['weather_underground_last_response'] == 'Unauthorized'
