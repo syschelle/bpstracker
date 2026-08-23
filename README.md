@@ -1408,10 +1408,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.42` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.43` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.42 --language en
+bash ./deploy-images.sh --regular --tag v0.9.43 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1807,3 +1807,9 @@ v0.9.41 adds a dedicated **Interfaces** category below **General** in the Setup 
 v0.9.42 moves admin 2FA management directly into the Admin card under **Setup -> User access**. The separate **Admin 2FA** sidebar tab has been removed while setup QR code, activation, deactivation and recovery code management remain available in Setup.
 
 Image-based installations can update in place with `bash ./update.sh --tag v0.9.42` from `/opt/bpstracker`.
+
+### v0.9.43 locked post-activation 2FA setup
+
+v0.9.43 removes post-activation controls for regenerating recovery codes or disabling admin 2FA from Setup. Recovery codes are shown only once immediately after 2FA activation. The old recovery-code regeneration and 2FA-disable API routes are no longer available.
+
+Image-based installations can update in place with `bash ./update.sh --tag v0.9.43` from `/opt/bpstracker`.

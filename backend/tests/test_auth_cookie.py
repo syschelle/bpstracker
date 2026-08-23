@@ -65,3 +65,10 @@ def test_logout_clears_auth_cookie(client: TestClient) -> None:
     assert response.status_code == 204
     assert 'bpstracker_access_token=' in response.headers['set-cookie']
     assert 'Max-Age=0' in response.headers['set-cookie']
+
+
+def test_2fa_disable_and_recovery_regeneration_routes_are_not_available(client: TestClient) -> None:
+    assert client.post('/api/auth/login', json={'username': 'admin', 'password': 'SehrSicher123!'}).status_code == 200
+
+    assert client.post('/api/auth/2fa/disable').status_code == 404
+    assert client.post('/api/auth/2fa/recovery-codes').status_code == 404

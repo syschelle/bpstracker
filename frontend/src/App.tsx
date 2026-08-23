@@ -2555,20 +2555,6 @@ function AdminTwoFaSettings({ user, onUser }: { user: User; onUser: (user: User)
     setMessage(t('twoFaEnabledMessage'));
   }
 
-  async function disable() {
-    const updated = await api.disable2fa();
-    onUser(updated);
-    setSetup(null);
-    setRecoveryCodes([]);
-    setMessage(t('twoFaDisabledMessage'));
-  }
-
-  async function regenerateRecoveryCodes() {
-    const response = await api.regenerateRecoveryCodes();
-    setRecoveryCodes(response.recovery_codes);
-    setMessage(t('recoveryRegenerated'));
-  }
-
   return (
     <div className="admin-twofa">
       {message && <div className="info">{message}</div>}
@@ -2576,7 +2562,6 @@ function AdminTwoFaSettings({ user, onUser }: { user: User; onUser: (user: User)
       <p>{t('twoFaStatus')}: <strong>{user.totp_enabled ? t('enabled') : t('notActive')}</strong></p>
       <p className="hint">{t('twoFaHint')}</p>
       {!user.totp_enabled && !setup && <button onClick={() => void startSetup()}>{t('setup2fa')}</button>}
-      {user.totp_enabled && <div className="actions"><button onClick={() => void regenerateRecoveryCodes()}>{t('regenerateRecoveryCodes')}</button><button className="danger" onClick={() => void disable()}>{t('disable2fa')}</button></div>}
       {setup && <div className="twofa-box">
         <QRCodeSVG value={setup.provisioning_uri} size={180} />
         <p>Secret: <code>{setup.secret}</code></p>

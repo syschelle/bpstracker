@@ -11,7 +11,6 @@ from ..models import AuditLog, User, UserRole
 from ..rate_limit import FixedWindowRateLimiter, client_rate_limit_key, raise_rate_limited
 from ..schemas import (
     LoginRequest,
-    RecoveryCodesResponse,
     TokenResponse,
     TwoFaEnableRequest,
     TwoFaEnableResponse,
@@ -177,23 +176,3 @@ def enable_2fa(payload: TwoFaEnableRequest, user: User = Depends(require_admin),
     db.refresh(user)
     return _user_payload(user, recovery_codes)
 
-
-@router.post('/2fa/disable', response_model=UserRead)
-def disable_2fa(user: User = Depends(require_admin), db: Session = Depends(get_db)) -> User:
-    user.totp_enabled = False
-    set_user_totp_secret(user, None)
-    delete_recovery_codes(db, user)
-    db.add(AuditLog(actor_user_id=user.id, action='auth.2fa.disabled', details={}))
-    db.commit()
-    db.refresh(user)
-    return user
-
-
-@router.post('/2fa/recovery-codes', response_model=RecoveryCodesResponse)
-def regenerate_recovery_codes(user: User = Depends(require_admin), db: Session = Depends(get_db)) -> dict[str, list[str]]:
-    if not user.totp_enabled:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='2FA must be enabled first')
-    recovery_codes = replace_recovery_codes(db, user)
-    db.add(AuditLog(actor_user_id=user.id, action='auth.2fa.recovery_codes.regenerated', details={'recovery_code_count': len(recovery_codes)}))
-    db.commit()
-    return {'recovery_codes': recovery_codes}

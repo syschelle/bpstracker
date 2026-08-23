@@ -62,10 +62,6 @@ class TwoFaEnableResponse(UserRead):
     recovery_codes: list[str] = Field(default_factory=list)
 
 
-class RecoveryCodesResponse(BaseModel):
-    recovery_codes: list[str]
-
-
 class UserCredentialUpdate(BaseModel):
     username: str = Field(min_length=1, max_length=80, pattern=r'^[A-Za-z0-9_.-]+$')
     password: str | None = Field(default=None, min_length=8, max_length=256)
