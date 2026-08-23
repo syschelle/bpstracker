@@ -155,6 +155,7 @@ export interface AirSensorSettings {
   weather_underground_station_id?: string | null;
   weather_underground_api_key?: string | null;
   weather_underground_api_key_set?: boolean;
+  weather_underground_upload_url?: string | null;
 }
 
 export interface AirSensorCurrent {

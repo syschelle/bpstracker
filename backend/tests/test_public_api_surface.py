@@ -52,7 +52,7 @@ def test_public_dashboard_settings_allows_empty_meter_number() -> None:
 
 
 def test_air_sensor_weather_underground_key_is_not_exposed() -> None:
-    from app.routers.settings import _normalize_air_sensor_value
+    from app.routers.settings import DEFAULT_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE, _normalize_air_sensor_value
 
     settings = _normalize_air_sensor_value({
         'enabled': True,
@@ -66,10 +66,11 @@ def test_air_sensor_weather_underground_key_is_not_exposed() -> None:
     assert settings.weather_underground_station_id == 'IDORTMUN123'
     assert settings.weather_underground_api_key is None
     assert settings.weather_underground_api_key_set is True
+    assert settings.weather_underground_upload_url == DEFAULT_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE
 
 
 def test_weather_underground_params_include_air_sensor_values() -> None:
-    from app.routers.settings import _weather_underground_params, _normalize_air_sensor_value
+    from app.routers.settings import _weather_underground_params, _weather_underground_upload_url, _normalize_air_sensor_value
 
     settings = _normalize_air_sensor_value({
         'weather_underground_enabled': True,
@@ -94,3 +95,9 @@ def test_weather_underground_params_include_air_sensor_values() -> None:
     assert params['AqPM10'] == '12.35'
     assert params['AqPM2.5'] == '6.79'
     assert params['action'] == 'updateraw'
+
+    upload_url = _weather_underground_upload_url(settings, current, 'secret-key', datetime(2026, 8, 23, 12, 0, tzinfo=timezone.utc))
+    assert 'ID=IDORTMUN123' in upload_url
+    assert 'PASSWORD=secret-key' in upload_url
+    assert 'dateutc=2026-08-23+12%3A00%3A00' in upload_url
+    assert 'baromin=29.92' in upload_url

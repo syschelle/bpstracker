@@ -2343,6 +2343,7 @@ function AirSensorSettingsPanel() {
     weather_underground_enabled: false,
     weather_underground_station_id: '',
     weather_underground_api_key: '',
+    weather_underground_upload_url: '',
   });
   const [message, setMessage] = useState<string | null>(null);
 
@@ -2361,6 +2362,7 @@ function AirSensorSettingsPanel() {
       weather_underground_enabled: Boolean(settings.weather_underground_enabled),
       weather_underground_station_id: (settings.weather_underground_station_id || '').trim() || null,
       weather_underground_api_key: (settings.weather_underground_api_key || '').trim() || null,
+      weather_underground_upload_url: (settings.weather_underground_upload_url || '').trim() || null,
     });
     setSettings({ ...saved, weather_underground_api_key: '' });
     setMessage(t('airSensorSaved'));
@@ -2377,6 +2379,7 @@ function AirSensorSettingsPanel() {
         <label className="check"><input type="checkbox" checked={Boolean(settings.weather_underground_enabled)} onChange={e => setSettings({ ...settings, weather_underground_enabled: e.target.checked })} /> {t('enableWeatherUndergroundUpload')}</label>
         <label>{t('weatherUndergroundStation')}<input value={settings.weather_underground_station_id || ''} onChange={e => setSettings({ ...settings, weather_underground_station_id: e.target.value })} placeholder="IDORTMUN123" disabled={!settings.weather_underground_enabled} /></label>
         <label>{t('weatherUndergroundApiKey')}<input type="password" value={settings.weather_underground_api_key || ''} onChange={e => setSettings({ ...settings, weather_underground_api_key: e.target.value })} placeholder={settings.weather_underground_api_key_set ? t('unchangedPlaceholder') : ''} disabled={!settings.weather_underground_enabled} /></label>
+        <label className="full-row">{t('weatherUndergroundUploadUrl')}<textarea value={settings.weather_underground_upload_url || ''} onChange={e => setSettings({ ...settings, weather_underground_upload_url: e.target.value })} disabled={!settings.weather_underground_enabled} rows={4} /></label>
       </div>
       <p className="hint">{t('weatherUndergroundHint')}</p>
       <button onClick={() => void save()}>{t('saveAirSensor')}</button>

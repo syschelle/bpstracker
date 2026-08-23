@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from urllib.parse import quote_plus
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 import logging
 import re
@@ -33,6 +34,12 @@ AIR_SENSOR_CACHE_KEY = 'air_sensor_cache'
 AIR_SENSOR_SUCCESS_POLL_SECONDS = 180
 AIR_SENSOR_RETRY_SECONDS = 30
 WEATHER_UNDERGROUND_UPLOAD_URL = 'https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php'
+DEFAULT_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE = (
+    WEATHER_UNDERGROUND_UPLOAD_URL
+    + '?ID={station_id}&PASSWORD={api_key}&dateutc={dateutc}&action=updateraw'
+    + '&softwaretype={softwaretype}&realtime=1&rtfreq={rtfreq}'
+    + '&tempf={tempf}&humidity={humidity}&baromin={baromin}&AqPM2.5={pm25}&AqPM10={pm10}'
+)
 DEFAULT_KWH_PRICE_EUR = 0.30
 DEFAULT_INVESTMENT_COST_EUR = 0.0
 DEFAULT_BATTERY_ROUNDTRIP_EFFICIENCY = 0.85
@@ -168,6 +175,7 @@ def _normalize_air_sensor_value(value: dict | None) -> AirSensorSettings:
     value = value or {}
     station_id = str(value.get('weather_underground_station_id') or '').strip().upper() or None
     api_key_ciphertext = str(value.get('weather_underground_api_key_ciphertext') or '').strip()
+    upload_url = str(value.get('weather_underground_upload_url') or '').strip() or DEFAULT_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE
     return AirSensorSettings(
         enabled=bool(value.get('enabled', False)),
         host=_normalize_host(value.get('host')),
@@ -175,6 +183,7 @@ def _normalize_air_sensor_value(value: dict | None) -> AirSensorSettings:
         weather_underground_station_id=station_id,
         weather_underground_api_key=None,
         weather_underground_api_key_set=bool(api_key_ciphertext),
+        weather_underground_upload_url=upload_url,
     )
 
 
@@ -319,17 +328,37 @@ def _weather_underground_params(settings: AirSensorSettings, current: AirSensorC
     return params
 
 
+def _weather_underground_upload_url(settings: AirSensorSettings, current: AirSensorCurrent, api_key: str, now: datetime) -> str:
+    params = _weather_underground_params(settings, current, api_key, now)
+    values = {
+        'station_id': params.get('ID', ''),
+        'api_key': params.get('PASSWORD', ''),
+        'dateutc': params.get('dateutc', ''),
+        'softwaretype': params.get('softwaretype', ''),
+        'rtfreq': params.get('rtfreq', ''),
+        'tempf': params.get('tempf', ''),
+        'humidity': params.get('humidity', ''),
+        'baromin': params.get('baromin', ''),
+        'pm25': params.get('AqPM2.5', ''),
+        'pm10': params.get('AqPM10', ''),
+    }
+    url = settings.weather_underground_upload_url or DEFAULT_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE
+    for key, value in values.items():
+        url = url.replace('{' + key + '}', quote_plus(str(value)))
+    return url
+
+
 async def _upload_weather_underground(settings: AirSensorSettings, current: AirSensorCurrent, db: Session, now: datetime) -> None:
     if not settings.weather_underground_enabled or not settings.weather_underground_station_id:
         return
     api_key = _weather_underground_api_key_from_db(db)
     if not api_key:
         return
-    params = _weather_underground_params(settings, current, api_key, now)
+    upload_url = _weather_underground_upload_url(settings, current, api_key, now)
     timeout = httpx.Timeout(connect=2.0, read=5.0, write=2.0, pool=2.0)
     try:
         async with httpx.AsyncClient(timeout=timeout, follow_redirects=False) as client:
-            response = await client.get(WEATHER_UNDERGROUND_UPLOAD_URL, params=params)
+            response = await client.get(upload_url)
             response.raise_for_status()
             text = response.text.strip().lower()
             if text and not text.startswith('success'):
@@ -720,6 +749,7 @@ def update_air_sensor_settings(
         raw_value['weather_underground_api_key_ciphertext'] = existing_value.get('weather_underground_api_key_ciphertext')
     raw_value.pop('weather_underground_api_key_set', None)
     raw_value['weather_underground_station_id'] = str(raw_value.get('weather_underground_station_id') or '').strip().upper() or None
+    raw_value['weather_underground_upload_url'] = str(raw_value.get('weather_underground_upload_url') or '').strip() or DEFAULT_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE
     normalized = _normalize_air_sensor_value(raw_value)
     value = normalized.model_dump()
     value.pop('weather_underground_api_key', None)
@@ -736,6 +766,7 @@ def update_air_sensor_settings(
         'host': value.get('host'),
         'weather_underground_enabled': value.get('weather_underground_enabled'),
         'weather_underground_station_id': value.get('weather_underground_station_id'),
+        'weather_underground_upload_url': value.get('weather_underground_upload_url'),
         'weather_underground_api_key_changed': bool(api_key),
     }))
     db.commit()

@@ -23,7 +23,7 @@ button.small { padding: 0.45rem 0.7rem; }
 button.active, .side-nav button.active { background: #0d9488; }
 button.danger { background: #b91c1c; }
 button:disabled { opacity: 0.6; cursor: wait; }
-input, select {
+input, select, textarea {
   display: block;
   width: 100%;
   border: 1px solid #d5dbea;
@@ -31,6 +31,11 @@ input, select {
   padding: 0.72rem 0.85rem;
   margin-top: 0.35rem;
   background: white;
+}
+textarea {
+  min-height: 6.5rem;
+  resize: vertical;
+  font: inherit;
 }
 label { font-size: 0.92rem; color: #34405a; font-weight: 650; }
 table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
@@ -100,6 +105,7 @@ html[data-theme='dark'] .daily-balance-list .balance-value.grid-export { color: 
 .panel-head h2 { margin: 0; }
 .tall { min-height: 540px; }
 .form-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+.form-grid .full-row { grid-column: 1 / -1; }
 .check { display: flex; align-items: center; gap: 0.5rem; }
 .check input { width: auto; margin: 0; }
 .badge { display: inline-block; background: #e5e7eb; color: #374151; border-radius: 999px; padding: 0.18rem 0.55rem; font-weight: 750; font-size: 0.78rem; }
@@ -511,7 +517,8 @@ html[data-theme='dark'] .finance-summary .metric {
   box-shadow: 0 10px 34px rgba(0, 0, 0, 0.32);
 }
 html[data-theme='dark'] input,
-html[data-theme='dark'] select {
+html[data-theme='dark'] select,
+html[data-theme='dark'] textarea {
   background: #0f172a;
   color: #e5e7eb;
   border-color: #334155;

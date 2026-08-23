@@ -188,6 +188,7 @@ class AirSensorSettings(BaseModel):
     weather_underground_station_id: str | None = Field(default=None, max_length=80)
     weather_underground_api_key: str | None = Field(default=None, max_length=255)
     weather_underground_api_key_set: bool = False
+    weather_underground_upload_url: str | None = Field(default=None, max_length=2000)
 
 
 class AirSensorCurrent(BaseModel):
