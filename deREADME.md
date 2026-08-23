@@ -766,7 +766,7 @@ bash ./deploy-images.sh
 `deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.36` oder `latest`). Für unbeaufsichtigte Image-Deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.41 --language de
+bash ./deploy-images.sh --regular --tag v0.9.42 --language de
 bash ./deploy-images.sh --zero2w --latest --language en
 ```
 
@@ -1076,3 +1076,6 @@ v0.9.40 gruppiert Sprache, Zeitzone und GitHub-Repository als erste Setup-Katego
 
 v0.9.41 ergänzt im Setup unter **Allgemein** die neue Rubrik **Schnittstellen**. Dort werden JSON-API und Kindle-Display gruppiert, die einzelnen Kacheln bleiben dabei erhalten. Das kompakte Setup-Layout bleibt unverändert.
 
+### v0.9.42 Admin-2FA im Setup
+
+v0.9.42 verschiebt die Admin-2FA-Verwaltung direkt in die Admin-Kachel unter **Setup -> Benutzerzugänge**. Der separate Seitenleisten-Reiter **Admin 2FA** entfällt; QR-Code-Einrichtung, Aktivierung, Deaktivierung und Recovery-Code-Verwaltung bleiben im Setup verfügbar.

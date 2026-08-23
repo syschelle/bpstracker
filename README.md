@@ -1408,10 +1408,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.41` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.42` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.41 --language en
+bash ./deploy-images.sh --regular --tag v0.9.42 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1802,3 +1802,6 @@ v0.9.40 groups language, time zone and GitHub repository into a first Setup cate
 
 v0.9.41 adds a dedicated **Interfaces** category below **General** in the Setup page. The JSON API and Kindle display settings are grouped there while keeping their individual setup cards. The compact setup layout remains unchanged.
 
+### v0.9.42 setup admin 2FA
+
+v0.9.42 moves admin 2FA management directly into the Admin card under **Setup -> User access**. The separate **Admin 2FA** sidebar tab has been removed while setup QR code, activation, deactivation and recovery code management remain available in Setup.
