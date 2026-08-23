@@ -1805,3 +1805,5 @@ v0.9.41 adds a dedicated **Interfaces** category below **General** in the Setup 
 ### v0.9.42 setup admin 2FA
 
 v0.9.42 moves admin 2FA management directly into the Admin card under **Setup -> User access**. The separate **Admin 2FA** sidebar tab has been removed while setup QR code, activation, deactivation and recovery code management remain available in Setup.
+
+Image-based installations can update in place with `bash ./update.sh --tag v0.9.42` from `/opt/bpstracker`.

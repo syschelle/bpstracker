@@ -1079,3 +1079,5 @@ v0.9.41 ergänzt im Setup unter **Allgemein** die neue Rubrik **Schnittstellen**
 ### v0.9.42 Admin-2FA im Setup
 
 v0.9.42 verschiebt die Admin-2FA-Verwaltung direkt in die Admin-Kachel unter **Setup -> Benutzerzugänge**. Der separate Seitenleisten-Reiter **Admin 2FA** entfällt; QR-Code-Einrichtung, Aktivierung, Deaktivierung und Recovery-Code-Verwaltung bleiben im Setup verfügbar.
+
+Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.42` aktualisiert werden.
