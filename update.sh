@@ -80,6 +80,11 @@ else
 fi
 export BPSTRACKER_IMAGE_TAG="$IMAGE_TAG"
 
+if grep -Eq 'ghcr\.io/syschelle/bpstracker-(backend|frontend):' "$COMPOSE_FILE"; then
+  sed -i -E "s#ghcr\\.io/syschelle/bpstracker-backend:[^[:space:]]+#ghcr.io/syschelle/bpstracker-backend:$IMAGE_TAG#" "$COMPOSE_FILE"
+  sed -i -E "s#ghcr\\.io/syschelle/bpstracker-frontend:[^[:space:]]+#ghcr.io/syschelle/bpstracker-frontend:$IMAGE_TAG#" "$COMPOSE_FILE"
+fi
+
 echo "Using BPSTracker image tag: $IMAGE_TAG"
 echo "Pulling images..."
 compose -f "$COMPOSE_FILE" pull
