@@ -1,7 +1,9 @@
 from fastapi.routing import APIRoute
+from datetime import datetime, timezone
 
 from app.main import app
 from app.security import require_admin
+from app.schemas import AirSensorCurrent
 
 
 def test_sensitive_public_endpoints_are_not_registered() -> None:
@@ -47,3 +49,46 @@ def test_public_dashboard_settings_allows_empty_meter_number() -> None:
 
     assert settings.enabled is True
     assert settings.meter_number is None
+
+
+def test_air_sensor_weather_underground_key_is_not_exposed() -> None:
+    from app.routers.settings import _normalize_air_sensor_value
+
+    settings = _normalize_air_sensor_value({
+        'enabled': True,
+        'host': '192.168.178.60',
+        'weather_underground_enabled': True,
+        'weather_underground_station_id': ' idortmun123 ',
+        'weather_underground_api_key_ciphertext': 'encrypted-value',
+    })
+
+    assert settings.weather_underground_enabled is True
+    assert settings.weather_underground_station_id == 'IDORTMUN123'
+    assert settings.weather_underground_api_key is None
+    assert settings.weather_underground_api_key_set is True
+
+
+def test_weather_underground_params_include_air_sensor_values() -> None:
+    from app.routers.settings import _weather_underground_params, _normalize_air_sensor_value
+
+    settings = _normalize_air_sensor_value({
+        'weather_underground_enabled': True,
+        'weather_underground_station_id': 'IDORTMUN123',
+    })
+    current = AirSensorCurrent(
+        temperature_c=20.0,
+        humidity_percent=54.4,
+        sds_p1=12.345,
+        sds_p2=6.789,
+    )
+
+    params = _weather_underground_params(settings, current, 'secret-key', datetime(2026, 8, 23, 12, 0, tzinfo=timezone.utc))
+
+    assert params['ID'] == 'IDORTMUN123'
+    assert params['PASSWORD'] == 'secret-key'
+    assert params['dateutc'] == '2026-08-23 12:00:00'
+    assert params['tempf'] == '68.00'
+    assert params['humidity'] == '54'
+    assert params['AqPM10'] == '12.35'
+    assert params['AqPM2.5'] == '6.79'
+    assert params['action'] == 'updateraw'

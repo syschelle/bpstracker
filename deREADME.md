@@ -766,7 +766,7 @@ bash ./deploy-images.sh
 `deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.36` oder `latest`). Für unbeaufsichtigte Image-Deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.43 --language de
+bash ./deploy-images.sh --regular --tag v0.9.44 --language de
 bash ./deploy-images.sh --zero2w --latest --language en
 ```
 
@@ -1087,3 +1087,9 @@ Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./up
 v0.9.43 entfernt nach aktivierter Admin-2FA die Setup-Aktionen zum Neuerzeugen von Recovery-Codes und zum Deaktivieren von 2FA. Recovery-Codes werden nur noch direkt nach der 2FA-Aktivierung einmalig angezeigt. Die alten API-Routen zum Neuerzeugen von Recovery-Codes und zum Deaktivieren von 2FA sind nicht mehr verfügbar.
 
 Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.43` aktualisiert werden.
+
+### v0.9.44 Weather-Underground-Upload für Luftdatensensor
+
+v0.9.44 ergänzt in der Luftdatensensor-Kachel einen optionalen Upload zu Weather Underground. Stations-ID und Key können im Setup gespeichert werden; der Key wird verschlüsselt abgelegt und nicht erneut angezeigt. Uploads laufen nur nach einer erfolgreichen neuen Aktualisierung des Luftdatensensors und senden Temperatur, Luftfeuchte, PM10 und PM2.5 über das Weather-Underground-PWS-Protokoll.
+
+Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.44` aktualisiert werden.

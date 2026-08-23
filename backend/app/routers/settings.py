@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+import logging
 import re
 
 import httpx
@@ -13,10 +14,11 @@ from ..database import get_db
 from ..models import AppSetting, AuditLog, User
 from ..schemas import AirSensorCurrent, AirSensorSettings, CurrentValuesApiSettings, PublicDashboardSettings, FinanceSettings, KindleDisplaySettings, RetentionSettings, SimulationSettings, UiSettings
 from ..network_security import OutboundHostError, lan_http_url, normalize_outbound_http_host, resolve_lan_http_target
-from ..security import get_current_user, require_admin
+from ..security import decrypt_secret, encrypt_secret, get_current_user, require_admin
 from ..simulation import simulated_air_sensor_current
 
 router = APIRouter(prefix='/api/settings', tags=['settings'])
+logger = logging.getLogger(__name__)
 
 FINANCE_SETTINGS_KEY = 'finance'
 UI_SETTINGS_KEY = 'ui'
@@ -30,6 +32,7 @@ SIMULATION_CACHE_KEY = 'simulation_cache'
 AIR_SENSOR_CACHE_KEY = 'air_sensor_cache'
 AIR_SENSOR_SUCCESS_POLL_SECONDS = 180
 AIR_SENSOR_RETRY_SECONDS = 30
+WEATHER_UNDERGROUND_UPLOAD_URL = 'https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php'
 DEFAULT_KWH_PRICE_EUR = 0.30
 DEFAULT_INVESTMENT_COST_EUR = 0.0
 DEFAULT_BATTERY_ROUNDTRIP_EFFICIENCY = 0.85
@@ -163,9 +166,15 @@ def get_finance_settings_from_db(db: Session) -> FinanceSettings:
 
 def _normalize_air_sensor_value(value: dict | None) -> AirSensorSettings:
     value = value or {}
+    station_id = str(value.get('weather_underground_station_id') or '').strip().upper() or None
+    api_key_ciphertext = str(value.get('weather_underground_api_key_ciphertext') or '').strip()
     return AirSensorSettings(
         enabled=bool(value.get('enabled', False)),
         host=_normalize_host(value.get('host')),
+        weather_underground_enabled=bool(value.get('weather_underground_enabled', False)),
+        weather_underground_station_id=station_id,
+        weather_underground_api_key=None,
+        weather_underground_api_key_set=bool(api_key_ciphertext),
     )
 
 
@@ -271,6 +280,57 @@ def _merge_with_previous(current: AirSensorCurrent, previous: AirSensorCurrent) 
     return current
 
 
+def _weather_underground_api_key_from_db(db: Session) -> str | None:
+    row = db.get(AppSetting, AIR_SENSOR_SETTINGS_KEY)
+    value = row.value if row and isinstance(row.value, dict) else {}
+    ciphertext = value.get('weather_underground_api_key_ciphertext')
+    return decrypt_secret(str(ciphertext)) if ciphertext else None
+
+
+def _fahrenheit(celsius: float) -> float:
+    return (celsius * 9.0 / 5.0) + 32.0
+
+
+def _weather_underground_params(settings: AirSensorSettings, current: AirSensorCurrent, api_key: str, now: datetime) -> dict[str, str]:
+    params: dict[str, str] = {
+        'ID': str(settings.weather_underground_station_id or '').strip().upper(),
+        'PASSWORD': api_key,
+        'dateutc': now.strftime('%Y-%m-%d %H:%M:%S'),
+        'action': 'updateraw',
+        'softwaretype': 'BPSTracker',
+        'realtime': '1',
+        'rtfreq': str(AIR_SENSOR_SUCCESS_POLL_SECONDS),
+    }
+    if current.temperature_c is not None:
+        params['tempf'] = f'{_fahrenheit(current.temperature_c):.2f}'
+    if current.humidity_percent is not None:
+        params['humidity'] = str(max(0, min(100, int(round(current.humidity_percent)))))
+    if current.sds_p2 is not None:
+        params['AqPM2.5'] = f'{current.sds_p2:.2f}'
+    if current.sds_p1 is not None:
+        params['AqPM10'] = f'{current.sds_p1:.2f}'
+    return params
+
+
+async def _upload_weather_underground(settings: AirSensorSettings, current: AirSensorCurrent, db: Session, now: datetime) -> None:
+    if not settings.weather_underground_enabled or not settings.weather_underground_station_id:
+        return
+    api_key = _weather_underground_api_key_from_db(db)
+    if not api_key:
+        return
+    params = _weather_underground_params(settings, current, api_key, now)
+    timeout = httpx.Timeout(connect=2.0, read=5.0, write=2.0, pool=2.0)
+    try:
+        async with httpx.AsyncClient(timeout=timeout, follow_redirects=False) as client:
+            response = await client.get(WEATHER_UNDERGROUND_UPLOAD_URL, params=params)
+            response.raise_for_status()
+            text = response.text.strip().lower()
+            if text and not text.startswith('success'):
+                logger.warning('Weather Underground upload returned: %s', response.text.strip())
+    except Exception:
+        logger.exception('Weather Underground upload failed')
+
+
 async def fetch_air_sensor_current(settings: AirSensorSettings, db: Session) -> AirSensorCurrent:
     configured = bool(settings.host)
     if not settings.enabled or not configured:
@@ -350,6 +410,7 @@ async def fetch_air_sensor_current(settings: AirSensorSettings, db: Session) -> 
         return _air_sensor_cache_from_db(db, settings, configured, ok=False, last_error=message)
 
     _save_air_sensor_cache(db, current, last_attempt_at=now)
+    await _upload_weather_underground(settings, current, db, now)
     return current
 
 
@@ -636,16 +697,34 @@ def update_air_sensor_settings(
     db: Session = Depends(get_db),
 ) -> AirSensorSettings:
     raw_value = payload.model_dump()
-    raw_value['host'] = _normalize_host_or_400(raw_value.get('host'))
-    normalized = _normalize_air_sensor_value(raw_value)
     row = db.get(AppSetting, AIR_SENSOR_SETTINGS_KEY)
+    existing_value = row.value if row and isinstance(row.value, dict) else {}
+    raw_value['host'] = _normalize_host_or_400(raw_value.get('host'))
+    api_key = str(raw_value.pop('weather_underground_api_key') or '').strip()
+    if api_key:
+        raw_value['weather_underground_api_key_ciphertext'] = encrypt_secret(api_key)
+    elif existing_value.get('weather_underground_api_key_ciphertext'):
+        raw_value['weather_underground_api_key_ciphertext'] = existing_value.get('weather_underground_api_key_ciphertext')
+    raw_value.pop('weather_underground_api_key_set', None)
+    raw_value['weather_underground_station_id'] = str(raw_value.get('weather_underground_station_id') or '').strip().upper() or None
+    normalized = _normalize_air_sensor_value(raw_value)
     value = normalized.model_dump()
+    value.pop('weather_underground_api_key', None)
+    value.pop('weather_underground_api_key_set', None)
+    if raw_value.get('weather_underground_api_key_ciphertext'):
+        value['weather_underground_api_key_ciphertext'] = raw_value.get('weather_underground_api_key_ciphertext')
     if row is None:
         row = AppSetting(key=AIR_SENSOR_SETTINGS_KEY, value=value)
         db.add(row)
     else:
         row.value = value
-    db.add(AuditLog(actor_user_id=actor.id, action='settings.air_sensor.update', details={'enabled': value.get('enabled'), 'host': value.get('host')}))
+    db.add(AuditLog(actor_user_id=actor.id, action='settings.air_sensor.update', details={
+        'enabled': value.get('enabled'),
+        'host': value.get('host'),
+        'weather_underground_enabled': value.get('weather_underground_enabled'),
+        'weather_underground_station_id': value.get('weather_underground_station_id'),
+        'weather_underground_api_key_changed': bool(api_key),
+    }))
     db.commit()
     db.refresh(row)
     return _normalize_air_sensor_value(row.value)

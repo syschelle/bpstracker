@@ -2337,11 +2337,18 @@ function KindleDisplaySettingsPanel() {
 
 function AirSensorSettingsPanel() {
   const { t } = useI18n();
-  const [settings, setSettings] = useState<AirSensorSettings>({ enabled: false, host: '' });
+  const [settings, setSettings] = useState<AirSensorSettings>({
+    enabled: false,
+    host: '',
+    weather_underground_enabled: false,
+    weather_underground_station_id: '',
+    weather_underground_api_key: '',
+  });
   const [message, setMessage] = useState<string | null>(null);
 
   async function load() {
-    setSettings(await api.airSensorSettings());
+    const loaded = await api.airSensorSettings();
+    setSettings({ ...loaded, weather_underground_api_key: '' });
   }
 
   useEffect(() => { void load(); }, []);
@@ -2351,8 +2358,11 @@ function AirSensorSettingsPanel() {
     const saved = await api.updateAirSensorSettings({
       enabled: settings.enabled,
       host: (settings.host || '').trim() || null,
+      weather_underground_enabled: Boolean(settings.weather_underground_enabled),
+      weather_underground_station_id: (settings.weather_underground_station_id || '').trim() || null,
+      weather_underground_api_key: (settings.weather_underground_api_key || '').trim() || null,
     });
-    setSettings(saved);
+    setSettings({ ...saved, weather_underground_api_key: '' });
     setMessage(t('airSensorSaved'));
   }
 
@@ -2364,7 +2374,11 @@ function AirSensorSettingsPanel() {
       <div className="form-grid finance-form">
         <label className="check"><input type="checkbox" checked={settings.enabled} onChange={e => setSettings({ ...settings, enabled: e.target.checked })} /> {t('enableAirSensor')}</label>
         <label>{t('airSensorHost')}<input value={settings.host || ''} onChange={e => setSettings({ ...settings, host: e.target.value })} placeholder="192.168.178.60" /></label>
+        <label className="check"><input type="checkbox" checked={Boolean(settings.weather_underground_enabled)} onChange={e => setSettings({ ...settings, weather_underground_enabled: e.target.checked })} /> {t('enableWeatherUndergroundUpload')}</label>
+        <label>{t('weatherUndergroundStation')}<input value={settings.weather_underground_station_id || ''} onChange={e => setSettings({ ...settings, weather_underground_station_id: e.target.value })} placeholder="IDORTMUN123" disabled={!settings.weather_underground_enabled} /></label>
+        <label>{t('weatherUndergroundApiKey')}<input type="password" value={settings.weather_underground_api_key || ''} onChange={e => setSettings({ ...settings, weather_underground_api_key: e.target.value })} placeholder={settings.weather_underground_api_key_set ? t('unchangedPlaceholder') : ''} disabled={!settings.weather_underground_enabled} /></label>
       </div>
+      <p className="hint">{t('weatherUndergroundHint')}</p>
       <button onClick={() => void save()}>{t('saveAirSensor')}</button>
     </section>
   );

@@ -151,6 +151,10 @@ export interface Summary {
 export interface AirSensorSettings {
   enabled: boolean;
   host?: string | null;
+  weather_underground_enabled?: boolean;
+  weather_underground_station_id?: string | null;
+  weather_underground_api_key?: string | null;
+  weather_underground_api_key_set?: boolean;
 }
 
 export interface AirSensorCurrent {
