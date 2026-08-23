@@ -1,0 +1,15 @@
+*
+!frontend/
+!frontend/**
+!README.md
+!deREADME.md
+!docs/
+!docs/**
+
+.git
+.env
+data/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+npm-debug.log
