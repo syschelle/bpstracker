@@ -158,7 +158,6 @@
     "saveViewer": "Viewer erstellen/speichern",
     "adminSaved": "Admin wurde gespeichert.",
     "viewerSaved": "Viewer wurde gespeichert.",
-    "twoFaManagedInTab": "2FA verwaltest du im Reiter „Admin 2FA“.",
     "viewerNoSetup": "Der Viewer hat keinen Zugriff auf Setup und 2FA.",
     "role": "Rolle",
     "twoFa": "2FA",

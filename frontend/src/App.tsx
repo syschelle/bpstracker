@@ -8,7 +8,7 @@ import type { AirSensorCurrent, AirSensorSettings, BackupInfo, CurrencyCode, Cur
 import { availableLanguages, DEFAULT_LANGUAGE, helpFileForLanguage, isSupportedLanguage, languageMeta, languageOptionLabel, localeForLanguage, nextLanguage, normalizeLanguage, translate } from './i18n';
 import type { Language, TranslationKey } from './i18n';
 
-type Tab = 'dashboard' | 'history' | 'setup' | 'account' | 'help';
+type Tab = 'dashboard' | 'history' | 'setup' | 'help';
 type Translator = (key: TranslationKey, vars?: Record<string, string | number>) => string;
 type Theme = 'light' | 'dark';
 
@@ -438,7 +438,7 @@ export default function App() {
   }, [installRequired, loadCurrentUserAndLanguage]);
 
   useEffect(() => {
-    if (!isAdmin(user) && (tab === 'setup' || tab === 'account')) setTab('dashboard');
+    if (!isAdmin(user) && tab === 'setup') setTab('dashboard');
   }, [tab, user]);
 
   async function handleInstall() {
@@ -602,7 +602,6 @@ export default function App() {
             <button className={tab === 'dashboard' ? 'active' : ''} onClick={() => goTo('dashboard')}><Activity /> {t('dashboard')}</button>
             <button className={tab === 'history' ? 'active' : ''} onClick={() => goTo('history')}><History /> {t('history')}</button>
             {isAdmin(user) && <button className={tab === 'setup' ? 'active' : ''} onClick={() => goTo('setup')}><Settings /> {t('setup')}</button>}
-            {isAdmin(user) && <button className={tab === 'account' ? 'active' : ''} onClick={() => goTo('account')}><ShieldCheck /> {t('account2fa')}</button>}
             <button className={tab === 'help' ? 'active' : ''} onClick={() => goTo('help')}><HelpCircle /> {t('help')}</button>
             <button onClick={logout}><LogOut /> {t('logout')}</button>
             <div className="side-nav-version">BPSTracker {APP_VERSION}</div>
@@ -641,8 +640,7 @@ export default function App() {
             <SimulationBanner />
             {tab === 'dashboard' && <Dashboard />}
             {tab === 'history' && <HistoryView />}
-            {tab === 'setup' && isAdmin(user) && <SetupView onCurrentUserChange={setUser} />}
-            {tab === 'account' && isAdmin(user) && <AccountView user={user} onUser={setUser} />}
+            {tab === 'setup' && isAdmin(user) && <SetupView currentUser={user} onCurrentUserChange={setUser} />}
             {tab === 'help' && <HelpView />}
           </section>
         </main>
@@ -727,7 +725,6 @@ function tabTitle(tab: Tab, t: Translator): string {
     dashboard: t('dashboard'),
     history: t('history'),
     setup: t('setup'),
-    account: t('account2fa'),
     help: t('help')
   }[tab];
 }
@@ -1685,7 +1682,7 @@ function GithubRepositoryPanel() {
   );
 }
 
-function SetupView({ onCurrentUserChange }: { onCurrentUserChange: (user: User) => void }) {
+function SetupView({ currentUser, onCurrentUserChange }: { currentUser: User; onCurrentUserChange: (user: User) => void }) {
   const { t } = useI18n();
 
   return (
@@ -1709,7 +1706,7 @@ function SetupView({ onCurrentUserChange }: { onCurrentUserChange: (user: User) 
       <SimulationSettingsPanel />
       <AirSensorSettingsPanel />
       <PublicDashboardSettingsPanel />
-      <UserCredentialsPanel onCurrentUserChange={onCurrentUserChange} />
+      <UserCredentialsPanel currentUser={currentUser} onCurrentUserChange={onCurrentUserChange} />
       <BackupSettingsPanel />
       <RetentionSettingsPanel />
       <ResetValuesPanel />
@@ -1806,7 +1803,7 @@ function TimezoneSettingsPanel() {
   );
 }
 
-function UserCredentialsPanel({ onCurrentUserChange }: { onCurrentUserChange: (user: User) => void }) {
+function UserCredentialsPanel({ currentUser, onCurrentUserChange }: { currentUser: User; onCurrentUserChange: (user: User) => void }) {
   const { t } = useI18n();
   const [users, setUsers] = useState<User[]>([]);
   const [adminUsername, setAdminUsername] = useState('');
@@ -1850,7 +1847,7 @@ function UserCredentialsPanel({ onCurrentUserChange }: { onCurrentUserChange: (u
           <label>{t('username')}<input value={adminUsername} onChange={e => setAdminUsername(e.target.value)} /></label>
           <label>{t('newPassword')}<input type="password" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} placeholder={t('unchangedPlaceholder')} /></label>
           <button onClick={() => void saveRole('admin')}>{t('saveAdmin')}</button>
-          <small>{t('twoFaManagedInTab')}</small>
+          <AdminTwoFaSettings user={currentUser} onUser={user => { onCurrentUserChange(user); void load(); }} />
         </div>
         <div className="credential-card">
           <h3>{t('roleViewer')}</h3>
@@ -2536,7 +2533,7 @@ function DeviceSetupPanel() {
   );
 }
 
-function AccountView({ user, onUser }: { user: User; onUser: (user: User) => void }) {
+function AdminTwoFaSettings({ user, onUser }: { user: User; onUser: (user: User) => void }) {
   const { t } = useI18n();
   const [setup, setSetup] = useState<{ secret: string; provisioning_uri: string } | null>(null);
   const [code, setCode] = useState('');
@@ -2573,10 +2570,9 @@ function AccountView({ user, onUser }: { user: User; onUser: (user: User) => voi
   }
 
   return (
-    <section className="panel account">
+    <div className="admin-twofa">
       {message && <div className="info">{message}</div>}
-      <h2>{user.username}</h2>
-      <p>{t('accountRole')}: <strong>{user.role === 'admin' ? t('roleAdmin') : t('roleViewer')}</strong></p>
+      <h4>{t('account2fa')}</h4>
       <p>{t('twoFaStatus')}: <strong>{user.totp_enabled ? t('enabled') : t('notActive')}</strong></p>
       <p className="hint">{t('twoFaHint')}</p>
       {!user.totp_enabled && !setup && <button onClick={() => void startSetup()}>{t('setup2fa')}</button>}
@@ -2592,6 +2588,6 @@ function AccountView({ user, onUser }: { user: User; onUser: (user: User) => voi
         <p className="hint">{t('recoveryHint')}</p>
         <ul>{recoveryCodes.map(code => <li key={code}><code>{code}</code></li>)}</ul>
       </div>}
-    </section>
+    </div>
   );
 }
