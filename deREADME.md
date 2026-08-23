@@ -763,10 +763,10 @@ Oder:
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.51` oder `latest`). Für unbeaufsichtigte Image-Deployments:
+`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.52` oder `latest`). Für unbeaufsichtigte Image-Deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.51 --language de
+bash ./deploy-images.sh --regular --tag v0.9.52 --language de
 bash ./deploy-images.sh --zero2w --latest --language en
 ```
 
@@ -1117,6 +1117,12 @@ Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./up
 v0.9.49 zeigt Datum und Uhrzeit des Weather-Underground-Responses direkt in der Luftdaten-Zeile im Header. Die Felder für Station, Key und Aufruf-Vorlage können im Setup jetzt auch bearbeitet werden, wenn die Upload-Checkbox deaktiviert ist.
 
 Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.49` aktualisiert werden.
+
+### v0.9.52 Weather-Underground-Key bleibt erhalten
+
+v0.9.52 härtet das Speichern der Luftdatensensor-Einstellungen ab: Wenn das Weather-Underground-Key-Feld leer bleibt, sendet das Frontend keinen leeren Ersatz-Key mehr. Zusätzlich stellt ein Backend-Regressionstest sicher, dass der bereits verschlüsselt gespeicherte Key erhalten bleibt, wenn nur andere Luftsensor-Einstellungen geändert werden.
+
+Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.52` aktualisiert werden.
 
 ### v0.9.51 Höhenkorrigierter Luftdruck
 

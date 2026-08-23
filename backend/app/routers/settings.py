@@ -351,6 +351,16 @@ def _weather_underground_api_key_from_db(db: Session) -> str | None:
     return decrypt_secret(str(ciphertext)) if ciphertext else None
 
 
+def _apply_weather_underground_api_key_update(raw_value: dict, existing_value: dict) -> bool:
+    api_key = str(raw_value.pop('weather_underground_api_key', None) or '').strip()
+    if api_key:
+        raw_value['weather_underground_api_key_ciphertext'] = encrypt_secret(api_key)
+    elif existing_value.get('weather_underground_api_key_ciphertext'):
+        raw_value['weather_underground_api_key_ciphertext'] = existing_value.get('weather_underground_api_key_ciphertext')
+    raw_value.pop('weather_underground_api_key_set', None)
+    return bool(api_key)
+
+
 def _fahrenheit(celsius: float) -> float:
     return (celsius * 9.0 / 5.0) + 32.0
 
@@ -833,12 +843,7 @@ def update_air_sensor_settings(
     existing_value = row.value if row and isinstance(row.value, dict) else {}
     raw_value['host'] = _normalize_host_or_400(raw_value.get('host'))
     raw_value['altitude_m'] = _air_sensor_altitude_m(raw_value.get('altitude_m'))
-    api_key = str(raw_value.pop('weather_underground_api_key') or '').strip()
-    if api_key:
-        raw_value['weather_underground_api_key_ciphertext'] = encrypt_secret(api_key)
-    elif existing_value.get('weather_underground_api_key_ciphertext'):
-        raw_value['weather_underground_api_key_ciphertext'] = existing_value.get('weather_underground_api_key_ciphertext')
-    raw_value.pop('weather_underground_api_key_set', None)
+    api_key_changed = _apply_weather_underground_api_key_update(raw_value, existing_value)
     raw_value['weather_underground_station_id'] = str(raw_value.get('weather_underground_station_id') or '').strip().upper() or None
     raw_value['weather_underground_upload_url'] = str(raw_value.get('weather_underground_upload_url') or '').strip() or DEFAULT_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE
     normalized = _normalize_air_sensor_value(raw_value)
@@ -859,7 +864,7 @@ def update_air_sensor_settings(
         'weather_underground_enabled': value.get('weather_underground_enabled'),
         'weather_underground_station_id': value.get('weather_underground_station_id'),
         'weather_underground_upload_url': value.get('weather_underground_upload_url'),
-        'weather_underground_api_key_changed': bool(api_key),
+        'weather_underground_api_key_changed': api_key_changed,
     }))
     db.commit()
     db.refresh(row)

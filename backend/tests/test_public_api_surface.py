@@ -52,7 +52,7 @@ def test_public_dashboard_settings_allows_empty_meter_number() -> None:
 
 
 def test_air_sensor_weather_underground_key_is_not_exposed() -> None:
-    from app.routers.settings import DEFAULT_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE, LEGACY_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE_NO_DEWPOINT, _normalize_air_sensor_value
+    from app.routers.settings import DEFAULT_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE, LEGACY_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE_NO_DEWPOINT, _apply_weather_underground_api_key_update, _normalize_air_sensor_value
 
     settings = _normalize_air_sensor_value({
         'enabled': True,
@@ -70,6 +70,13 @@ def test_air_sensor_weather_underground_key_is_not_exposed() -> None:
     assert settings.weather_underground_upload_url == DEFAULT_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE
     migrated = _normalize_air_sensor_value({'weather_underground_upload_url': LEGACY_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE_NO_DEWPOINT})
     assert migrated.weather_underground_upload_url == DEFAULT_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE
+
+    raw_value = {'weather_underground_api_key': '', 'weather_underground_api_key_set': True}
+    changed = _apply_weather_underground_api_key_update(raw_value, {'weather_underground_api_key_ciphertext': 'encrypted-value'})
+    assert changed is False
+    assert raw_value['weather_underground_api_key_ciphertext'] == 'encrypted-value'
+    assert 'weather_underground_api_key' not in raw_value
+    assert 'weather_underground_api_key_set' not in raw_value
 
 
 def test_weather_underground_params_include_air_sensor_values() -> None:

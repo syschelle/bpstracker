@@ -2379,15 +2379,17 @@ function AirSensorSettingsPanel() {
 
   async function save() {
     setMessage(null);
-    const saved = await api.updateAirSensorSettings({
+    const payload: AirSensorSettings = {
       enabled: settings.enabled,
       host: (settings.host || '').trim() || null,
       altitude_m: settings.altitude_m ?? null,
       weather_underground_enabled: Boolean(settings.weather_underground_enabled),
       weather_underground_station_id: (settings.weather_underground_station_id || '').trim() || null,
-      weather_underground_api_key: (settings.weather_underground_api_key || '').trim() || null,
       weather_underground_upload_url: (settings.weather_underground_upload_url || '').trim() || null,
-    });
+    };
+    const apiKey = (settings.weather_underground_api_key || '').trim();
+    if (apiKey) payload.weather_underground_api_key = apiKey;
+    const saved = await api.updateAirSensorSettings(payload);
     setSettings({ ...saved, weather_underground_api_key: '' });
     setMessage(t('airSensorSaved'));
   }
