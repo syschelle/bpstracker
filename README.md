@@ -659,7 +659,7 @@ The simulation is based on:
 
 No simulated measurements are written to the production measurement tables. The values are generated live and separated from production data. When simulation is disabled, the simulated view disappears and no demo values remain in the production environment.
 
-The simulation also affects the Kindle display, JSON API and air sensor header. Simulated air data includes temperature, humidity, PM10 and PM2.5.
+The simulation also affects the Kindle display, JSON API and air sensor header. Simulated air data includes temperature, humidity, PM10, PM2.5 and pressure.
 
 The header displays a visible simulation banner: **You are in the Matrix 😎**
 
@@ -1408,10 +1408,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.44` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.45` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.44 --language en
+bash ./deploy-images.sh --regular --tag v0.9.45 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1772,7 +1772,7 @@ v0.9.32 aligns the Daily cost balance and Total cost balance value colors with t
 
 ### v0.9.33 dashboard air sensor and label color alignment
 
-v0.9.33 aligns the air sensor label/value presentation with the compact dashboard value rows and synchronizes dashboard value-label colors across the current, balance and cost cards. The air sensor header and public air sensor widget now show explicit labels for temperature, humidity, PM10 and PM2.5 values while keeping the existing compact layout.
+v0.9.33 aligns the air sensor label/value presentation with the compact dashboard value rows and synchronizes dashboard value-label colors across the current, balance and cost cards. The air sensor header and public air sensor widget now show explicit labels for temperature, humidity, PM10, PM2.5 and pressure values while keeping the existing compact layout.
 
 ### v0.9.34 compact air sensor values
 
@@ -1814,8 +1814,8 @@ v0.9.43 removes post-activation controls for regenerating recovery codes or disa
 
 Image-based installations can update in place with `bash ./update.sh --tag v0.9.43` from `/opt/bpstracker`.
 
-### v0.9.44 Weather Underground air sensor upload
+### v0.9.45 Weather Underground air sensor upload
 
-v0.9.44 adds an optional Weather Underground upload to the Air data sensor setup card. Operators can store the station ID and key in Setup; the key is encrypted and not shown again. Uploads are triggered only after a successful new air sensor refresh and send temperature, humidity, PM10 and PM2.5 using the Weather Underground PWS upload protocol.
+v0.9.45 adds an optional Weather Underground upload to the Air data sensor setup card. Operators can store the station ID and key in Setup; the key is encrypted and not shown again. Uploads are triggered only after a successful new air sensor refresh and send temperature, humidity, PM10, PM2.5 and pressure using the Weather Underground PWS upload protocol.
 
-Image-based installations can update in place with `bash ./update.sh --tag v0.9.44` from `/opt/bpstracker`.
+Image-based installations can update in place with `bash ./update.sh --tag v0.9.45` from `/opt/bpstracker`.

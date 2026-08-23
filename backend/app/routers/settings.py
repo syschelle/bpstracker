@@ -220,7 +220,7 @@ def _air_sensor_cache_value(db: Session) -> dict:
 
 
 def _air_sensor_has_values(current: AirSensorCurrent) -> bool:
-    return any(getattr(current, field) is not None for field in ('temperature_c', 'humidity_percent', 'sds_p1', 'sds_p2'))
+    return any(getattr(current, field) is not None for field in ('temperature_c', 'humidity_percent', 'pressure_hpa', 'sds_p1', 'sds_p2'))
 
 
 def _air_sensor_cache_from_db(db: Session, settings: AirSensorSettings, configured: bool, *, ok: bool = False, last_error: str | None = None) -> AirSensorCurrent:
@@ -233,6 +233,7 @@ def _air_sensor_cache_from_db(db: Session, settings: AirSensorSettings, configur
         cached=bool(value),
         temperature_c=_float_from_value(value.get('temperature_c')),
         humidity_percent=_float_from_value(value.get('humidity_percent')),
+        pressure_hpa=_float_from_value(value.get('pressure_hpa')),
         sds_p1=_float_from_value(value.get('sds_p1')),
         sds_p2=_float_from_value(value.get('sds_p2')),
         age_seconds=_int_from_value(value.get('age_seconds')),
@@ -274,7 +275,7 @@ def _save_air_sensor_failure(db: Session, message: str, *, last_attempt_at: date
 
 def _merge_with_previous(current: AirSensorCurrent, previous: AirSensorCurrent) -> AirSensorCurrent:
     # Keep the last good value for individual fields that are temporarily missing.
-    for field in ('temperature_c', 'humidity_percent', 'sds_p1', 'sds_p2', 'age_seconds', 'software_version'):
+    for field in ('temperature_c', 'humidity_percent', 'pressure_hpa', 'sds_p1', 'sds_p2', 'age_seconds', 'software_version'):
         if getattr(current, field) is None and getattr(previous, field) is not None:
             setattr(current, field, getattr(previous, field))
     return current
@@ -291,6 +292,10 @@ def _fahrenheit(celsius: float) -> float:
     return (celsius * 9.0 / 5.0) + 32.0
 
 
+def _inches_hg(hpa: float) -> float:
+    return hpa * 0.0295299830714
+
+
 def _weather_underground_params(settings: AirSensorSettings, current: AirSensorCurrent, api_key: str, now: datetime) -> dict[str, str]:
     params: dict[str, str] = {
         'ID': str(settings.weather_underground_station_id or '').strip().upper(),
@@ -305,6 +310,8 @@ def _weather_underground_params(settings: AirSensorSettings, current: AirSensorC
         params['tempf'] = f'{_fahrenheit(current.temperature_c):.2f}'
     if current.humidity_percent is not None:
         params['humidity'] = str(max(0, min(100, int(round(current.humidity_percent)))))
+    if current.pressure_hpa is not None:
+        params['baromin'] = f'{_inches_hg(current.pressure_hpa):.2f}'
     if current.sds_p2 is not None:
         params['AqPM2.5'] = f'{current.sds_p2:.2f}'
     if current.sds_p1 is not None:
@@ -388,6 +395,11 @@ async def fetch_air_sensor_current(settings: AirSensorSettings, db: Session) -> 
         _float_from_value(values.get('BME280_humidity'))
         or _float_from_value(values.get('humidity'))
     )
+    pressure = (
+        _float_from_value(values.get('BME280_pressure'))
+        or _float_from_value(values.get('BMP280_pressure'))
+        or _float_from_value(values.get('pressure'))
+    )
 
     current = AirSensorCurrent(
         enabled=settings.enabled,
@@ -396,6 +408,7 @@ async def fetch_air_sensor_current(settings: AirSensorSettings, db: Session) -> 
         cached=False,
         temperature_c=temperature,
         humidity_percent=humidity,
+        pressure_hpa=pressure,
         sds_p1=_float_from_value(values.get('SDS_P1')),
         sds_p2=_float_from_value(values.get('SDS_P2')),
         age_seconds=_int_from_value(payload.get('age')),

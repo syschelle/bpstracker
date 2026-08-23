@@ -78,6 +78,7 @@ def test_weather_underground_params_include_air_sensor_values() -> None:
     current = AirSensorCurrent(
         temperature_c=20.0,
         humidity_percent=54.4,
+        pressure_hpa=1013.25,
         sds_p1=12.345,
         sds_p2=6.789,
     )
@@ -89,6 +90,7 @@ def test_weather_underground_params_include_air_sensor_values() -> None:
     assert params['dateutc'] == '2026-08-23 12:00:00'
     assert params['tempf'] == '68.00'
     assert params['humidity'] == '54'
+    assert params['baromin'] == '29.92'
     assert params['AqPM10'] == '12.35'
     assert params['AqPM2.5'] == '6.79'
     assert params['action'] == 'updateraw'

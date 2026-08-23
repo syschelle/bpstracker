@@ -766,7 +766,7 @@ bash ./deploy-images.sh
 `deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.36` oder `latest`). Für unbeaufsichtigte Image-Deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.44 --language de
+bash ./deploy-images.sh --regular --tag v0.9.45 --language de
 bash ./deploy-images.sh --zero2w --latest --language en
 ```
 
@@ -1050,7 +1050,7 @@ v0.9.32 gleicht die Farben in Tageskostenbilanz und Gesamtkostenbilanz an die Da
 
 ### v0.9.33 Luftsensor- und Dashboard-Beschriftungen angeglichen
 
-v0.9.33 gleicht die Beschriftungs-/Wertdarstellung des Luftdatensensors an die kompakten Dashboard-Wertzeilen an und vereinheitlicht die Farben der Wertbeschriftungen im Dashboard. Luftsensor-Header und öffentliches Luftsensor-Widget zeigen jetzt explizite Beschriftungen für Temperatur, Luftfeuchte, PM10 und PM2.5, ohne das kompakte Layout aufzugeben.
+v0.9.33 gleicht die Beschriftungs-/Wertdarstellung des Luftdatensensors an die kompakten Dashboard-Wertzeilen an und vereinheitlicht die Farben der Wertbeschriftungen im Dashboard. Luftsensor-Header und öffentliches Luftsensor-Widget zeigen jetzt explizite Beschriftungen für Temperatur, Luftfeuchte, PM10, PM2.5 und Luftdruck, ohne das kompakte Layout aufzugeben.
 
 ### v0.9.34 Kompakte Luftdatenwerte
 
@@ -1088,8 +1088,8 @@ v0.9.43 entfernt nach aktivierter Admin-2FA die Setup-Aktionen zum Neuerzeugen v
 
 Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.43` aktualisiert werden.
 
-### v0.9.44 Weather-Underground-Upload für Luftdatensensor
+### v0.9.45 Weather-Underground-Upload für Luftdatensensor
 
-v0.9.44 ergänzt in der Luftdatensensor-Kachel einen optionalen Upload zu Weather Underground. Stations-ID und Key können im Setup gespeichert werden; der Key wird verschlüsselt abgelegt und nicht erneut angezeigt. Uploads laufen nur nach einer erfolgreichen neuen Aktualisierung des Luftdatensensors und senden Temperatur, Luftfeuchte, PM10 und PM2.5 über das Weather-Underground-PWS-Protokoll.
+v0.9.45 ergänzt in der Luftdatensensor-Kachel einen optionalen Upload zu Weather Underground. Stations-ID und Key können im Setup gespeichert werden; der Key wird verschlüsselt abgelegt und nicht erneut angezeigt. Uploads laufen nur nach einer erfolgreichen neuen Aktualisierung des Luftdatensensors und senden Temperatur, Luftfeuchte, PM10, PM2.5 und Luftdruck über das Weather-Underground-PWS-Protokoll.
 
-Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.44` aktualisiert werden.
+Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.45` aktualisiert werden.

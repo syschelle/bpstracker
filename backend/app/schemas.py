@@ -197,6 +197,7 @@ class AirSensorCurrent(BaseModel):
     cached: bool = False
     temperature_c: float | None = None
     humidity_percent: float | None = None
+    pressure_hpa: float | None = None
     sds_p1: float | None = None
     sds_p2: float | None = None
     age_seconds: int | None = None

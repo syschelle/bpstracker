@@ -297,7 +297,7 @@
     "enableWeatherUndergroundUpload": "Upload zu Weather Underground aktivieren",
     "weatherUndergroundStation": "Weather-Underground-Station",
     "weatherUndergroundApiKey": "Weather-Underground-Key",
-    "weatherUndergroundHint": "Der Upload läuft nur nach einer neuen erfolgreichen Aktualisierung des Luftdatensensors. Gesendet werden Temperatur, Luftfeuchte, PM10 und PM2.5. Der Key wird verschlüsselt gespeichert und nicht erneut angezeigt.",
+    "weatherUndergroundHint": "Der Upload läuft nur nach einer neuen erfolgreichen Aktualisierung des Luftdatensensors. Gesendet werden Temperatur, Luftfeuchte, PM10, PM2.5 und Luftdruck. Der Key wird verschlüsselt gespeichert und nicht erneut angezeigt.",
     "airSensorSaved": "Luftdatensensor wurde gespeichert.",
     "saveAirSensor": "Luftdatensensor speichern",
     "temperature": "Temperatur",
