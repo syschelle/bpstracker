@@ -763,10 +763,10 @@ Oder:
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.48` oder `latest`). Für unbeaufsichtigte Image-Deployments:
+`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.49` oder `latest`). Für unbeaufsichtigte Image-Deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.48 --language de
+bash ./deploy-images.sh --regular --tag v0.9.49 --language de
 bash ./deploy-images.sh --zero2w --latest --language en
 ```
 
@@ -1111,3 +1111,9 @@ Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./up
 v0.9.48 speichert den letzten Weather-Underground-Uploadstatus im Luftsensor-Cache und zeigt ihn unter den Luftdaten im Header an. Erfolgreiche Antworten erscheinen grün, fehlgeschlagene Antworten rot, inklusive HTTP-Status und Antworttext.
 
 Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.48` aktualisiert werden.
+
+### v0.9.49 Weather-Underground-Zeitstempel und Setup-Eingaben
+
+v0.9.49 zeigt Datum und Uhrzeit des Weather-Underground-Responses direkt in der Luftdaten-Zeile im Header. Die Felder für Station, Key und Aufruf-Vorlage können im Setup jetzt auch bearbeitet werden, wenn die Upload-Checkbox deaktiviert ist.
+
+Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.49` aktualisiert werden.

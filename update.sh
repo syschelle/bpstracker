@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-DEFAULT_IMAGE_TAG="v0.9.48"
+DEFAULT_IMAGE_TAG="v0.9.49"
 IMAGE_TAG="${BPSTRACKER_IMAGE_TAG:-$DEFAULT_IMAGE_TAG}"
 COMPOSE_FILE="docker-compose.images.yml"
 
@@ -16,7 +16,7 @@ Updates an image-based BPSTracker installation in /opt/bpstracker.
 
 Options:
   --latest       Use the latest GHCR image tag.
-  --tag TAG      Use a specific GHCR image tag, for example v0.9.48.
+  --tag TAG      Use a specific GHCR image tag, for example v0.9.49.
   -h, --help     Show this help.
 EOF
 }
@@ -29,7 +29,7 @@ while [ $# -gt 0 ]; do
       ;;
     --tag)
       if [ $# -lt 2 ]; then
-        echo "ERROR: --tag requires a value, for example --tag v0.9.48 or --tag latest." >&2
+        echo "ERROR: --tag requires a value, for example --tag v0.9.49 or --tag latest." >&2
         exit 1
       fi
       IMAGE_TAG="$2"

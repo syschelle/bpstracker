@@ -711,6 +711,7 @@ function AirSensorHeader() {
   if (!sensor?.enabled || !sensor.configured) return null;
   const weatherUndergroundStatus = sensor.weather_underground_last_response
     || (sensor.weather_underground_last_status ? `HTTP ${sensor.weather_underground_last_status}` : null);
+  const weatherUndergroundDate = sensor.weather_underground_last_at ? fmtDate(sensor.weather_underground_last_at, language) : null;
   const weatherUndergroundTitle = sensor.weather_underground_last_at
     ? `${weatherUndergroundStatus || 'Weather Underground'} · ${fmtDate(sensor.weather_underground_last_at, language)}`
     : (weatherUndergroundStatus || 'Weather Underground');
@@ -723,7 +724,7 @@ function AirSensorHeader() {
       <span className="air-header-item" title="PM2.5" aria-label={`PM2.5: ${fmtMicrograms(sensor.sds_p2, language)}`}><Wind size={17} /><span className="air-particle-size">2.5</span><strong className="air-header-value">{fmtMicrograms(sensor.sds_p2, language)}</strong></span>
       {weatherUndergroundStatus && (
         <span className={`air-header-wu ${sensor.weather_underground_last_ok ? 'ok' : 'error'}`} title={weatherUndergroundTitle} aria-label={weatherUndergroundTitle}>
-          WU: {sensor.weather_underground_last_status ? `${sensor.weather_underground_last_status} ` : ''}{weatherUndergroundStatus}
+          WU: {weatherUndergroundDate ? `${weatherUndergroundDate} · ` : ''}{sensor.weather_underground_last_status ? `${sensor.weather_underground_last_status} ` : ''}{weatherUndergroundStatus}
         </span>
       )}
     </div>
@@ -2387,9 +2388,9 @@ function AirSensorSettingsPanel() {
         <label className="check"><input type="checkbox" checked={settings.enabled} onChange={e => setSettings({ ...settings, enabled: e.target.checked })} /> {t('enableAirSensor')}</label>
         <label>{t('airSensorHost')}<input value={settings.host || ''} onChange={e => setSettings({ ...settings, host: e.target.value })} placeholder="192.168.178.60" /></label>
         <label className="check"><input type="checkbox" checked={Boolean(settings.weather_underground_enabled)} onChange={e => setSettings({ ...settings, weather_underground_enabled: e.target.checked })} /> {t('enableWeatherUndergroundUpload')}</label>
-        <label>{t('weatherUndergroundStation')}<input value={settings.weather_underground_station_id || ''} onChange={e => setSettings({ ...settings, weather_underground_station_id: e.target.value })} placeholder="IDORTMUN123" disabled={!settings.weather_underground_enabled} /></label>
-        <label>{t('weatherUndergroundApiKey')}<input type="password" value={settings.weather_underground_api_key || ''} onChange={e => setSettings({ ...settings, weather_underground_api_key: e.target.value })} placeholder={settings.weather_underground_api_key_set ? t('unchangedPlaceholder') : ''} disabled={!settings.weather_underground_enabled} /></label>
-        <label className="full-row">{t('weatherUndergroundUploadUrl')}<textarea value={settings.weather_underground_upload_url || ''} onChange={e => setSettings({ ...settings, weather_underground_upload_url: e.target.value })} disabled={!settings.weather_underground_enabled} rows={4} /></label>
+        <label>{t('weatherUndergroundStation')}<input value={settings.weather_underground_station_id || ''} onChange={e => setSettings({ ...settings, weather_underground_station_id: e.target.value })} placeholder="IDORTMUN123" /></label>
+        <label>{t('weatherUndergroundApiKey')}<input type="password" value={settings.weather_underground_api_key || ''} onChange={e => setSettings({ ...settings, weather_underground_api_key: e.target.value })} placeholder={settings.weather_underground_api_key_set ? t('unchangedPlaceholder') : ''} /></label>
+        <label className="full-row">{t('weatherUndergroundUploadUrl')}<textarea value={settings.weather_underground_upload_url || ''} onChange={e => setSettings({ ...settings, weather_underground_upload_url: e.target.value })} rows={4} /></label>
       </div>
       <p className="hint">{t('weatherUndergroundHint')}</p>
       <button onClick={() => void save()}>{t('saveAirSensor')}</button>

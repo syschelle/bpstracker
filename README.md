@@ -1408,10 +1408,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.48` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.49` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.48 --language en
+bash ./deploy-images.sh --regular --tag v0.9.49 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1837,3 +1837,9 @@ Image-based installations can update in place with `bash ./update.sh --tag v0.9.
 v0.9.48 stores the last Weather Underground upload result with the air sensor cache and shows it below the air data header values. Successful responses are shown in green, failed responses in red, including HTTP status and the returned response text.
 
 Image-based installations can update in place with `bash ./update.sh --tag v0.9.48` from `/opt/bpstracker`.
+
+### v0.9.49 Weather Underground header timestamp and setup editing
+
+v0.9.49 shows the Weather Underground response timestamp directly in the air data header line. The Weather Underground station, key and request template fields can now be edited in Setup even while the upload checkbox is disabled.
+
+Image-based installations can update in place with `bash ./update.sh --tag v0.9.49` from `/opt/bpstracker`.
