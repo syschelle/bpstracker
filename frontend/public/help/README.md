@@ -1408,10 +1408,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.50` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.51` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.50 --language en
+bash ./deploy-images.sh --regular --tag v0.9.51 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1843,6 +1843,12 @@ Image-based installations can update in place with `bash ./update.sh --tag v0.9.
 v0.9.49 shows the Weather Underground response timestamp directly in the air data header line. The Weather Underground station, key and request template fields can now be edited in Setup even while the upload checkbox is disabled.
 
 Image-based installations can update in place with `bash ./update.sh --tag v0.9.49` from `/opt/bpstracker`.
+
+### v0.9.51 Altitude-corrected air pressure
+
+v0.9.51 adds an air sensor altitude setting in meters. BPSTracker now calculates sea-level pressure from the sensor pressure and configured altitude, shows pressure in hPa in the air data widgets, and uploads the altitude-corrected value to Weather Underground as `baromin`.
+
+Image-based installations can update in place with `bash ./update.sh --tag v0.9.51` from `/opt/bpstracker`.
 
 ### v0.9.50 Dew point for air data and Weather Underground
 

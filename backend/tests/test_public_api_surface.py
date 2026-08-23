@@ -63,6 +63,7 @@ def test_air_sensor_weather_underground_key_is_not_exposed() -> None:
     })
 
     assert settings.weather_underground_enabled is True
+    assert settings.altitude_m is None
     assert settings.weather_underground_station_id == 'IDORTMUN123'
     assert settings.weather_underground_api_key is None
     assert settings.weather_underground_api_key_set is True
@@ -72,17 +73,19 @@ def test_air_sensor_weather_underground_key_is_not_exposed() -> None:
 
 
 def test_weather_underground_params_include_air_sensor_values() -> None:
-    from app.routers.settings import _dew_point_c, _pressure_hpa_from_value, _weather_underground_params, _weather_underground_status, _weather_underground_upload_url, _normalize_air_sensor_value
+    from app.routers.settings import _dew_point_c, _pressure_hpa_from_value, _sea_level_pressure_hpa, _weather_underground_params, _weather_underground_status, _weather_underground_upload_url, _normalize_air_sensor_value
 
     settings = _normalize_air_sensor_value({
         'weather_underground_enabled': True,
         'weather_underground_station_id': 'IDORTMUN123',
+        'altitude_m': 300,
     })
     current = AirSensorCurrent(
         temperature_c=20.0,
         humidity_percent=54.4,
         dew_point_c=_dew_point_c(20.0, 54.4),
         pressure_hpa=1013.25,
+        pressure_sea_level_hpa=_sea_level_pressure_hpa(1013.25, settings.altitude_m),
         sds_p1=12.345,
         sds_p2=6.789,
     )
@@ -96,7 +99,8 @@ def test_weather_underground_params_include_air_sensor_values() -> None:
     assert params['humidity'] == '54'
     assert current.dew_point_c == 10.5
     assert params['dewptf'] == '50.9'
-    assert params['baromin'] == '29.92'
+    assert current.pressure_sea_level_hpa == 1050.1
+    assert params['baromin'] == '31.01'
     assert params['AqPM10'] == '12.35'
     assert params['AqPM2.5'] == '6.79'
     assert params['action'] == 'updateraw'
@@ -106,8 +110,9 @@ def test_weather_underground_params_include_air_sensor_values() -> None:
     assert 'PASSWORD=secret-key' in upload_url
     assert 'dateutc=2026-08-23+12%3A00%3A00' in upload_url
     assert 'dewptf=50.9' in upload_url
-    assert 'baromin=29.92' in upload_url
+    assert 'baromin=31.01' in upload_url
     assert _pressure_hpa_from_value('98607') == 986.07
+    assert _sea_level_pressure_hpa(1013.25, None) == 1013.2
 
     status = _weather_underground_status(False, datetime(2026, 8, 23, 12, 1, tzinfo=timezone.utc), status=401, response='Unauthorized')
     assert status['weather_underground_last_ok'] is False

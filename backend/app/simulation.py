@@ -578,6 +578,7 @@ def simulated_air_sensor_current(timezone_name: str | None = DEFAULT_TIMEZONE):
     humidity = 53.0 - 12.0 * math.sin((2 * math.pi * (hour - 6.0)) / 24.0) + _noise(seed + local_dt.minute, 3.0)
     pm10 = 6.0 + _smooth_pulse(hour, 8.0, 1.2, 5.0) + _smooth_pulse(hour, 19.0, 1.6, 6.0) + _noise(seed + 123 + local_dt.minute, 1.1)
     pm25 = 2.2 + _smooth_pulse(hour, 8.2, 1.1, 2.2) + _smooth_pulse(hour, 19.3, 1.4, 2.6) + _noise(seed + 321 + local_dt.minute, 0.5)
+    pressure = 1012.0 + 5.0 * math.sin((2 * math.pi * (hour - 10.0)) / 24.0) + _noise(seed + 222 + local_dt.minute, 0.7)
 
     return AirSensorCurrent(
         enabled=True,
@@ -586,6 +587,8 @@ def simulated_air_sensor_current(timezone_name: str | None = DEFAULT_TIMEZONE):
         cached=False,
         temperature_c=round(temp, 1),
         humidity_percent=round(max(25.0, min(85.0, humidity)), 1),
+        pressure_hpa=round(pressure, 1),
+        pressure_sea_level_hpa=round(pressure, 1),
         sds_p1=round(max(0.2, pm10), 2),
         sds_p2=round(max(0.1, pm25), 2),
         age_seconds=45,

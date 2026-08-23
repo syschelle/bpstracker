@@ -151,6 +151,7 @@ export interface Summary {
 export interface AirSensorSettings {
   enabled: boolean;
   host?: string | null;
+  altitude_m?: number | null;
   weather_underground_enabled?: boolean;
   weather_underground_station_id?: string | null;
   weather_underground_api_key?: string | null;
@@ -167,6 +168,7 @@ export interface AirSensorCurrent {
   humidity_percent?: number | null;
   dew_point_c?: number | null;
   pressure_hpa?: number | null;
+  pressure_sea_level_hpa?: number | null;
   sds_p1?: number | null;
   sds_p2?: number | null;
   age_seconds?: number | null;

@@ -184,6 +184,7 @@ class SimulationSettings(BaseModel):
 class AirSensorSettings(BaseModel):
     enabled: bool = False
     host: str | None = Field(default=None, max_length=255)
+    altitude_m: float | None = Field(default=None, ge=-500, le=9000)
     weather_underground_enabled: bool = False
     weather_underground_station_id: str | None = Field(default=None, max_length=80)
     weather_underground_api_key: str | None = Field(default=None, max_length=255)
@@ -200,6 +201,7 @@ class AirSensorCurrent(BaseModel):
     humidity_percent: float | None = None
     dew_point_c: float | None = None
     pressure_hpa: float | None = None
+    pressure_sea_level_hpa: float | None = None
     sds_p1: float | None = None
     sds_p2: float | None = None
     age_seconds: int | None = None

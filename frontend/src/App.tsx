@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Activity, Euro, Globe2, HelpCircle, History, LogOut, Menu, Moon, Plus, RefreshCcw, Settings, ShieldCheck, Sun, Droplets, Thermometer, Trash2, UserCog, Wind, Zap } from 'lucide-react';
+import { Activity, Euro, Gauge, Globe2, HelpCircle, History, LogOut, Menu, Moon, Plus, RefreshCcw, Settings, ShieldCheck, Sun, Droplets, Thermometer, Trash2, UserCog, Wind, Zap } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api, getRuntimeConfig, setToken } from './api';
 import packageJson from '../package.json';
@@ -191,6 +191,11 @@ function fmtTemperature(value?: number | null, language: Language = 'de'): strin
 function fmtMicrograms(value?: number | null, language: Language = 'de'): string {
   if (value === null || value === undefined) return translate(language, 'none');
   return `${value.toLocaleString(localeFor(language), { maximumFractionDigits: 2 })} µg/m³`;
+}
+
+function fmtHpa(value?: number | null, language: Language = 'de'): string {
+  if (value === null || value === undefined) return translate(language, 'none');
+  return `${value.toLocaleString(localeFor(language), { maximumFractionDigits: 1 })} hPa`;
 }
 
 function clampPercent(value: number): number {
@@ -715,12 +720,14 @@ function AirSensorHeader() {
   const weatherUndergroundTitle = sensor.weather_underground_last_at
     ? `${weatherUndergroundStatus || 'Weather Underground'} · ${fmtDate(sensor.weather_underground_last_at, language)}`
     : (weatherUndergroundStatus || 'Weather Underground');
+  const displayPressure = sensor.pressure_sea_level_hpa ?? sensor.pressure_hpa;
 
   return (
     <div className={sensor.ok ? 'air-header-widget' : 'air-header-widget offline'} title={sensor.ok ? t('airSensorSettings') : (sensor.last_error || t('offline'))}>
       <span className="air-header-item" title={t('temperature')} aria-label={`${t('temperature')}: ${fmtTemperature(sensor.temperature_c, language)}`}><Thermometer size={17} /><strong className="air-header-value">{fmtTemperature(sensor.temperature_c, language)}</strong></span>
       <span className="air-header-item" title={t('humidity')} aria-label={`${t('humidity')}: ${fmtPercent(sensor.humidity_percent, language)}`}><Droplets size={17} /><strong className="air-header-value">{fmtPercent(sensor.humidity_percent, language)}</strong></span>
       <span className="air-header-item" title={t('dewPoint')} aria-label={`${t('dewPoint')}: ${fmtTemperature(sensor.dew_point_c, language)}`}><Thermometer size={17} /><span className="air-particle-size">DP</span><strong className="air-header-value">{fmtTemperature(sensor.dew_point_c, language)}</strong></span>
+      <span className="air-header-item" title={t('pressure')} aria-label={`${t('pressure')}: ${fmtHpa(displayPressure, language)}`}><Gauge size={17} /><strong className="air-header-value">{fmtHpa(displayPressure, language)}</strong></span>
       <span className="air-header-item" title="PM10" aria-label={`PM10: ${fmtMicrograms(sensor.sds_p1, language)}`}><Wind size={17} /><span className="air-particle-size">10</span><strong className="air-header-value">{fmtMicrograms(sensor.sds_p1, language)}</strong></span>
       <span className="air-header-item" title="PM2.5" aria-label={`PM2.5: ${fmtMicrograms(sensor.sds_p2, language)}`}><Wind size={17} /><span className="air-particle-size">2.5</span><strong className="air-header-value">{fmtMicrograms(sensor.sds_p2, language)}</strong></span>
       {weatherUndergroundStatus && (
@@ -946,6 +953,7 @@ function escapeHtmlAttribute(value: string): string {
 function PublicAirSensorWidget({ sensor }: { sensor: AirSensorCurrent | null }) {
   const { language, t } = useI18n();
   if (!sensor?.enabled || !sensor.configured) return null;
+  const displayPressure = sensor.pressure_sea_level_hpa ?? sensor.pressure_hpa;
 
   return (
     <section className={sensor.ok ? 'panel public-air-sensor' : 'panel public-air-sensor offline'} title={sensor.ok ? t('airSensorSettings') : (sensor.last_error || t('offline'))}>
@@ -954,6 +962,7 @@ function PublicAirSensorWidget({ sensor }: { sensor: AirSensorCurrent | null }) 
         <span className="public-air-row" title={t('temperature')} aria-label={`${t('temperature')}: ${fmtTemperature(sensor.temperature_c, language)}`}><Thermometer size={18} /><strong className="public-air-value">{fmtTemperature(sensor.temperature_c, language)}</strong></span>
         <span className="public-air-row" title={t('humidity')} aria-label={`${t('humidity')}: ${fmtPercent(sensor.humidity_percent, language)}`}><Droplets size={18} /><strong className="public-air-value">{fmtPercent(sensor.humidity_percent, language)}</strong></span>
         <span className="public-air-row" title={t('dewPoint')} aria-label={`${t('dewPoint')}: ${fmtTemperature(sensor.dew_point_c, language)}`}><Thermometer size={18} /><span className="air-particle-size">DP</span><strong className="public-air-value">{fmtTemperature(sensor.dew_point_c, language)}</strong></span>
+        <span className="public-air-row" title={t('pressure')} aria-label={`${t('pressure')}: ${fmtHpa(displayPressure, language)}`}><Gauge size={18} /><strong className="public-air-value">{fmtHpa(displayPressure, language)}</strong></span>
         <span className="public-air-row" title="PM10" aria-label={`PM10: ${fmtMicrograms(sensor.sds_p1, language)}`}><Wind size={18} /><span className="air-particle-size">10</span><strong className="public-air-value">{fmtMicrograms(sensor.sds_p1, language)}</strong></span>
         <span className="public-air-row" title="PM2.5" aria-label={`PM2.5: ${fmtMicrograms(sensor.sds_p2, language)}`}><Wind size={18} /><span className="air-particle-size">2.5</span><strong className="public-air-value">{fmtMicrograms(sensor.sds_p2, language)}</strong></span>
       </div>
@@ -2353,6 +2362,7 @@ function AirSensorSettingsPanel() {
   const [settings, setSettings] = useState<AirSensorSettings>({
     enabled: false,
     host: '',
+    altitude_m: null,
     weather_underground_enabled: false,
     weather_underground_station_id: '',
     weather_underground_api_key: '',
@@ -2372,6 +2382,7 @@ function AirSensorSettingsPanel() {
     const saved = await api.updateAirSensorSettings({
       enabled: settings.enabled,
       host: (settings.host || '').trim() || null,
+      altitude_m: settings.altitude_m ?? null,
       weather_underground_enabled: Boolean(settings.weather_underground_enabled),
       weather_underground_station_id: (settings.weather_underground_station_id || '').trim() || null,
       weather_underground_api_key: (settings.weather_underground_api_key || '').trim() || null,
@@ -2389,6 +2400,7 @@ function AirSensorSettingsPanel() {
       <div className="form-grid finance-form">
         <label className="check"><input type="checkbox" checked={settings.enabled} onChange={e => setSettings({ ...settings, enabled: e.target.checked })} /> {t('enableAirSensor')}</label>
         <label>{t('airSensorHost')}<input value={settings.host || ''} onChange={e => setSettings({ ...settings, host: e.target.value })} placeholder="192.168.178.60" /></label>
+        <label>{t('airSensorAltitude')}<input type="number" value={settings.altitude_m ?? ''} onChange={e => setSettings({ ...settings, altitude_m: e.target.value === '' ? null : Number(e.target.value) })} placeholder="0" /></label>
         <label className="check"><input type="checkbox" checked={Boolean(settings.weather_underground_enabled)} onChange={e => setSettings({ ...settings, weather_underground_enabled: e.target.checked })} /> {t('enableWeatherUndergroundUpload')}</label>
         <label>{t('weatherUndergroundStation')}<input value={settings.weather_underground_station_id || ''} onChange={e => setSettings({ ...settings, weather_underground_station_id: e.target.value })} placeholder="IDORTMUN123" /></label>
         <label>{t('weatherUndergroundApiKey')}<input type="password" value={settings.weather_underground_api_key || ''} onChange={e => setSettings({ ...settings, weather_underground_api_key: e.target.value })} placeholder={settings.weather_underground_api_key_set ? t('unchangedPlaceholder') : ''} /></label>

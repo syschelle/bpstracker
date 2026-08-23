@@ -188,6 +188,7 @@ def _normalize_air_sensor_value(value: dict | None) -> AirSensorSettings:
     return AirSensorSettings(
         enabled=bool(value.get('enabled', False)),
         host=_normalize_host(value.get('host')),
+        altitude_m=_air_sensor_altitude_m(value.get('altitude_m')),
         weather_underground_enabled=bool(value.get('weather_underground_enabled', False)),
         weather_underground_station_id=station_id,
         weather_underground_api_key=None,
@@ -241,6 +242,21 @@ def _pressure_hpa_from_value(value: object) -> float | None:
     return pressure
 
 
+def _air_sensor_altitude_m(value: object) -> float | None:
+    altitude = _float_from_value(value)
+    if altitude is None:
+        return None
+    return max(-500.0, min(9000.0, altitude))
+
+
+def _sea_level_pressure_hpa(pressure_hpa: float | None, altitude_m: float | None) -> float | None:
+    if pressure_hpa is None:
+        return None
+    if altitude_m is None or altitude_m == 0:
+        return round(pressure_hpa, 1)
+    return round(pressure_hpa / ((1.0 - (altitude_m / 44330.0)) ** 5.255), 1)
+
+
 def _datetime_from_value(value: object) -> datetime | None:
     if not value:
         return None
@@ -266,6 +282,7 @@ def _air_sensor_has_values(current: AirSensorCurrent) -> bool:
 def _air_sensor_cache_from_db(db: Session, settings: AirSensorSettings, configured: bool, *, ok: bool = False, last_error: str | None = None) -> AirSensorCurrent:
     value = _air_sensor_cache_value(db)
     stored_error = str(value.get('last_error')) if value.get('last_error') else None
+    pressure_hpa = _float_from_value(value.get('pressure_hpa'))
     return AirSensorCurrent(
         enabled=settings.enabled,
         configured=configured,
@@ -274,7 +291,8 @@ def _air_sensor_cache_from_db(db: Session, settings: AirSensorSettings, configur
         temperature_c=_float_from_value(value.get('temperature_c')),
         humidity_percent=_float_from_value(value.get('humidity_percent')),
         dew_point_c=_float_from_value(value.get('dew_point_c')),
-        pressure_hpa=_float_from_value(value.get('pressure_hpa')),
+        pressure_hpa=pressure_hpa,
+        pressure_sea_level_hpa=_sea_level_pressure_hpa(pressure_hpa, settings.altitude_m),
         sds_p1=_float_from_value(value.get('sds_p1')),
         sds_p2=_float_from_value(value.get('sds_p2')),
         age_seconds=_int_from_value(value.get('age_seconds')),
@@ -320,7 +338,7 @@ def _save_air_sensor_failure(db: Session, message: str, *, last_attempt_at: date
 
 def _merge_with_previous(current: AirSensorCurrent, previous: AirSensorCurrent) -> AirSensorCurrent:
     # Keep the last good value for individual fields that are temporarily missing.
-    for field in ('temperature_c', 'humidity_percent', 'dew_point_c', 'pressure_hpa', 'sds_p1', 'sds_p2', 'age_seconds', 'software_version'):
+    for field in ('temperature_c', 'humidity_percent', 'dew_point_c', 'pressure_hpa', 'pressure_sea_level_hpa', 'sds_p1', 'sds_p2', 'age_seconds', 'software_version'):
         if getattr(current, field) is None and getattr(previous, field) is not None:
             setattr(current, field, getattr(previous, field))
     return current
@@ -365,8 +383,9 @@ def _weather_underground_params(settings: AirSensorSettings, current: AirSensorC
         params['humidity'] = str(max(0, min(100, int(round(current.humidity_percent)))))
     if current.dew_point_c is not None:
         params['dewptf'] = f'{_fahrenheit(current.dew_point_c):.1f}'
-    if current.pressure_hpa is not None:
-        params['baromin'] = f'{_inches_hg(current.pressure_hpa):.2f}'
+    pressure_for_weather_underground = current.pressure_sea_level_hpa if current.pressure_sea_level_hpa is not None else current.pressure_hpa
+    if pressure_for_weather_underground is not None:
+        params['baromin'] = f'{_inches_hg(pressure_for_weather_underground):.2f}'
     if current.sds_p2 is not None:
         params['AqPM2.5'] = f'{current.sds_p2:.2f}'
     if current.sds_p1 is not None:
@@ -508,6 +527,7 @@ async def fetch_air_sensor_current(settings: AirSensorSettings, db: Session) -> 
         humidity_percent=humidity,
         dew_point_c=_dew_point_c(temperature, humidity),
         pressure_hpa=pressure,
+        pressure_sea_level_hpa=_sea_level_pressure_hpa(pressure, settings.altitude_m),
         sds_p1=_float_from_value(values.get('SDS_P1')),
         sds_p2=_float_from_value(values.get('SDS_P2')),
         age_seconds=_int_from_value(payload.get('age')),
@@ -812,6 +832,7 @@ def update_air_sensor_settings(
     row = db.get(AppSetting, AIR_SENSOR_SETTINGS_KEY)
     existing_value = row.value if row and isinstance(row.value, dict) else {}
     raw_value['host'] = _normalize_host_or_400(raw_value.get('host'))
+    raw_value['altitude_m'] = _air_sensor_altitude_m(raw_value.get('altitude_m'))
     api_key = str(raw_value.pop('weather_underground_api_key') or '').strip()
     if api_key:
         raw_value['weather_underground_api_key_ciphertext'] = encrypt_secret(api_key)
@@ -834,6 +855,7 @@ def update_air_sensor_settings(
     db.add(AuditLog(actor_user_id=actor.id, action='settings.air_sensor.update', details={
         'enabled': value.get('enabled'),
         'host': value.get('host'),
+        'altitude_m': value.get('altitude_m'),
         'weather_underground_enabled': value.get('weather_underground_enabled'),
         'weather_underground_station_id': value.get('weather_underground_station_id'),
         'weather_underground_upload_url': value.get('weather_underground_upload_url'),

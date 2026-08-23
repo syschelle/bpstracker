@@ -763,10 +763,10 @@ Oder:
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.50` oder `latest`). Für unbeaufsichtigte Image-Deployments:
+`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.51` oder `latest`). Für unbeaufsichtigte Image-Deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.50 --language de
+bash ./deploy-images.sh --regular --tag v0.9.51 --language de
 bash ./deploy-images.sh --zero2w --latest --language en
 ```
 
@@ -1117,6 +1117,12 @@ Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./up
 v0.9.49 zeigt Datum und Uhrzeit des Weather-Underground-Responses direkt in der Luftdaten-Zeile im Header. Die Felder für Station, Key und Aufruf-Vorlage können im Setup jetzt auch bearbeitet werden, wenn die Upload-Checkbox deaktiviert ist.
 
 Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.49` aktualisiert werden.
+
+### v0.9.51 Höhenkorrigierter Luftdruck
+
+v0.9.51 ergänzt im Setup des Luftdatensensors eine Sensorhöhe in Metern. BPSTracker berechnet daraus den auf Meereshöhe korrigierten Luftdruck, zeigt den Luftdruck in den Luftdaten der Webapp in hPa an und lädt den höhenkorrigierten Wert als `baromin` zu Weather Underground hoch.
+
+Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.51` aktualisiert werden.
 
 ### v0.9.50 Taupunkt für Luftdaten und Weather Underground
 
