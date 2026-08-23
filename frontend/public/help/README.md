@@ -1408,10 +1408,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.49` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.50` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.49 --language en
+bash ./deploy-images.sh --regular --tag v0.9.50 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1843,3 +1843,9 @@ Image-based installations can update in place with `bash ./update.sh --tag v0.9.
 v0.9.49 shows the Weather Underground response timestamp directly in the air data header line. The Weather Underground station, key and request template fields can now be edited in Setup even while the upload checkbox is disabled.
 
 Image-based installations can update in place with `bash ./update.sh --tag v0.9.49` from `/opt/bpstracker`.
+
+### v0.9.50 Dew point for air data and Weather Underground
+
+v0.9.50 calculates dew point from air sensor temperature and humidity using the Magnus formula, rounded to one decimal place in Celsius. The dew point is shown in the web app air data widgets and is uploaded to Weather Underground as `dewptf`.
+
+Image-based installations can update in place with `bash ./update.sh --tag v0.9.50` from `/opt/bpstracker`.

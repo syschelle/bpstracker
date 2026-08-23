@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from urllib.parse import quote_plus
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 import logging
+import math
 import re
 
 import httpx
@@ -34,11 +35,17 @@ AIR_SENSOR_CACHE_KEY = 'air_sensor_cache'
 AIR_SENSOR_SUCCESS_POLL_SECONDS = 180
 AIR_SENSOR_RETRY_SECONDS = 30
 WEATHER_UNDERGROUND_UPLOAD_URL = 'https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php'
-DEFAULT_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE = (
+LEGACY_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE_NO_DEWPOINT = (
     WEATHER_UNDERGROUND_UPLOAD_URL
     + '?ID={station_id}&PASSWORD={api_key}&dateutc={dateutc}&action=updateraw'
     + '&softwaretype={softwaretype}&realtime=1&rtfreq={rtfreq}'
     + '&tempf={tempf}&humidity={humidity}&baromin={baromin}&AqPM2.5={pm25}&AqPM10={pm10}'
+)
+DEFAULT_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE = (
+    WEATHER_UNDERGROUND_UPLOAD_URL
+    + '?ID={station_id}&PASSWORD={api_key}&dateutc={dateutc}&action=updateraw'
+    + '&softwaretype={softwaretype}&realtime=1&rtfreq={rtfreq}'
+    + '&tempf={tempf}&humidity={humidity}&dewptf={dewptf}&baromin={baromin}&AqPM2.5={pm25}&AqPM10={pm10}'
 )
 DEFAULT_KWH_PRICE_EUR = 0.30
 DEFAULT_INVESTMENT_COST_EUR = 0.0
@@ -176,6 +183,8 @@ def _normalize_air_sensor_value(value: dict | None) -> AirSensorSettings:
     station_id = str(value.get('weather_underground_station_id') or '').strip().upper() or None
     api_key_ciphertext = str(value.get('weather_underground_api_key_ciphertext') or '').strip()
     upload_url = str(value.get('weather_underground_upload_url') or '').strip() or DEFAULT_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE
+    if upload_url == LEGACY_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE_NO_DEWPOINT:
+        upload_url = DEFAULT_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE
     return AirSensorSettings(
         enabled=bool(value.get('enabled', False)),
         host=_normalize_host(value.get('host')),
@@ -264,6 +273,7 @@ def _air_sensor_cache_from_db(db: Session, settings: AirSensorSettings, configur
         cached=bool(value),
         temperature_c=_float_from_value(value.get('temperature_c')),
         humidity_percent=_float_from_value(value.get('humidity_percent')),
+        dew_point_c=_float_from_value(value.get('dew_point_c')),
         pressure_hpa=_float_from_value(value.get('pressure_hpa')),
         sds_p1=_float_from_value(value.get('sds_p1')),
         sds_p2=_float_from_value(value.get('sds_p2')),
@@ -310,7 +320,7 @@ def _save_air_sensor_failure(db: Session, message: str, *, last_attempt_at: date
 
 def _merge_with_previous(current: AirSensorCurrent, previous: AirSensorCurrent) -> AirSensorCurrent:
     # Keep the last good value for individual fields that are temporarily missing.
-    for field in ('temperature_c', 'humidity_percent', 'pressure_hpa', 'sds_p1', 'sds_p2', 'age_seconds', 'software_version'):
+    for field in ('temperature_c', 'humidity_percent', 'dew_point_c', 'pressure_hpa', 'sds_p1', 'sds_p2', 'age_seconds', 'software_version'):
         if getattr(current, field) is None and getattr(previous, field) is not None:
             setattr(current, field, getattr(previous, field))
     return current
@@ -331,6 +341,14 @@ def _inches_hg(hpa: float) -> float:
     return hpa * 0.0295299830714
 
 
+def _dew_point_c(temperature_c: float | None, humidity_percent: float | None) -> float | None:
+    if temperature_c is None or humidity_percent is None or humidity_percent <= 0:
+        return None
+    humidity = min(100.0, max(0.1, humidity_percent))
+    alpha = math.log(humidity / 100.0) + (17.62 * temperature_c) / (243.12 + temperature_c)
+    return round((243.12 * alpha) / (17.62 - alpha), 1)
+
+
 def _weather_underground_params(settings: AirSensorSettings, current: AirSensorCurrent, api_key: str, now: datetime) -> dict[str, str]:
     params: dict[str, str] = {
         'ID': str(settings.weather_underground_station_id or '').strip().upper(),
@@ -345,6 +363,8 @@ def _weather_underground_params(settings: AirSensorSettings, current: AirSensorC
         params['tempf'] = f'{_fahrenheit(current.temperature_c):.2f}'
     if current.humidity_percent is not None:
         params['humidity'] = str(max(0, min(100, int(round(current.humidity_percent)))))
+    if current.dew_point_c is not None:
+        params['dewptf'] = f'{_fahrenheit(current.dew_point_c):.1f}'
     if current.pressure_hpa is not None:
         params['baromin'] = f'{_inches_hg(current.pressure_hpa):.2f}'
     if current.sds_p2 is not None:
@@ -364,6 +384,7 @@ def _weather_underground_upload_url(settings: AirSensorSettings, current: AirSen
         'rtfreq': params.get('rtfreq', ''),
         'tempf': params.get('tempf', ''),
         'humidity': params.get('humidity', ''),
+        'dewptf': params.get('dewptf', ''),
         'baromin': params.get('baromin', ''),
         'pm25': params.get('AqPM2.5', ''),
         'pm10': params.get('AqPM10', ''),
@@ -485,6 +506,7 @@ async def fetch_air_sensor_current(settings: AirSensorSettings, db: Session) -> 
         cached=False,
         temperature_c=temperature,
         humidity_percent=humidity,
+        dew_point_c=_dew_point_c(temperature, humidity),
         pressure_hpa=pressure,
         sds_p1=_float_from_value(values.get('SDS_P1')),
         sds_p2=_float_from_value(values.get('SDS_P2')),

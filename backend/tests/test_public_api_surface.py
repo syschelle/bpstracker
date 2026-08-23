@@ -52,7 +52,7 @@ def test_public_dashboard_settings_allows_empty_meter_number() -> None:
 
 
 def test_air_sensor_weather_underground_key_is_not_exposed() -> None:
-    from app.routers.settings import DEFAULT_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE, _normalize_air_sensor_value
+    from app.routers.settings import DEFAULT_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE, LEGACY_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE_NO_DEWPOINT, _normalize_air_sensor_value
 
     settings = _normalize_air_sensor_value({
         'enabled': True,
@@ -67,10 +67,12 @@ def test_air_sensor_weather_underground_key_is_not_exposed() -> None:
     assert settings.weather_underground_api_key is None
     assert settings.weather_underground_api_key_set is True
     assert settings.weather_underground_upload_url == DEFAULT_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE
+    migrated = _normalize_air_sensor_value({'weather_underground_upload_url': LEGACY_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE_NO_DEWPOINT})
+    assert migrated.weather_underground_upload_url == DEFAULT_WEATHER_UNDERGROUND_UPLOAD_TEMPLATE
 
 
 def test_weather_underground_params_include_air_sensor_values() -> None:
-    from app.routers.settings import _pressure_hpa_from_value, _weather_underground_params, _weather_underground_status, _weather_underground_upload_url, _normalize_air_sensor_value
+    from app.routers.settings import _dew_point_c, _pressure_hpa_from_value, _weather_underground_params, _weather_underground_status, _weather_underground_upload_url, _normalize_air_sensor_value
 
     settings = _normalize_air_sensor_value({
         'weather_underground_enabled': True,
@@ -79,6 +81,7 @@ def test_weather_underground_params_include_air_sensor_values() -> None:
     current = AirSensorCurrent(
         temperature_c=20.0,
         humidity_percent=54.4,
+        dew_point_c=_dew_point_c(20.0, 54.4),
         pressure_hpa=1013.25,
         sds_p1=12.345,
         sds_p2=6.789,
@@ -91,6 +94,8 @@ def test_weather_underground_params_include_air_sensor_values() -> None:
     assert params['dateutc'] == '2026-08-23 12:00:00'
     assert params['tempf'] == '68.00'
     assert params['humidity'] == '54'
+    assert current.dew_point_c == 10.5
+    assert params['dewptf'] == '50.9'
     assert params['baromin'] == '29.92'
     assert params['AqPM10'] == '12.35'
     assert params['AqPM2.5'] == '6.79'
@@ -100,6 +105,7 @@ def test_weather_underground_params_include_air_sensor_values() -> None:
     assert 'ID=IDORTMUN123' in upload_url
     assert 'PASSWORD=secret-key' in upload_url
     assert 'dateutc=2026-08-23+12%3A00%3A00' in upload_url
+    assert 'dewptf=50.9' in upload_url
     assert 'baromin=29.92' in upload_url
     assert _pressure_hpa_from_value('98607') == 986.07
 

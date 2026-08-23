@@ -165,6 +165,7 @@ export interface AirSensorCurrent {
   cached?: boolean;
   temperature_c?: number | null;
   humidity_percent?: number | null;
+  dew_point_c?: number | null;
   pressure_hpa?: number | null;
   sds_p1?: number | null;
   sds_p2?: number | null;

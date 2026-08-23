@@ -763,10 +763,10 @@ Oder:
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.49` oder `latest`). Für unbeaufsichtigte Image-Deployments:
+`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.50` oder `latest`). Für unbeaufsichtigte Image-Deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.49 --language de
+bash ./deploy-images.sh --regular --tag v0.9.50 --language de
 bash ./deploy-images.sh --zero2w --latest --language en
 ```
 
@@ -1117,3 +1117,9 @@ Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./up
 v0.9.49 zeigt Datum und Uhrzeit des Weather-Underground-Responses direkt in der Luftdaten-Zeile im Header. Die Felder für Station, Key und Aufruf-Vorlage können im Setup jetzt auch bearbeitet werden, wenn die Upload-Checkbox deaktiviert ist.
 
 Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.49` aktualisiert werden.
+
+### v0.9.50 Taupunkt für Luftdaten und Weather Underground
+
+v0.9.50 berechnet den Taupunkt aus Temperatur und Luftfeuchte des Luftdatensensors mit der Magnus-Formel, gerundet auf eine Nachkommastelle in Grad Celsius. Der Taupunkt wird in den Luftdaten der Webapp angezeigt und als `dewptf` zu Weather Underground hochgeladen.
+
+Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.50` aktualisiert werden.
