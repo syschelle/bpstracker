@@ -1,7 +1,8 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const localesDir = new URL('../src/i18n/locales/', import.meta.url);
+const localesDir = fileURLToPath(new URL('../src/i18n/locales/', import.meta.url));
 const files = readdirSync(localesDir).filter(file => file.endsWith('.json')).sort();
 
 if (!files.length) {
@@ -10,7 +11,7 @@ if (!files.length) {
 }
 
 function readLocale(file) {
-  const path = join(localesDir.pathname, file);
+  const path = join(localesDir, file);
   const locale = JSON.parse(readFileSync(path, 'utf8'));
   const expectedCode = file.replace(/\.json$/, '');
   if (!locale.meta || typeof locale.meta !== 'object') throw new Error(`${file}: missing meta object`);
