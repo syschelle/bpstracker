@@ -70,7 +70,7 @@ def test_air_sensor_weather_underground_key_is_not_exposed() -> None:
 
 
 def test_weather_underground_params_include_air_sensor_values() -> None:
-    from app.routers.settings import _weather_underground_params, _weather_underground_upload_url, _normalize_air_sensor_value
+    from app.routers.settings import _pressure_hpa_from_value, _weather_underground_params, _weather_underground_upload_url, _normalize_air_sensor_value
 
     settings = _normalize_air_sensor_value({
         'weather_underground_enabled': True,
@@ -101,3 +101,4 @@ def test_weather_underground_params_include_air_sensor_values() -> None:
     assert 'PASSWORD=secret-key' in upload_url
     assert 'dateutc=2026-08-23+12%3A00%3A00' in upload_url
     assert 'baromin=29.92' in upload_url
+    assert _pressure_hpa_from_value('98607') == 986.07

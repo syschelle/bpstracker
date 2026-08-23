@@ -210,6 +210,15 @@ def _int_from_value(value: object) -> int | None:
         return None
 
 
+def _pressure_hpa_from_value(value: object) -> float | None:
+    pressure = _float_from_value(value)
+    if pressure is None:
+        return None
+    if pressure > 2000:
+        return pressure / 100.0
+    return pressure
+
+
 def _datetime_from_value(value: object) -> datetime | None:
     if not value:
         return None
@@ -359,12 +368,14 @@ async def _upload_weather_underground(settings: AirSensorSettings, current: AirS
     try:
         async with httpx.AsyncClient(timeout=timeout, follow_redirects=False) as client:
             response = await client.get(upload_url)
-            response.raise_for_status()
+            if response.is_error:
+                logger.warning('Weather Underground upload failed with HTTP %s: %s', response.status_code, response.text.strip())
+                return
             text = response.text.strip().lower()
             if text and not text.startswith('success'):
                 logger.warning('Weather Underground upload returned: %s', response.text.strip())
-    except Exception:
-        logger.exception('Weather Underground upload failed')
+    except Exception as exc:
+        logger.warning('Weather Underground upload failed: %s', exc.__class__.__name__)
 
 
 async def fetch_air_sensor_current(settings: AirSensorSettings, db: Session) -> AirSensorCurrent:
@@ -425,9 +436,9 @@ async def fetch_air_sensor_current(settings: AirSensorSettings, db: Session) -> 
         or _float_from_value(values.get('humidity'))
     )
     pressure = (
-        _float_from_value(values.get('BME280_pressure'))
-        or _float_from_value(values.get('BMP280_pressure'))
-        or _float_from_value(values.get('pressure'))
+        _pressure_hpa_from_value(values.get('BME280_pressure'))
+        or _pressure_hpa_from_value(values.get('BMP280_pressure'))
+        or _pressure_hpa_from_value(values.get('pressure'))
     )
 
     current = AirSensorCurrent(

@@ -1408,10 +1408,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.46` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.47` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.46 --language en
+bash ./deploy-images.sh --regular --tag v0.9.47 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1825,3 +1825,9 @@ Image-based installations can update in place with `bash ./update.sh --tag v0.9.
 v0.9.46 shows the full Weather Underground upload request in the Air data sensor setup card. Operators can adjust the URL template with placeholders for station ID, stored key, timestamp, temperature, humidity, pressure, PM2.5, PM10, software type and upload interval while keeping the existing secure key storage.
 
 Image-based installations can update in place with `bash ./update.sh --tag v0.9.46` from `/opt/bpstracker`.
+
+### v0.9.47 Weather Underground pressure and log fix
+
+v0.9.47 normalizes air sensor pressure values reported in Pa before converting them to Weather Underground `baromin`, preventing unrealistic pressure uploads. Weather Underground upload errors now log HTTP status and response text without exposing the full request URL and stored key.
+
+Image-based installations can update in place with `bash ./update.sh --tag v0.9.47` from `/opt/bpstracker`.
