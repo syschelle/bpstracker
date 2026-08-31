@@ -306,6 +306,23 @@ def _air_sensor_cache_from_db(db: Session, settings: AirSensorSettings, configur
     )
 
 
+def get_cached_air_sensor_current(settings: AirSensorSettings, db: Session) -> AirSensorCurrent:
+    configured = bool(settings.host)
+    if not settings.enabled or not configured:
+        return AirSensorCurrent(enabled=settings.enabled, configured=configured, ok=False)
+
+    cached_value = _air_sensor_cache_value(db)
+    current = _air_sensor_cache_from_db(db, settings, configured)
+    stored_error = str(cached_value.get('last_error')) if cached_value.get('last_error') else None
+    return _air_sensor_cache_from_db(
+        db,
+        settings,
+        configured,
+        ok=not stored_error and _air_sensor_has_values(current),
+        last_error=stored_error,
+    )
+
+
 def _upsert_air_sensor_cache_value(db: Session, value: dict) -> None:
     row = db.get(AppSetting, AIR_SENSOR_CACHE_KEY)
     if row is None:

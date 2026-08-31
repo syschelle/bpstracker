@@ -1863,6 +1863,12 @@ v0.9.49 shows the Weather Underground response timestamp directly in the air dat
 
 Image-based installations can update in place with `bash ./update.sh --tag v0.9.49` from `/opt/bpstracker`.
 
+### v0.9.55 Fast current-values API with cached air sensor data
+
+v0.9.55 keeps the optional `/api/current-values` JSON API fast when an air data sensor is configured. The endpoint now reads air sensor values from the local cache instead of performing live sensor and Weather Underground network requests during the public API call. Slow or unreachable air sensors can no longer delay the current energy values response, and regression coverage verifies that the API does not trigger a live air sensor fetch.
+
+Image-based installations can update in place with `bash ./update.sh --tag v0.9.55` from `/opt/bpstracker`.
+
 ### v0.9.54 Air sensor values in current-values API
 
 v0.9.54 adds the configured air data sensor to the optional `/api/current-values` JSON API. The response now contains an `air_sensor` block with current measurement and status values such as temperature, humidity, dew point, pressure, PM10 and PM2.5, while sensor host and API key configuration stay private. Simulation mode returns simulated air data through the same field, and a backend regression test covers the public API response.

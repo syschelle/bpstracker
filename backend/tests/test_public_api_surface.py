@@ -1,5 +1,5 @@
 from fastapi.routing import APIRoute
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -179,3 +179,42 @@ def test_current_values_api_includes_enabled_air_sensor_cache() -> None:
     assert data['air_sensor']['sds_p2'] == 3.45
     assert 'host' not in data['air_sensor']
     assert 'weather_underground_api_key' not in data['air_sensor']
+
+
+def test_current_values_api_does_not_block_on_air_sensor_fetch(monkeypatch) -> None:
+    from app.routers import settings
+
+    engine = create_engine('sqlite+pysqlite://', connect_args={'check_same_thread': False}, poolclass=StaticPool)
+    Base.metadata.create_all(bind=engine)
+    SessionLocal = sessionmaker(bind=engine)
+    stale_success_at = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+
+    with SessionLocal() as db:
+        db.add(AppSetting(key='current_values_api', value={'enabled': True}))
+        db.add(AppSetting(key='air_sensor', value={'enabled': True, 'host': '192.0.2.10'}))
+        db.add(AppSetting(key='air_sensor_cache', value={
+            'temperature_c': 20.1,
+            'humidity_percent': 50.0,
+            'last_success_at': stale_success_at,
+        }))
+        db.commit()
+
+    async def fail_if_called(*_args, **_kwargs):
+        raise AssertionError('current values API must not perform live air sensor fetches')
+
+    monkeypatch.setattr(settings, 'fetch_air_sensor_current', fail_if_called)
+
+    def override_get_db():
+        with SessionLocal() as db:
+            yield db
+
+    test_app = FastAPI()
+    test_app.dependency_overrides[get_db] = override_get_db
+    test_app.include_router(current_values.router)
+    response = TestClient(test_app).get('/api/current-values')
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data['air_sensor']['cached'] is True
+    assert data['air_sensor']['ok'] is True
+    assert data['air_sensor']['temperature_c'] == 20.1

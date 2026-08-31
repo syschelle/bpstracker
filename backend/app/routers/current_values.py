@@ -214,9 +214,9 @@ async def current_values(db: Session = Depends(get_db)) -> dict:
             'air_sensor': _air_sensor_response(air_sensor),
         }
 
-    from .settings import fetch_air_sensor_current, get_air_sensor_settings_from_db
+    from .settings import get_air_sensor_settings_from_db, get_cached_air_sensor_current
 
-    air_sensor = await fetch_air_sensor_current(get_air_sensor_settings_from_db(db), db)
+    air_sensor = get_cached_air_sensor_current(get_air_sensor_settings_from_db(db), db)
 
     latest = _latest_measurements(db)
 
