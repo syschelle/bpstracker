@@ -531,8 +531,9 @@ Sie stellt aktuelle Werte bereit, zum Beispiel:
 - Tageseinspeisung
 - Gesamtproduktion
 - Gesamteinspeisung
+- aktuelle Luftsensorwerte, wenn der Luftdatensensor aktiviert und eingerichtet ist
 
-Die API ist nützlich für externe Systeme, Smart-Home-Integrationen oder eigene Skripte.
+Die API ist nützlich für externe Systeme, Smart-Home-Integrationen oder eigene Skripte. Der Luftsensor-Block enthält nur aktuelle Mess- und Statuswerte, aber keine Host- oder API-Key-Konfiguration.
 
 ---
 
@@ -763,10 +764,10 @@ Oder:
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.36` oder `latest`). Für unbeaufsichtigte Image-Deployments:
+`deploy-images.sh` fragt nach der Skriptsprache und nach dem Image-Tag (`v0.9.52` oder `latest`). Für unbeaufsichtigte Image-Deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.41 --language de
+bash ./deploy-images.sh --regular --tag v0.9.52 --language de
 bash ./deploy-images.sh --zero2w --latest --language en
 ```
 
@@ -1050,7 +1051,7 @@ v0.9.32 gleicht die Farben in Tageskostenbilanz und Gesamtkostenbilanz an die Da
 
 ### v0.9.33 Luftsensor- und Dashboard-Beschriftungen angeglichen
 
-v0.9.33 gleicht die Beschriftungs-/Wertdarstellung des Luftdatensensors an die kompakten Dashboard-Wertzeilen an und vereinheitlicht die Farben der Wertbeschriftungen im Dashboard. Luftsensor-Header und öffentliches Luftsensor-Widget zeigen jetzt explizite Beschriftungen für Temperatur, Luftfeuchte, PM10 und PM2.5, ohne das kompakte Layout aufzugeben.
+v0.9.33 gleicht die Beschriftungs-/Wertdarstellung des Luftdatensensors an die kompakten Dashboard-Wertzeilen an und vereinheitlicht die Farben der Wertbeschriftungen im Dashboard. Luftsensor-Header und öffentliches Luftsensor-Widget zeigen jetzt explizite Beschriftungen für Temperatur, Luftfeuchte, PM10, PM2.5 und Luftdruck, ohne das kompakte Layout aufzugeben.
 
 ### v0.9.34 Kompakte Luftdatenwerte
 
@@ -1076,3 +1077,68 @@ v0.9.40 gruppiert Sprache, Zeitzone und GitHub-Repository als erste Setup-Katego
 
 v0.9.41 ergänzt im Setup unter **Allgemein** die neue Rubrik **Schnittstellen**. Dort werden JSON-API und Kindle-Display gruppiert, die einzelnen Kacheln bleiben dabei erhalten. Das kompakte Setup-Layout bleibt unverändert.
 
+### v0.9.42 Admin-2FA im Setup
+
+v0.9.42 verschiebt die Admin-2FA-Verwaltung direkt in die Admin-Kachel unter **Setup -> Benutzerzugänge**. Der separate Seitenleisten-Reiter **Admin 2FA** entfällt; QR-Code-Einrichtung, Aktivierung, Deaktivierung und Recovery-Code-Verwaltung bleiben im Setup verfügbar.
+
+Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.42` aktualisiert werden.
+
+### v0.9.43 Gesperrtes 2FA-Setup nach Aktivierung
+
+v0.9.43 entfernt nach aktivierter Admin-2FA die Setup-Aktionen zum Neuerzeugen von Recovery-Codes und zum Deaktivieren von 2FA. Recovery-Codes werden nur noch direkt nach der 2FA-Aktivierung einmalig angezeigt. Die alten API-Routen zum Neuerzeugen von Recovery-Codes und zum Deaktivieren von 2FA sind nicht mehr verfügbar.
+
+Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.43` aktualisiert werden.
+
+### v0.9.45 Weather-Underground-Upload für Luftdatensensor
+
+v0.9.45 ergänzt in der Luftdatensensor-Kachel einen optionalen Upload zu Weather Underground. Stations-ID und Key können im Setup gespeichert werden; der Key wird verschlüsselt abgelegt und nicht erneut angezeigt. Uploads laufen nur nach einer erfolgreichen neuen Aktualisierung des Luftdatensensors und senden Temperatur, Luftfeuchte, PM10, PM2.5 und Luftdruck über das Weather-Underground-PWS-Protokoll.
+
+Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.45` aktualisiert werden.
+
+### v0.9.46 Änderbarer Weather-Underground-Aufruf
+
+v0.9.46 zeigt den vollständigen Weather-Underground-Aufruf in der Luftdatensensor-Kachel im Setup. Betreiber können die URL-Vorlage mit Platzhaltern für Station, gespeicherten Key, Zeitstempel, Temperatur, Luftfeuchte, Luftdruck, PM2.5, PM10, Softwaretyp und Upload-Intervall anpassen; die sichere Key-Speicherung bleibt erhalten.
+
+Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.46` aktualisiert werden.
+
+### v0.9.47 Weather-Underground-Luftdruck- und Log-Fix
+
+v0.9.47 normalisiert Luftdruckwerte des Sensors, die in Pa geliefert werden, vor der Umrechnung zu Weather Underground `baromin`. Dadurch werden unrealistische Luftdruckwerte im Upload verhindert. Fehler beim Weather-Underground-Upload loggen jetzt HTTP-Status und Antworttext, ohne die komplette URL und den gespeicherten Key auszugeben.
+
+Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.47` aktualisiert werden.
+
+### v0.9.48 Weather-Underground-Response im Header
+
+v0.9.48 speichert den letzten Weather-Underground-Uploadstatus im Luftsensor-Cache und zeigt ihn unter den Luftdaten im Header an. Erfolgreiche Antworten erscheinen grün, fehlgeschlagene Antworten rot, inklusive HTTP-Status und Antworttext.
+
+Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.48` aktualisiert werden.
+
+### v0.9.49 Weather-Underground-Zeitstempel und Setup-Eingaben
+
+v0.9.49 zeigt Datum und Uhrzeit des Weather-Underground-Responses direkt in der Luftdaten-Zeile im Header. Die Felder für Station, Key und Aufruf-Vorlage können im Setup jetzt auch bearbeitet werden, wenn die Upload-Checkbox deaktiviert ist.
+
+Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.49` aktualisiert werden.
+
+### v0.9.53 Luftsensorwerte in der Current-Values-API
+
+v0.9.53 ergänzt den eingerichteten Luftdatensensor in der optionalen JSON-API `/api/current-values`. Die Antwort enthält jetzt einen `air_sensor`-Block mit aktuellen Mess- und Statuswerten wie Temperatur, Luftfeuchte, Taupunkt, Luftdruck, PM10 und PM2.5, während Sensor-Host und API-Key-Konfiguration privat bleiben. Der Simulationsmodus liefert simulierte Luftdaten über dasselbe Feld, und ein Backend-Regressionstest deckt die öffentliche API-Antwort ab.
+
+Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.53` aktualisiert werden.
+
+### v0.9.52 Weather-Underground-Key bleibt erhalten
+
+v0.9.52 härtet das Speichern der Luftdatensensor-Einstellungen ab: Wenn das Weather-Underground-Key-Feld leer bleibt, sendet das Frontend keinen leeren Ersatz-Key mehr. Zusätzlich stellt ein Backend-Regressionstest sicher, dass der bereits verschlüsselt gespeicherte Key erhalten bleibt, wenn nur andere Luftsensor-Einstellungen geändert werden.
+
+Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.52` aktualisiert werden.
+
+### v0.9.51 Höhenkorrigierter Luftdruck
+
+v0.9.51 ergänzt im Setup des Luftdatensensors eine Sensorhöhe in Metern. BPSTracker berechnet daraus den auf Meereshöhe korrigierten Luftdruck, zeigt den Luftdruck in den Luftdaten der Webapp in hPa an und lädt den höhenkorrigierten Wert als `baromin` zu Weather Underground hoch.
+
+Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.51` aktualisiert werden.
+
+### v0.9.50 Taupunkt für Luftdaten und Weather Underground
+
+v0.9.50 berechnet den Taupunkt aus Temperatur und Luftfeuchte des Luftdatensensors mit der Magnus-Formel, gerundet auf eine Nachkommastelle in Grad Celsius. Der Taupunkt wird in den Luftdaten der Webapp angezeigt und als `dewptf` zu Weather Underground hochgeladen.
+
+Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.50` aktualisiert werden.

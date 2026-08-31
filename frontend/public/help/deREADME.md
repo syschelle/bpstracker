@@ -531,8 +531,9 @@ Sie stellt aktuelle Werte bereit, zum Beispiel:
 - Tageseinspeisung
 - Gesamtproduktion
 - Gesamteinspeisung
+- aktuelle Luftsensorwerte, wenn der Luftdatensensor aktiviert und eingerichtet ist
 
-Die API ist nützlich für externe Systeme, Smart-Home-Integrationen oder eigene Skripte.
+Die API ist nützlich für externe Systeme, Smart-Home-Integrationen oder eigene Skripte. Der Luftsensor-Block enthält nur aktuelle Mess- und Statuswerte, aber keine Host- oder API-Key-Konfiguration.
 
 ---
 
@@ -1117,6 +1118,12 @@ Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./up
 v0.9.49 zeigt Datum und Uhrzeit des Weather-Underground-Responses direkt in der Luftdaten-Zeile im Header. Die Felder für Station, Key und Aufruf-Vorlage können im Setup jetzt auch bearbeitet werden, wenn die Upload-Checkbox deaktiviert ist.
 
 Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.49` aktualisiert werden.
+
+### v0.9.53 Luftsensorwerte in der Current-Values-API
+
+v0.9.53 ergänzt den eingerichteten Luftdatensensor in der optionalen JSON-API `/api/current-values`. Die Antwort enthält jetzt einen `air_sensor`-Block mit aktuellen Mess- und Statuswerten wie Temperatur, Luftfeuchte, Taupunkt, Luftdruck, PM10 und PM2.5, während Sensor-Host und API-Key-Konfiguration privat bleiben. Der Simulationsmodus liefert simulierte Luftdaten über dasselbe Feld, und ein Backend-Regressionstest deckt die öffentliche API-Antwort ab.
+
+Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.53` aktualisiert werden.
 
 ### v0.9.52 Weather-Underground-Key bleibt erhalten
 

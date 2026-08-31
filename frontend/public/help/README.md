@@ -610,7 +610,25 @@ The preview calls `/api/current-values` and displays the current JSON response d
 
   "total_solar_production_kwh": 15.7,
   "total_grid_import_kwh": 128.4,
-  "total_grid_export_kwh": 2.1
+  "total_grid_export_kwh": 2.1,
+
+  "air_sensor": {
+    "enabled": true,
+    "configured": true,
+    "ok": true,
+    "cached": true,
+    "temperature_c": 21.4,
+    "humidity_percent": 48.2,
+    "dew_point_c": 10.2,
+    "pressure_hpa": 1001.5,
+    "pressure_sea_level_hpa": 1013.4,
+    "sds_p1": 8.12,
+    "sds_p2": 3.45,
+    "age_seconds": 42,
+    "software_version": "NRZ-2024-136-B1",
+    "last_success_at": "2026-05-29T20:14:40+00:00",
+    "last_error": null
+  }
 }
 ```
 
@@ -629,6 +647,7 @@ The preview calls `/api/current-values` and displays the current JSON response d
 | `total_solar_production_kwh` | total solar production |
 | `total_grid_import_kwh` | total grid import |
 | `total_grid_export_kwh` | total grid export |
+| `air_sensor` | current air sensor state and measured values when the air sensor is enabled/configured; no host or API key configuration is exposed |
 
 ---
 
@@ -1843,6 +1862,12 @@ Image-based installations can update in place with `bash ./update.sh --tag v0.9.
 v0.9.49 shows the Weather Underground response timestamp directly in the air data header line. The Weather Underground station, key and request template fields can now be edited in Setup even while the upload checkbox is disabled.
 
 Image-based installations can update in place with `bash ./update.sh --tag v0.9.49` from `/opt/bpstracker`.
+
+### v0.9.53 Air sensor values in current-values API
+
+v0.9.53 adds the configured air data sensor to the optional `/api/current-values` JSON API. The response now contains an `air_sensor` block with current measurement and status values such as temperature, humidity, dew point, pressure, PM10 and PM2.5, while sensor host and API key configuration stay private. Simulation mode returns simulated air data through the same field, and a backend regression test covers the public API response.
+
+Image-based installations can update in place with `bash ./update.sh --tag v0.9.53` from `/opt/bpstracker`.
 
 ### v0.9.52 Weather Underground key preservation
 

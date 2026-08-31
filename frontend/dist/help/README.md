@@ -610,7 +610,25 @@ The preview calls `/api/current-values` and displays the current JSON response d
 
   "total_solar_production_kwh": 15.7,
   "total_grid_import_kwh": 128.4,
-  "total_grid_export_kwh": 2.1
+  "total_grid_export_kwh": 2.1,
+
+  "air_sensor": {
+    "enabled": true,
+    "configured": true,
+    "ok": true,
+    "cached": true,
+    "temperature_c": 21.4,
+    "humidity_percent": 48.2,
+    "dew_point_c": 10.2,
+    "pressure_hpa": 1001.5,
+    "pressure_sea_level_hpa": 1013.4,
+    "sds_p1": 8.12,
+    "sds_p2": 3.45,
+    "age_seconds": 42,
+    "software_version": "NRZ-2024-136-B1",
+    "last_success_at": "2026-05-29T20:14:40+00:00",
+    "last_error": null
+  }
 }
 ```
 
@@ -629,6 +647,7 @@ The preview calls `/api/current-values` and displays the current JSON response d
 | `total_solar_production_kwh` | total solar production |
 | `total_grid_import_kwh` | total grid import |
 | `total_grid_export_kwh` | total grid export |
+| `air_sensor` | current air sensor state and measured values when the air sensor is enabled/configured; no host or API key configuration is exposed |
 
 ---
 
@@ -659,7 +678,7 @@ The simulation is based on:
 
 No simulated measurements are written to the production measurement tables. The values are generated live and separated from production data. When simulation is disabled, the simulated view disappears and no demo values remain in the production environment.
 
-The simulation also affects the Kindle display, JSON API and air sensor header. Simulated air data includes temperature, humidity, PM10 and PM2.5.
+The simulation also affects the Kindle display, JSON API and air sensor header. Simulated air data includes temperature, humidity, PM10, PM2.5 and pressure.
 
 The header displays a visible simulation banner: **You are in the Matrix 😎**
 
@@ -1408,10 +1427,10 @@ git pull
 bash ./deploy-images.sh
 ```
 
-`deploy-images.sh` asks for the script language and for the image tag (`v0.9.41` or `latest`). For unattended image deployments:
+`deploy-images.sh` asks for the script language and for the image tag (`v0.9.52` or `latest`). For unattended image deployments:
 
 ```bash
-bash ./deploy-images.sh --regular --tag v0.9.41 --language en
+bash ./deploy-images.sh --regular --tag v0.9.52 --language en
 bash ./deploy-images.sh --zero2w --latest --language de
 ```
 
@@ -1772,7 +1791,7 @@ v0.9.32 aligns the Daily cost balance and Total cost balance value colors with t
 
 ### v0.9.33 dashboard air sensor and label color alignment
 
-v0.9.33 aligns the air sensor label/value presentation with the compact dashboard value rows and synchronizes dashboard value-label colors across the current, balance and cost cards. The air sensor header and public air sensor widget now show explicit labels for temperature, humidity, PM10 and PM2.5 values while keeping the existing compact layout.
+v0.9.33 aligns the air sensor label/value presentation with the compact dashboard value rows and synchronizes dashboard value-label colors across the current, balance and cost cards. The air sensor header and public air sensor widget now show explicit labels for temperature, humidity, PM10, PM2.5 and pressure values while keeping the existing compact layout.
 
 ### v0.9.34 compact air sensor values
 
@@ -1802,3 +1821,68 @@ v0.9.40 groups language, time zone and GitHub repository into a first Setup cate
 
 v0.9.41 adds a dedicated **Interfaces** category below **General** in the Setup page. The JSON API and Kindle display settings are grouped there while keeping their individual setup cards. The compact setup layout remains unchanged.
 
+### v0.9.42 setup admin 2FA
+
+v0.9.42 moves admin 2FA management directly into the Admin card under **Setup -> User access**. The separate **Admin 2FA** sidebar tab has been removed while setup QR code, activation, deactivation and recovery code management remain available in Setup.
+
+Image-based installations can update in place with `bash ./update.sh --tag v0.9.42` from `/opt/bpstracker`.
+
+### v0.9.43 locked post-activation 2FA setup
+
+v0.9.43 removes post-activation controls for regenerating recovery codes or disabling admin 2FA from Setup. Recovery codes are shown only once immediately after 2FA activation. The old recovery-code regeneration and 2FA-disable API routes are no longer available.
+
+Image-based installations can update in place with `bash ./update.sh --tag v0.9.43` from `/opt/bpstracker`.
+
+### v0.9.45 Weather Underground air sensor upload
+
+v0.9.45 adds an optional Weather Underground upload to the Air data sensor setup card. Operators can store the station ID and key in Setup; the key is encrypted and not shown again. Uploads are triggered only after a successful new air sensor refresh and send temperature, humidity, PM10, PM2.5 and pressure using the Weather Underground PWS upload protocol.
+
+Image-based installations can update in place with `bash ./update.sh --tag v0.9.45` from `/opt/bpstracker`.
+
+### v0.9.46 Editable Weather Underground request
+
+v0.9.46 shows the full Weather Underground upload request in the Air data sensor setup card. Operators can adjust the URL template with placeholders for station ID, stored key, timestamp, temperature, humidity, pressure, PM2.5, PM10, software type and upload interval while keeping the existing secure key storage.
+
+Image-based installations can update in place with `bash ./update.sh --tag v0.9.46` from `/opt/bpstracker`.
+
+### v0.9.47 Weather Underground pressure and log fix
+
+v0.9.47 normalizes air sensor pressure values reported in Pa before converting them to Weather Underground `baromin`, preventing unrealistic pressure uploads. Weather Underground upload errors now log HTTP status and response text without exposing the full request URL and stored key.
+
+Image-based installations can update in place with `bash ./update.sh --tag v0.9.47` from `/opt/bpstracker`.
+
+### v0.9.48 Weather Underground header response
+
+v0.9.48 stores the last Weather Underground upload result with the air sensor cache and shows it below the air data header values. Successful responses are shown in green, failed responses in red, including HTTP status and the returned response text.
+
+Image-based installations can update in place with `bash ./update.sh --tag v0.9.48` from `/opt/bpstracker`.
+
+### v0.9.49 Weather Underground header timestamp and setup editing
+
+v0.9.49 shows the Weather Underground response timestamp directly in the air data header line. The Weather Underground station, key and request template fields can now be edited in Setup even while the upload checkbox is disabled.
+
+Image-based installations can update in place with `bash ./update.sh --tag v0.9.49` from `/opt/bpstracker`.
+
+### v0.9.53 Air sensor values in current-values API
+
+v0.9.53 adds the configured air data sensor to the optional `/api/current-values` JSON API. The response now contains an `air_sensor` block with current measurement and status values such as temperature, humidity, dew point, pressure, PM10 and PM2.5, while sensor host and API key configuration stay private. Simulation mode returns simulated air data through the same field, and a backend regression test covers the public API response.
+
+Image-based installations can update in place with `bash ./update.sh --tag v0.9.53` from `/opt/bpstracker`.
+
+### v0.9.52 Weather Underground key preservation
+
+v0.9.52 hardens the Air data sensor settings save flow so leaving the Weather Underground key field empty never sends an empty replacement key. The backend also has a regression check to preserve the previously encrypted key when only other air sensor settings change.
+
+Image-based installations can update in place with `bash ./update.sh --tag v0.9.52` from `/opt/bpstracker`.
+
+### v0.9.51 Altitude-corrected air pressure
+
+v0.9.51 adds an air sensor altitude setting in meters. BPSTracker now calculates sea-level pressure from the sensor pressure and configured altitude, shows pressure in hPa in the air data widgets, and uploads the altitude-corrected value to Weather Underground as `baromin`.
+
+Image-based installations can update in place with `bash ./update.sh --tag v0.9.51` from `/opt/bpstracker`.
+
+### v0.9.50 Dew point for air data and Weather Underground
+
+v0.9.50 calculates dew point from air sensor temperature and humidity using the Magnus formula, rounded to one decimal place in Celsius. The dew point is shown in the web app air data widgets and is uploaded to Weather Underground as `dewptf`.
+
+Image-based installations can update in place with `bash ./update.sh --tag v0.9.50` from `/opt/bpstracker`.
