@@ -1,7 +1,16 @@
 from fastapi.routing import APIRoute
 from datetime import datetime, timezone
 
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+
+from app.database import Base, get_db
 from app.main import app
+from app.models import AppSetting
+from app.routers import current_values
 from app.security import require_admin
 from app.schemas import AirSensorCurrent
 
@@ -125,3 +134,48 @@ def test_weather_underground_params_include_air_sensor_values() -> None:
     assert status['weather_underground_last_ok'] is False
     assert status['weather_underground_last_status'] == 401
     assert status['weather_underground_last_response'] == 'Unauthorized'
+
+
+def test_current_values_api_includes_enabled_air_sensor_cache() -> None:
+    engine = create_engine('sqlite+pysqlite://', connect_args={'check_same_thread': False}, poolclass=StaticPool)
+    Base.metadata.create_all(bind=engine)
+    SessionLocal = sessionmaker(bind=engine)
+    last_success_at = datetime.now(timezone.utc).isoformat()
+
+    with SessionLocal() as db:
+        db.add(AppSetting(key='current_values_api', value={'enabled': True}))
+        db.add(AppSetting(key='air_sensor', value={'enabled': True, 'host': '192.168.178.60', 'altitude_m': 100}))
+        db.add(AppSetting(key='air_sensor_cache', value={
+            'temperature_c': 21.4,
+            'humidity_percent': 48.2,
+            'dew_point_c': 10.2,
+            'pressure_hpa': 1001.5,
+            'sds_p1': 8.12,
+            'sds_p2': 3.45,
+            'age_seconds': 42,
+            'software_version': 'NRZ-test',
+            'last_success_at': last_success_at,
+        }))
+        db.commit()
+
+    def override_get_db():
+        with SessionLocal() as db:
+            yield db
+
+    test_app = FastAPI()
+    test_app.dependency_overrides[get_db] = override_get_db
+    test_app.include_router(current_values.router)
+    response = TestClient(test_app).get('/api/current-values')
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data['air_sensor']['enabled'] is True
+    assert data['air_sensor']['configured'] is True
+    assert data['air_sensor']['ok'] is True
+    assert data['air_sensor']['temperature_c'] == 21.4
+    assert data['air_sensor']['humidity_percent'] == 48.2
+    assert data['air_sensor']['pressure_hpa'] == 1001.5
+    assert data['air_sensor']['sds_p1'] == 8.12
+    assert data['air_sensor']['sds_p2'] == 3.45
+    assert 'host' not in data['air_sensor']
+    assert 'weather_underground_api_key' not in data['air_sensor']

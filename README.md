@@ -610,7 +610,25 @@ The preview calls `/api/current-values` and displays the current JSON response d
 
   "total_solar_production_kwh": 15.7,
   "total_grid_import_kwh": 128.4,
-  "total_grid_export_kwh": 2.1
+  "total_grid_export_kwh": 2.1,
+
+  "air_sensor": {
+    "enabled": true,
+    "configured": true,
+    "ok": true,
+    "cached": true,
+    "temperature_c": 21.4,
+    "humidity_percent": 48.2,
+    "dew_point_c": 10.2,
+    "pressure_hpa": 1001.5,
+    "pressure_sea_level_hpa": 1013.4,
+    "sds_p1": 8.12,
+    "sds_p2": 3.45,
+    "age_seconds": 42,
+    "software_version": "NRZ-2024-136-B1",
+    "last_success_at": "2026-05-29T20:14:40+00:00",
+    "last_error": null
+  }
 }
 ```
 
@@ -629,6 +647,7 @@ The preview calls `/api/current-values` and displays the current JSON response d
 | `total_solar_production_kwh` | total solar production |
 | `total_grid_import_kwh` | total grid import |
 | `total_grid_export_kwh` | total grid export |
+| `air_sensor` | current air sensor state and measured values when the air sensor is enabled/configured; no host or API key configuration is exposed |
 
 ---
 

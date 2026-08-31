@@ -16,7 +16,8 @@ from ..energy_retention import (
     get_stored_total_kwh,
 )
 from ..models import AppSetting, Device, Measurement
-from ..simulation import simulated_values_at
+from ..schemas import AirSensorCurrent
+from ..simulation import simulated_air_sensor_current, simulated_values_at
 
 router = APIRouter(prefix='/api/current-values', tags=['current-values'])
 
@@ -165,9 +166,13 @@ def _kwh(value_wh: float | None) -> float | None:
     return value_wh / 1000.0 if value_wh is not None else None
 
 
+def _air_sensor_response(current: AirSensorCurrent) -> dict:
+    return current.model_dump(mode='json')
+
+
 @router.get('', summary='Current BPSTracker values as JSON')
 @router.get('/', include_in_schema=False)
-def current_values(db: Session = Depends(get_db)) -> dict:
+async def current_values(db: Session = Depends(get_db)) -> dict:
     """Return current and accumulated BPSTracker values as plain JSON.
 
     The response intentionally uses stable English field names so it can be
@@ -184,6 +189,7 @@ def current_values(db: Session = Depends(get_db)) -> dict:
         pv_peak_w = _simulation_pv_peak_w(db)
         baseload_day_w, baseload_night_w = _simulation_baseload_w(db)
         values = simulated_values_at(now_utc, timezone_name, pv_peak_w, baseload_day_w, baseload_night_w)
+        air_sensor = simulated_air_sensor_current(timezone_name)
         return {
             'timestamp_utc': now_utc.isoformat(),
             'local_date': now_utc.astimezone(_zoneinfo(timezone_name)).date().isoformat(),
@@ -205,7 +211,12 @@ def current_values(db: Session = Depends(get_db)) -> dict:
             'total_solar_production_kwh': values.solar_total_kwh,
             'total_grid_import_kwh': values.import_total_kwh,
             'total_grid_export_kwh': values.export_total_kwh,
+            'air_sensor': _air_sensor_response(air_sensor),
         }
+
+    from .settings import fetch_air_sensor_current, get_air_sensor_settings_from_db
+
+    air_sensor = await fetch_air_sensor_current(get_air_sensor_settings_from_db(db), db)
 
     latest = _latest_measurements(db)
 
@@ -273,4 +284,5 @@ def current_values(db: Session = Depends(get_db)) -> dict:
         'total_solar_production_kwh': total_solar_production_kwh,
         'total_grid_import_kwh': total_grid_import_kwh,
         'total_grid_export_kwh': total_grid_export_kwh,
+        'air_sensor': _air_sensor_response(air_sensor),
     }

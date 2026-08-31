@@ -531,8 +531,9 @@ Sie stellt aktuelle Werte bereit, zum Beispiel:
 - Tageseinspeisung
 - Gesamtproduktion
 - Gesamteinspeisung
+- aktuelle Luftsensorwerte, wenn der Luftdatensensor aktiviert und eingerichtet ist
 
-Die API ist nützlich für externe Systeme, Smart-Home-Integrationen oder eigene Skripte.
+Die API ist nützlich für externe Systeme, Smart-Home-Integrationen oder eigene Skripte. Der Luftsensor-Block enthält nur aktuelle Mess- und Statuswerte, aber keine Host- oder API-Key-Konfiguration.
 
 ---
 
