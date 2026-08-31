@@ -1863,6 +1863,12 @@ v0.9.49 shows the Weather Underground response timestamp directly in the air dat
 
 Image-based installations can update in place with `bash ./update.sh --tag v0.9.49` from `/opt/bpstracker`.
 
+### v0.9.56 Non-blocking air sensor API reads
+
+v0.9.56 moves all air sensor GET endpoints to cache-only reads so dashboard header, public air sensor data and `/api/current-values` no longer wait for live sensor or Weather Underground network requests. The existing backend poller refreshes the air sensor and Weather Underground status in the background every 180 seconds, keeping UI and API responses reachable even when the sensor or upload target is slow.
+
+Image-based installations can update in place with `bash ./update.sh --tag v0.9.56` from `/opt/bpstracker`.
+
 ### v0.9.55 Fast current-values API with cached air sensor data
 
 v0.9.55 keeps the optional `/api/current-values` JSON API fast when an air data sensor is configured. The endpoint now reads air sensor values from the local cache instead of performing live sensor and Weather Underground network requests during the public API call. Slow or unreachable air sensors can no longer delay the current energy values response, and regression coverage verifies that the API does not trigger a live air sensor fetch.

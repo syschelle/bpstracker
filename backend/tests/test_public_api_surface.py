@@ -9,7 +9,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.database import Base, get_db
 from app.main import app
-from app.models import AppSetting
+from app.models import AppSetting, User, UserRole
 from app.routers import current_values
 from app.security import require_admin
 from app.schemas import AirSensorCurrent
@@ -218,3 +218,48 @@ def test_current_values_api_does_not_block_on_air_sensor_fetch(monkeypatch) -> N
     assert data['air_sensor']['cached'] is True
     assert data['air_sensor']['ok'] is True
     assert data['air_sensor']['temperature_c'] == 20.1
+
+
+def test_air_sensor_current_endpoints_return_cache_without_live_fetch(monkeypatch) -> None:
+    from app.routers import settings
+    from app.security import get_current_user
+
+    engine = create_engine('sqlite+pysqlite://', connect_args={'check_same_thread': False}, poolclass=StaticPool)
+    Base.metadata.create_all(bind=engine)
+    SessionLocal = sessionmaker(bind=engine)
+    stale_success_at = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+
+    with SessionLocal() as db:
+        db.add(AppSetting(key='public_dashboard', value={'enabled': True}))
+        db.add(AppSetting(key='air_sensor', value={'enabled': True, 'host': '192.0.2.10'}))
+        db.add(AppSetting(key='air_sensor_cache', value={
+            'temperature_c': 19.8,
+            'humidity_percent': 51.0,
+            'last_success_at': stale_success_at,
+        }))
+        db.commit()
+
+    async def fail_if_called(*_args, **_kwargs):
+        raise AssertionError('air sensor GET endpoints must not perform live air sensor fetches')
+
+    def override_get_db():
+        with SessionLocal() as db:
+            yield db
+
+    def override_current_user():
+        return User(id=1, username='viewer', role=UserRole.viewer, is_active=True)
+
+    monkeypatch.setattr(settings, 'fetch_air_sensor_current', fail_if_called)
+
+    test_app = FastAPI()
+    test_app.dependency_overrides[get_db] = override_get_db
+    test_app.dependency_overrides[get_current_user] = override_current_user
+    test_app.include_router(settings.router)
+
+    private_response = TestClient(test_app).get('/api/settings/air-sensor/current')
+    public_response = TestClient(test_app).get('/api/settings/public/air-sensor/current')
+
+    assert private_response.status_code == 200
+    assert public_response.status_code == 200
+    assert private_response.json()['temperature_c'] == 19.8
+    assert public_response.json()['temperature_c'] == 19.8

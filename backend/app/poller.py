@@ -9,7 +9,13 @@ from .config import get_settings
 from .database import SessionLocal
 from .models import Device, DeviceStatus, DeviceType, Measurement, utcnow
 from .energy_retention import cleanup_old_raw_measurements, ensure_completed_daily_summaries
-from .routers.settings import get_raw_retention_hours_override, get_retention_settings_from_db
+from .routers.settings import (
+    AIR_SENSOR_SUCCESS_POLL_SECONDS,
+    fetch_air_sensor_current,
+    get_air_sensor_settings_from_db,
+    get_raw_retention_hours_override,
+    get_retention_settings_from_db,
+)
 from .security import decrypt_secret
 from .shelly import ShellyClient, ShellyCredentials, ShellyDeviceConfig, ShellyClientError, detected_device_type
 
@@ -23,6 +29,7 @@ class Poller:
         self._task: asyncio.Task | None = None
         self._stop = asyncio.Event()
         self._last_poll: dict[int, datetime] = {}
+        self._last_air_sensor_poll: datetime | None = None
         self._last_maintenance: datetime | None = None
 
     def start(self) -> None:
@@ -53,8 +60,18 @@ class Poller:
                 due.append(device.id)
         if due:
             await asyncio.gather(*(self.poll_device_id(device_id) for device_id in due))
+        await self.poll_air_sensor_if_due(now)
         await self.run_maintenance_if_due()
 
+    async def poll_air_sensor_if_due(self, now: datetime) -> None:
+        if self._last_air_sensor_poll is not None and now - self._last_air_sensor_poll < timedelta(seconds=AIR_SENSOR_SUCCESS_POLL_SECONDS):
+            return
+        self._last_air_sensor_poll = now
+        with SessionLocal() as db:
+            try:
+                await fetch_air_sensor_current(get_air_sensor_settings_from_db(db), db)
+            except Exception:  # noqa: BLE001
+                db.rollback()
 
     async def run_maintenance_if_due(self) -> None:
         now = datetime.now(timezone.utc)
