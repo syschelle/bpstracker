@@ -1863,11 +1863,11 @@ v0.9.49 shows the Weather Underground response timestamp directly in the air dat
 
 Image-based installations can update in place with `bash ./update.sh --tag v0.9.49` from `/opt/bpstracker`.
 
-### v0.9.53 Air sensor values in current-values API
+### v0.9.54 Air sensor values in current-values API
 
-v0.9.53 adds the configured air data sensor to the optional `/api/current-values` JSON API. The response now contains an `air_sensor` block with current measurement and status values such as temperature, humidity, dew point, pressure, PM10 and PM2.5, while sensor host and API key configuration stay private. Simulation mode returns simulated air data through the same field, and a backend regression test covers the public API response.
+v0.9.54 adds the configured air data sensor to the optional `/api/current-values` JSON API. The response now contains an `air_sensor` block with current measurement and status values such as temperature, humidity, dew point, pressure, PM10 and PM2.5, while sensor host and API key configuration stay private. Simulation mode returns simulated air data through the same field, and a backend regression test covers the public API response.
 
-Image-based installations can update in place with `bash ./update.sh --tag v0.9.53` from `/opt/bpstracker`.
+Image-based installations can update in place with `bash ./update.sh --tag v0.9.54` from `/opt/bpstracker`.
 
 ### v0.9.52 Weather Underground key preservation
 

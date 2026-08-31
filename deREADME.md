@@ -1119,11 +1119,11 @@ v0.9.49 zeigt Datum und Uhrzeit des Weather-Underground-Responses direkt in der 
 
 Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.49` aktualisiert werden.
 
-### v0.9.53 Luftsensorwerte in der Current-Values-API
+### v0.9.54 Luftsensorwerte in der Current-Values-API
 
-v0.9.53 ergänzt den eingerichteten Luftdatensensor in der optionalen JSON-API `/api/current-values`. Die Antwort enthält jetzt einen `air_sensor`-Block mit aktuellen Mess- und Statuswerten wie Temperatur, Luftfeuchte, Taupunkt, Luftdruck, PM10 und PM2.5, während Sensor-Host und API-Key-Konfiguration privat bleiben. Der Simulationsmodus liefert simulierte Luftdaten über dasselbe Feld, und ein Backend-Regressionstest deckt die öffentliche API-Antwort ab.
+v0.9.54 ergänzt den eingerichteten Luftdatensensor in der optionalen JSON-API `/api/current-values`. Die Antwort enthält jetzt einen `air_sensor`-Block mit aktuellen Mess- und Statuswerten wie Temperatur, Luftfeuchte, Taupunkt, Luftdruck, PM10 und PM2.5, während Sensor-Host und API-Key-Konfiguration privat bleiben. Der Simulationsmodus liefert simulierte Luftdaten über dasselbe Feld, und ein Backend-Regressionstest deckt die öffentliche API-Antwort ab.
 
-Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.53` aktualisiert werden.
+Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.54` aktualisiert werden.
 
 ### v0.9.52 Weather-Underground-Key bleibt erhalten
 
