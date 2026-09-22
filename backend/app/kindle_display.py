@@ -408,12 +408,9 @@ def _today_energy_mix(db: Session, timezone_name: str) -> tuple[float | None, fl
     start_utc = start_local.astimezone(timezone.utc)
     end_utc = end_local.astimezone(timezone.utc)
 
-    rows = (
-        db.query(Measurement)
-        .filter(Measurement.timestamp >= start_utc, Measurement.timestamp < end_utc)
-        .order_by(Measurement.timestamp.asc())
-        .all()
-    )
+    from .energy_retention import energy_counter_edges
+
+    rows = energy_counter_edges(db, start_utc, end_utc)
     purposes = _device_purposes(db)
     configs = _device_configs(db)
     rows = [row for row in rows if _measurement_matches_device_config(row, configs)]

@@ -12,7 +12,7 @@ from ..energy_retention import (
     GRID_ENERGY_SOURCES,
     SOLAR_ENERGY_SOURCES,
     delta_energy,
-    ensure_completed_daily_summaries,
+    energy_counter_edges,
     get_stored_total_kwh,
 )
 from ..models import AppSetting, Device, Measurement
@@ -172,7 +172,7 @@ def _air_sensor_response(current: AirSensorCurrent) -> dict:
 
 @router.get('', summary='Current BPSTracker values as JSON')
 @router.get('/', include_in_schema=False)
-async def current_values(db: Session = Depends(get_db)) -> dict:
+def current_values(db: Session = Depends(get_db)) -> dict:
     """Return current and accumulated BPSTracker values as plain JSON.
 
     The response intentionally uses stable English field names so it can be
@@ -247,13 +247,10 @@ async def current_values(db: Session = Depends(get_db)) -> dict:
 
     today_start_utc, today_end_utc, local_date = _today_bounds_utc(timezone_name)
 
-    ensure_completed_daily_summaries(db, now_utc)
-
-    today_rows = (
-        db.query(Measurement)
-        .filter(Measurement.timestamp >= today_start_utc, Measurement.timestamp < today_end_utc)
-        .order_by(Measurement.timestamp.asc())
-        .all()
+    # Historical days are finalized by the background poller; the public API
+    # never recalculates past days or blocks the event loop with database work.
+    today_rows = energy_counter_edges(
+        db, today_start_utc, today_end_utc, GRID_ENERGY_SOURCES | SOLAR_ENERGY_SOURCES,
     )
 
     daily_grid_import_kwh = _kwh(delta_energy(today_rows, 'energy_import_wh', GRID_ENERGY_SOURCES))

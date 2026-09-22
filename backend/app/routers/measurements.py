@@ -18,6 +18,7 @@ from ..energy_retention import (
     GRID_ENERGY_SOURCES,
     SOLAR_ENERGY_SOURCES,
     delta_energy,
+    energy_counter_edges,
     get_stored_total_kwh,
 )
 from ..routers.settings import get_finance_settings_from_db, get_live_data_max_hours, get_public_dashboard_settings_from_db, get_retention_settings_from_db, get_simulation_settings_from_db, get_ui_settings_from_db
@@ -644,12 +645,7 @@ def summary(_: User = Depends(get_current_user), db: Session = Depends(get_db)) 
     ui = get_ui_settings_from_db(db)
     today_start, today_end = _local_day_bounds(now, ui.timezone)
 
-    today_rows = (
-        db.query(Measurement)
-        .filter(Measurement.timestamp >= today_start, Measurement.timestamp < today_end)
-        .order_by(Measurement.timestamp.asc())
-        .all()
-    )
+    today_rows = energy_counter_edges(db, today_start, today_end)
     today_rows = [row for row in today_rows if _measurement_matches_device_config(row, configs)]
     grid_today_rows = [row for row in today_rows if _is_grid_row(row, purposes)]
     solar_today_rows = [row for row in today_rows if _is_solar_row(row, purposes)]

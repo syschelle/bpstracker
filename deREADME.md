@@ -1119,6 +1119,29 @@ v0.9.49 zeigt Datum und Uhrzeit des Weather-Underground-Responses direkt in der 
 
 Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.49` aktualisiert werden.
 
+### v0.9.57 Geringere Datenbanklast und schnellere Anmeldung
+
+v0.9.57 behebt unnötige Rechenlast bei den Tagesenergie-Zusammenfassungen.
+Abgeschlossene Tage bleiben unverändert gespeichert: Die Hintergrundwartung
+trägt nur noch fehlende Tage nach. Auch beim Löschen alter Rohmessungen werden
+vorhandene Tagesergebnisse nicht überschrieben. Die öffentliche JSON-API
+berechnet vergangene Tage nicht mehr bei jeder Anfrage.
+
+Dashboard, JSON-API und Kindle lesen für die aktuelle Tagesbilanz nur noch
+den jeweils ersten und letzten gültigen Energiezählerstand pro Shelly-Kanal
+aus der Datenbank statt sämtliche Rohmessungen mit JSON-Daten zu laden.
+Bestehende Energieformeln, Kanalzuordnungen, Gesamtkosten und History bleiben
+unverändert. Die laufenden Tageswerte fließen weiterhin in die Gesamtbilanz
+und die Gesamtkostenbilanz ein.
+
+Die stündliche Wartung läuft jetzt außerhalb des Hauptthreads und startet
+zusätzlich unmittelbar nach dem UTC-Tageswechsel. Die Current-Values-API
+blockiert den Hauptthread ebenfalls nicht mehr. Es sind weder eine
+Datenbankmigration noch ein Löschen von Messdaten erforderlich.
+
+Nach Veröffentlichung der neuen Docker-Images lässt sich eine Image-Installation
+in `/opt/bpstracker` mit `bash ./update.sh --tag v0.9.57` aktualisieren.
+
 ### v0.9.56 Nicht-blockierende Luftsensor-API-Antworten
 
 v0.9.56 stellt alle Luftsensor-GET-Endpunkte auf reine Cache-Antworten um, damit Dashboard-Header, öffentliche Luftsensordaten und `/api/current-values` nicht mehr auf Live-Anfragen an Sensor oder Weather Underground warten. Der bestehende Backend-Poller aktualisiert Luftsensor und Weather-Underground-Status im Hintergrund alle 180 Sekunden, sodass UI und API auch bei langsamem Sensor oder Upload-Ziel erreichbar bleiben.

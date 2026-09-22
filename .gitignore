@@ -1,0 +1,18 @@
+# Local secrets and runtime data
+.env
+/data/
+/backend/data/
+
+# Python and test output
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+
+# Frontend developer dependencies and ephemeral cache
+frontend/node_modules/
+frontend/.vite/
+
+# Editor and OS noise
+.vscode/
+.DS_Store

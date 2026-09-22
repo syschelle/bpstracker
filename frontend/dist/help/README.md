@@ -1863,6 +1863,31 @@ v0.9.49 shows the Weather Underground response timestamp directly in the air dat
 
 Image-based installations can update in place with `bash ./update.sh --tag v0.9.49` from `/opt/bpstracker`.
 
+### v0.9.57 Lower database load and responsive login
+
+v0.9.57 addresses the CPU saturation identified with `py-spy` in the daily-energy
+summary calculations. Previously stored days are immutable: the background
+maintenance task fills in missing completed days but never recalculates existing
+day totals. Raw-data cleanup likewise preserves stored day summaries. The
+public `/api/current-values` endpoint no longer performs historical repairs.
+
+For the current day, the dashboard, JSON API, Kindle display and historical
+backfill now read only the first and last valid energy counters per Shelly key,
+instead of loading every complete measurement record and raw JSON payload.
+The existing grid/solar classification, configured-channel filtering and
+delta-based calculations are unchanged. Stored historical totals are still
+combined with live current-day values for the total and financial balances.
+
+Hourly maintenance additionally runs in a worker thread instead of blocking
+the asynchronous server; it runs promptly after the UTC day changes. The
+current-values endpoint also executes as a normal worker-thread endpoint so
+a slow database request cannot monopolize the Uvicorn event loop. No database
+migration or reset is needed; historical measurements and Kindle settings are
+retained.
+
+Image-based installations can update in place after the CI images have been
+published with `bash ./update.sh --tag v0.9.57` from `/opt/bpstracker`.
+
 ### v0.9.56 Non-blocking air sensor API reads
 
 v0.9.56 moves all air sensor GET endpoints to cache-only reads so dashboard header, public air sensor data and `/api/current-values` no longer wait for live sensor or Weather Underground network requests. The existing backend poller refreshes the air sensor and Weather Underground status in the background every 180 seconds, keeping UI and API responses reachable even when the sensor or upload target is slow.

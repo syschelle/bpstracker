@@ -75,9 +75,17 @@ class Poller:
 
     async def run_maintenance_if_due(self) -> None:
         now = datetime.now(timezone.utc)
-        if self._last_maintenance is not None and now - self._last_maintenance < timedelta(hours=1):
+        # Also finalize yesterday promptly after a UTC day rollover. Doing all
+        # database maintenance off the event loop keeps /health and login live.
+        if (self._last_maintenance is not None
+                and self._last_maintenance.date() == now.date()
+                and now - self._last_maintenance < timedelta(hours=1)):
             return
         self._last_maintenance = now
+        await asyncio.to_thread(self._run_maintenance_sync, now)
+
+    @staticmethod
+    def _run_maintenance_sync(now: datetime) -> None:
         with SessionLocal() as db:
             try:
                 retention = get_retention_settings_from_db(db)
