@@ -1,16 +1,16 @@
-# BPSTracker v0.9.61
+# BPSTracker v0.9.62
 
 ## Changed
 
-- Matched the compact Ortsnetz API header tile height to the air-data sensor tile.
-- The Ortsnetz tile now stretches to the current header row height and keeps its contents vertically centered.
-- No additional values were added to the compact tile; frequency remains in **Device status** only.
-- Kept the existing Ortsnetz upload behavior and measured-frequency handling unchanged.
-- Integrated the expanded Ortsnetz-Auslastung documentation into both `README.md` and `deREADME.md`.
-- Synchronized the in-app English and German help copies with the updated README files.
+- Reworked the compact Ortsnetz API header tile into a clear three-line layout.
+- Line 1 now contains the status indicator and a bold **Ortsnetz-API** title.
+- Line 2 shows only the latest HTTP status.
+- Line 3 shows the date and time of the last successful upload.
+- The **Ortsnetz-API** title now links to `https://www.ortsnetz-auslastung.de/` and opens in a new tab.
+- Added an **OpenStreetMap** link next to the latitude label in **Setup → Interfaces → Ortsnetz-Auslastung** for easier coordinate lookup.
+- Kept Ortsnetz upload behavior, frequency handling and privacy separation unchanged.
 
 ## Documentation
 
-- Documented the optional five-minute Ortsnetz upload, grid-meter selection, coordinates, optional PV capacity and privacy behavior.
-- Documented measured grid-frequency handling for compatible Shelly devices and the deliberate `—` fallback when a device does not expose frequency.
-- Documented dashboard transfer-health states and the separation between viewer-visible status and administrator-only configuration.
+- Updated `README.md` and `deREADME.md` for the three-line status tile and the new external links.
+- Synchronized the in-app English and German help copies with the updated documentation.

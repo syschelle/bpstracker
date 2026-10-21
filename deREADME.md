@@ -1182,6 +1182,10 @@ v0.9.49 zeigt Datum und Uhrzeit des Weather-Underground-Responses direkt in der 
 
 Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.49` aktualisiert werden.
 
+### v0.9.62 Dreizeilige Ortsnetz-Statuskachel und Koordinaten-Links
+
+Die kompakte **Ortsnetz-API**-Kachel im Dashboard-Header verwendet jetzt drei Zeilen: Statussymbol plus verlinkter, fett dargestellter Titel **Ortsnetz-API**, darunter der aktuelle HTTP-Status und in der dritten Zeile Datum/Uhrzeit der letzten erfolgreichen Übertragung. Der Titel öffnet `https://www.ortsnetz-auslastung.de/` in einem neuen Tab. Unter **Setup → Schnittstellen → Ortsnetz-Auslastung** befindet sich hinter **Breitengrad** zusätzlich ein **OpenStreetMap**-Link zur einfacheren Ermittlung der Koordinaten. Übertragungsverhalten, Frequenzbehandlung und die Admin-only-Konfiguration bleiben unverändert.
+
 ### v0.9.61 Gleiche Höhe der Header-Kacheln
 
 Die kompakte **Ortsnetz-API**-Kachel im Dashboard-Header wird jetzt automatisch auf dieselbe Höhe wie die Luftdaten-Kachel gestreckt. Der Inhalt bleibt vertikal zentriert, sodass beide Statuskacheln optisch bündig in einer Zeile stehen. Frequenzanzeige im **Gerätestatus** und Ortsnetz-Übertragung bleiben funktional unverändert.

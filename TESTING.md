@@ -1,4 +1,4 @@
-# Testing – BPSTracker v0.9.61
+# Testing – BPSTracker v0.9.62
 
 ## Automated tests
 
@@ -6,7 +6,7 @@
 - `cd backend && pytest -q tests/test_energy_retention_performance.py`: focused energy performance and immutability regression tests, with an SQLite file URL for imports (`DATABASE_URL=sqlite+pysqlite:////tmp/bpstracker-test.sqlite`).
 - `cd frontend && npm ci && npm run build`: type-check, i18n checks and a production Vite build.
 
-## New v0.9.61 coverage
+## New v0.9.62 coverage
 
 - Ortsnetz header status tile stretches to the same cross-axis height as the air-data sensor tile while keeping its compact width and vertically centered content.
 - The device-status frequency column and existing Ortsnetz upload payload remain unchanged.

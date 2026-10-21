@@ -1929,6 +1929,10 @@ v0.9.49 shows the Weather Underground response timestamp directly in the air dat
 
 Image-based installations can update in place with `bash ./update.sh --tag v0.9.49` from `/opt/bpstracker`.
 
+### v0.9.62 Three-line Ortsnetz status and coordinate links
+
+The compact **Ortsnetz-API** tile in the dashboard header now uses three lines: status indicator plus the linked **Ortsnetz-API** title, the current HTTP status, and the date/time of the last successful upload. The title opens `https://www.ortsnetz-auslastung.de/` in a new tab. In **Setup → Interfaces → Ortsnetz-Auslastung**, an **OpenStreetMap** link is shown next to the latitude field to make coordinate lookup easier. Upload behavior, frequency handling and admin-only configuration remain unchanged.
+
 ### v0.9.61 Matching header tile heights
 
 The compact **Ortsnetz API** tile in the dashboard header now stretches to the same height as the air-data sensor tile. The contents remain vertically centered, so both status widgets form one visually aligned header row without making the Ortsnetz tile wider or adding extra information. The existing frequency display in **Device status** and the Ortsnetz upload behavior remain unchanged.

@@ -1309,7 +1309,7 @@ function OrtnetzHeaderStatus() {
         ? t('ortnetzDashboardError')
         : t('ortnetzDashboardWaiting');
   const detail = lastSuccess
-    ? lastSuccess.toLocaleString(localeFor(language), { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+    ? lastSuccess.toLocaleString(localeFor(language), { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
     : t('ortnetzDashboardNoSuccess');
 
   return (
@@ -1320,12 +1320,11 @@ function OrtnetzHeaderStatus() {
     >
       <div className="ortnetz-header-title">
         <span className="ortnetz-status-dot" aria-hidden="true" />
-        <strong>{t('ortnetzDashboardTitle')}</strong>
+        <a href="https://www.ortsnetz-auslastung.de/" target="_blank" rel="noreferrer">
+          <strong>{t('ortnetzDashboardTitle')}</strong>
+        </a>
       </div>
-      <div className="ortnetz-header-meta">
-        <span>{healthy ? 'OK' : stateText}</span>
-        <span>HTTP {status.last_http_status ?? '–'}</span>
-      </div>
+      <div className="ortnetz-header-meta">HTTP {status.last_http_status ?? '–'}</div>
       <small>{detail}</small>
     </div>
   );
@@ -2392,7 +2391,13 @@ function OrtnetzSettingsPanel() {
             {devices.map(device => <option key={device.id} value={device.id}>{device.name}{device.status?.detected_model ? ` – ${device.status.detected_model}` : ''}</option>)}
           </select>
         </label>
-        <label>{t('ortnetzLatitude')}<input inputMode="decimal" value={settings.latitude ?? ''} onChange={e => setSettings({ ...settings, latitude: numericValue(e.target.value) })} placeholder="50.12345" /></label>
+        <label>
+          <span className="ortnetz-field-label">
+            {t('ortnetzLatitude')}
+            <a href="https://www.openstreetmap.org/" target="_blank" rel="noreferrer">OpenStreetMap</a>
+          </span>
+          <input inputMode="decimal" value={settings.latitude ?? ''} onChange={e => setSettings({ ...settings, latitude: numericValue(e.target.value) })} placeholder="50.12345" />
+        </label>
         <label>{t('ortnetzLongitude')}<input inputMode="decimal" value={settings.longitude ?? ''} onChange={e => setSettings({ ...settings, longitude: numericValue(e.target.value) })} placeholder="12.12345" /></label>
         <label>{t('ortnetzPlantCapacity')}<input inputMode="decimal" value={settings.plant_capacity_kwp ?? ''} onChange={e => setSettings({ ...settings, plant_capacity_kwp: numericValue(e.target.value) })} placeholder="0.8" /></label>
       </div>
