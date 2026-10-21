@@ -623,6 +623,7 @@ export default function App() {
                 </div>
               </div>
               <div className="header-actions">
+                {tab === 'dashboard' && <OrtnetzHeaderStatus />}
                 <AchievementHeader />
                 <AirSensorHeader />
                 <button
@@ -1127,7 +1128,6 @@ function Dashboard() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [latest, setLatest] = useState<Measurement[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
-  const [ortnetzStatus, setOrtnetzStatus] = useState<OrtnetzStatus>({});
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
@@ -1136,7 +1136,6 @@ function Dashboard() {
       api.summary().then(setSummary),
       api.latest().then(setLatest),
       api.devices().then(setDevices),
-      api.ortnetzStatus().then(setOrtnetzStatus),
     ];
     const results = await Promise.allSettled(tasks);
     const rejected = results.find((result): result is PromiseRejectedResult => result.status === 'rejected');
@@ -1161,7 +1160,6 @@ function Dashboard() {
         <AmortizationMetric summary={summary} />
         <CostBalanceMetric summary={summary} mode="daily" />
         <CostBalanceMetric summary={summary} mode="total" />
-        <OrtnetzStatusMetric status={ortnetzStatus} />
       </div>
       <DashboardDeviceMeasurements devices={devices} latest={latest} onRefresh={load} />
     </div>
@@ -1233,6 +1231,7 @@ function DashboardDeviceMeasurements({ devices, latest, onRefresh }: { devices: 
   const hasPhase = measurementRows.some(row => Boolean(row.phase));
   const hasVoltage = measurementRows.some(row => row.voltage_v !== null && row.voltage_v !== undefined);
   const hasCurrent = measurementRows.some(row => row.current_a !== null && row.current_a !== undefined);
+  const hasFrequency = measurementRows.some(row => row.frequency_hz !== null && row.frequency_hz !== undefined);
 
   return (
     <section className="panel dashboard-device-measurements">
@@ -1253,6 +1252,7 @@ function DashboardDeviceMeasurements({ devices, latest, onRefresh }: { devices: 
               <th>{t('power')}</th>
               {hasVoltage && <th>{t('voltage')}</th>}
               {hasCurrent && <th>{t('current')}</th>}
+              {hasFrequency && <th>{t('frequency')}</th>}
             </tr>
           </thead>
           <tbody>
@@ -1267,6 +1267,7 @@ function DashboardDeviceMeasurements({ devices, latest, onRefresh }: { devices: 
                 <td>{measurement ? fmtW(measurement.power_w ?? measurement.total_power_w ?? measurement.grid_power_w ?? measurement.solar_power_w, language) : t('none')}</td>
                 {hasVoltage && <td>{measurement?.voltage_v ?? t('none')}</td>}
                 {hasCurrent && <td>{measurement?.current_a ?? t('none')}</td>}
+                {hasFrequency && <td>{measurement?.frequency_hz == null ? t('none') : `${measurement.frequency_hz.toLocaleString(localeFor(language), { minimumFractionDigits: 2, maximumFractionDigits: 3 })} Hz`}</td>}
               </tr>
             ))}
           </tbody>
@@ -1277,8 +1278,24 @@ function DashboardDeviceMeasurements({ devices, latest, onRefresh }: { devices: 
 }
 
 
-function OrtnetzStatusMetric({ status }: { status: OrtnetzStatus }) {
+function OrtnetzHeaderStatus() {
   const { language, t } = useI18n();
+  const [status, setStatus] = useState<OrtnetzStatus>({});
+
+  async function load() {
+    try {
+      setStatus(await api.ortnetzStatus());
+    } catch {
+      setStatus({ enabled: true, last_error: t('ortnetzDashboardError') });
+    }
+  }
+
+  useEffect(() => {
+    void load();
+    const timer = window.setInterval(() => void load(), 10000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   const lastSuccess = status.last_success_at ? new Date(status.last_success_at) : null;
   const ageMs = lastSuccess ? Date.now() - lastSuccess.getTime() : Number.POSITIVE_INFINITY;
   const healthy = Boolean(status.enabled && status.last_http_status === 202 && !status.last_error && ageMs <= 10 * 60 * 1000);
@@ -1291,26 +1308,25 @@ function OrtnetzStatusMetric({ status }: { status: OrtnetzStatus }) {
       : failed
         ? t('ortnetzDashboardError')
         : t('ortnetzDashboardWaiting');
-  const frequency = status.last_frequency_hz == null
-    ? '–'
-    : `${status.last_frequency_hz.toLocaleString(localeFor(language), { minimumFractionDigits: 2, maximumFractionDigits: 3 })} Hz`;
+  const detail = lastSuccess
+    ? lastSuccess.toLocaleString(localeFor(language), { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+    : t('ortnetzDashboardNoSuccess');
 
   return (
-    <div className={`metric ortnetz-status-metric ${stateClass}`}>
-      <p>{t('ortnetzDashboardTitle')}</p>
-      <div className="ortnetz-status-line">
+    <div
+      className={`ortnetz-header-widget ${stateClass}`}
+      title={`${stateText} · HTTP ${status.last_http_status ?? '–'} · ${detail}`}
+      aria-label={`${t('ortnetzDashboardTitle')}: ${stateText}`}
+    >
+      <div className="ortnetz-header-title">
         <span className="ortnetz-status-dot" aria-hidden="true" />
-        <strong>{stateText}</strong>
+        <strong>{t('ortnetzDashboardTitle')}</strong>
       </div>
-      <div className="ortnetz-status-details">
+      <div className="ortnetz-header-meta">
+        <span>{healthy ? 'OK' : stateText}</span>
         <span>HTTP {status.last_http_status ?? '–'}</span>
-        <span>{t('ortnetzDashboardFrequency')}: {frequency}</span>
       </div>
-      <small>
-        {lastSuccess
-          ? `${t('ortnetzDashboardLastSuccess')}: ${lastSuccess.toLocaleString(localeFor(language))}`
-          : t('ortnetzDashboardNoSuccess')}
-      </small>
+      <small>{detail}</small>
     </div>
   );
 }

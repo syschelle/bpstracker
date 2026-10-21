@@ -1863,9 +1863,13 @@ v0.9.49 shows the Weather Underground response timestamp directly in the air dat
 
 Image-based installations can update in place with `bash ./update.sh --tag v0.9.49` from `/opt/bpstracker`.
 
+### v0.9.60 Compact Ortsnetz status and device frequency
+
+The Ortsnetz API health display has been moved out of the dashboard card grid into a compact status tile in the dashboard header. It now focuses on transfer state, HTTP status and the last successful upload time. Grid frequency is no longer repeated in the Ortsnetz tile; measured frequency is shown in the **Device status** table instead, next to the electrical readings when a device provides it.
+
 ### v0.9.59 Grid frequency and dashboard API status
 
-BPSTracker now stores the grid frequency reported by compatible Shelly meters and includes `grid_frequency_hz` in Ortsnetz uploads when a real 45–55 Hz reading is available. The authenticated dashboard contains a dedicated API-health card showing upload state, HTTP status, the last transmitted frequency and the last successful transfer time. The card becomes green after a recent HTTP 202 response; disabled, waiting/stale and error states remain visually distinct. Coordinates and Ortsnetz configuration remain restricted to administrators.
+BPSTracker stores the grid frequency reported by compatible Shelly meters and includes `grid_frequency_hz` in Ortsnetz uploads when a real 45–55 Hz reading is available. The authenticated dashboard contains an API-health display showing upload state, HTTP status, the last transmitted frequency and the last successful transfer time. Coordinates and Ortsnetz configuration remain restricted to administrators.
 
 ### v0.9.58 Ortsnetz-Auslastung integration
 

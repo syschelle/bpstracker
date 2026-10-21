@@ -130,6 +130,7 @@
     "total": "Gesamt",
     "voltage": "Spannung",
     "current": "Strom",
+    "frequency": "Frequenz",
     "dashboardLoadFailed": "Dashboard konnte nicht geladen werden",
     "csvDownloaded": "CSV wurde heruntergeladen.",
     "csvExport": "CSV Export",

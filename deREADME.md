@@ -1119,9 +1119,13 @@ v0.9.49 zeigt Datum und Uhrzeit des Weather-Underground-Responses direkt in der 
 
 Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.49` aktualisiert werden.
 
+### v0.9.60 Kompakter Ortsnetz-Status und Frequenz im Gerätestatus
+
+Die Ortsnetz-API-Statusanzeige wurde aus dem großen Dashboard-Kachelraster in eine kleine Statuskachel im oberen Dashboard-Header verschoben. Dort werden nur noch Übertragungszustand, HTTP-Status und Zeitpunkt der letzten erfolgreichen Übertragung angezeigt. Die Netzfrequenz wird nicht mehr in der Ortsnetz-Kachel wiederholt, sondern im Bereich **Gerätestatus** neben den elektrischen Messwerten angezeigt, sofern das jeweilige Gerät einen Frequenzwert liefert.
+
 ### v0.9.59 Netzfrequenz und API-Status im Dashboard
 
-BPSTracker speichert jetzt die von kompatiblen Shelly-Messgeräten gelieferte Netzfrequenz und sendet `grid_frequency_hz` an die Ortsnetz-API, sofern ein echter Messwert zwischen 45 und 55 Hz vorliegt. Im angemeldeten Dashboard zeigt eine eigene API-Statuskarte den Übertragungszustand, HTTP-Status, die zuletzt übertragene Frequenz und den Zeitpunkt der letzten erfolgreichen Übertragung. Nach einem aktuellen HTTP-202-Erfolg wird die Karte grün; deaktivierte, wartende/veraltete und fehlerhafte Zustände werden getrennt dargestellt. Koordinaten und Ortsnetz-Konfiguration bleiben ausschließlich für Administratoren sichtbar.
+BPSTracker speichert die von kompatiblen Shelly-Messgeräten gelieferte Netzfrequenz und sendet `grid_frequency_hz` an die Ortsnetz-API, sofern ein echter Messwert zwischen 45 und 55 Hz vorliegt. Im angemeldeten Dashboard zeigt eine API-Statusanzeige den Übertragungszustand, HTTP-Status, die zuletzt übertragene Frequenz und den Zeitpunkt der letzten erfolgreichen Übertragung. Koordinaten und Ortsnetz-Konfiguration bleiben ausschließlich für Administratoren sichtbar.
 
 ### v0.9.58 Ortsnetz-Auslastung-Integration
 
