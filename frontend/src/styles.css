@@ -2055,7 +2055,7 @@ html[data-theme='dark'] .setup-category-head {
 }
 
 
-/* v0.9.62 three-line Ortsnetz API status aligned to the air-sensor header tile */
+/* v0.9.63 Ortsnetz API typography mirrors the air-sensor header widget. */
 .ortnetz-header-widget {
   display: flex;
   flex-direction: column;
@@ -2069,15 +2069,28 @@ html[data-theme='dark'] .setup-category-head {
   background: #ffffff;
   color: #34405a;
   box-shadow: 0 6px 24px rgba(23, 32, 51, 0.06);
-  font-size: 0.76rem;
   line-height: 1.15;
   align-self: stretch;
   align-content: center;
 }
-.ortnetz-header-title { display: inline-flex; align-items: center; gap: 0.38rem; white-space: nowrap; }
+.ortnetz-header-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
 .ortnetz-header-title a { color: inherit; text-decoration: none; }
 .ortnetz-header-title a:hover, .ortnetz-header-title a:focus-visible { text-decoration: underline; }
-.ortnetz-header-meta { white-space: nowrap; font-weight: 800; }
+.ortnetz-header-meta {
+  white-space: nowrap;
+  font-size: 0.78rem;
+  font-weight: 850;
+  line-height: 1.2;
+}
+.ortnetz-header-meta.ok { color: #15803d; }
+.ortnetz-header-meta.error { color: #b91c1c; }
 .ortnetz-header-widget small { opacity: 0.72; white-space: nowrap; font-size: 0.68rem; }
 .ortnetz-field-label { display: flex; align-items: baseline; justify-content: flex-start; gap: 0.45rem; }
 .ortnetz-field-label a { font-size: 0.78rem; font-weight: 600; }
@@ -2091,8 +2104,11 @@ html[data-theme='dark'] .ortnetz-header-widget {
   border-color: #334155;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.32);
 }
+html[data-theme='dark'] .ortnetz-header-meta.ok { color: #4ade80; }
+html[data-theme='dark'] .ortnetz-header-meta.error { color: #f87171; }
 @media (max-width: 1180px) {
-  .ortnetz-header-widget { min-width: 135px; padding: 0.38rem 0.52rem; font-size: 0.72rem; }
+  .ortnetz-header-widget { min-width: 135px; padding: 0.38rem 0.52rem; }
+  .ortnetz-header-title { font-size: 0.82rem; }
 }
 @media (max-width: 720px) {
   .ortnetz-header-widget { grid-column: 1 / -1; width: fit-content; max-width: 100%; justify-self: start; }

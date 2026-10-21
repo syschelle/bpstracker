@@ -1324,7 +1324,7 @@ function OrtnetzHeaderStatus() {
           <strong>{t('ortnetzDashboardTitle')}</strong>
         </a>
       </div>
-      <div className="ortnetz-header-meta">HTTP {status.last_http_status ?? '–'}</div>
+      <div className={`ortnetz-header-meta ${healthy ? 'ok' : failed ? 'error' : ''}`}>HTTP {status.last_http_status ?? '–'}</div>
       <small>{detail}</small>
     </div>
   );

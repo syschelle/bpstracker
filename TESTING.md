@@ -1,4 +1,4 @@
-# Testing – BPSTracker v0.9.62
+# Testing – BPSTracker v0.9.63
 
 ## Automated tests
 
@@ -6,12 +6,13 @@
 - `cd backend && pytest -q tests/test_energy_retention_performance.py`: focused energy performance and immutability regression tests, with an SQLite file URL for imports (`DATABASE_URL=sqlite+pysqlite:////tmp/bpstracker-test.sqlite`).
 - `cd frontend && npm ci && npm run build`: type-check, i18n checks and a production Vite build.
 
-## New v0.9.62 coverage
+## New v0.9.63 coverage
 
-- Ortsnetz header status tile stretches to the same cross-axis height as the air-data sensor tile while keeping its compact width and vertically centered content.
-- The device-status frequency column and existing Ortsnetz upload payload remain unchanged.
-- English and German README files now document the complete Ortsnetz integration, transfer-health states, privacy boundaries and measured-frequency behavior.
-- In-app English and German help copies are synchronized with the updated root README files.
+- The linked **Ortsnetz-API** title uses the same desktop and <=1180 px font sizes and the same weight as the primary air-sensor values.
+- The Ortsnetz `HTTP` line uses the same font size, weight and line height as the Weather Underground status line.
+- `HTTP 202` is rendered with the Weather Underground success green; failed HTTP/error states use the matching error red, including dark-theme variants.
+- The last-success date/time line and the existing three-line tile layout remain unchanged.
+- English and German README/help copies document the refined header presentation.
 
 ## New v0.9.57 coverage
 

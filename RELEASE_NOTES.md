@@ -1,16 +1,16 @@
-# BPSTracker v0.9.62
+# BPSTracker v0.9.63
 
 ## Changed
 
-- Reworked the compact Ortsnetz API header tile into a clear three-line layout.
-- Line 1 now contains the status indicator and a bold **Ortsnetz-API** title.
-- Line 2 shows only the latest HTTP status.
-- Line 3 shows the date and time of the last successful upload.
-- The **Ortsnetz-API** title now links to `https://www.ortsnetz-auslastung.de/` and opens in a new tab.
-- Added an **OpenStreetMap** link next to the latitude label in **Setup → Interfaces → Ortsnetz-Auslastung** for easier coordinate lookup.
-- Kept Ortsnetz upload behavior, frequency handling and privacy separation unchanged.
+- Matched the **Ortsnetz-API** link typography to the primary air-sensor values in the dashboard header.
+- The Ortsnetz title now uses the same visual font size and weight as temperature, humidity, pressure and particulate values.
+- Matched the `HTTP` status typography to the Weather Underground status line.
+- Successful Ortsnetz responses such as `HTTP 202` are shown in green, matching the Weather Underground success color.
+- Failed Ortsnetz responses are shown in red, matching the Weather Underground error color.
+- The third line with the last successful upload date and time remains unchanged.
+- Added equivalent dark-theme success and error colors.
 
 ## Documentation
 
-- Updated `README.md` and `deREADME.md` for the three-line status tile and the new external links.
+- Updated `README.md` and `deREADME.md` with the refined Ortsnetz header-status presentation.
 - Synchronized the in-app English and German help copies with the updated documentation.
