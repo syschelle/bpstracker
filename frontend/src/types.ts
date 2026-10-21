@@ -98,6 +98,22 @@ export interface CurrentValuesApiSettings {
   enabled: boolean;
 }
 
+export interface OrtnetzSettings {
+  enabled: boolean;
+  device_id?: number | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  plant_capacity_kwp?: number | null;
+}
+
+export interface OrtnetzStatus {
+  last_attempt_at?: string | null;
+  last_success_at?: string | null;
+  last_http_status?: number | null;
+  last_response?: Record<string, unknown> | null;
+  last_error?: string | null;
+}
+
 export interface SimulationSettings {
   enabled: boolean;
   pv_peak_w: number;

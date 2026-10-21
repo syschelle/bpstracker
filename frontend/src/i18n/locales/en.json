@@ -356,6 +356,19 @@
     "years": "years",
     "none": "—",
     "history7Days": "7 days",
-    "history30Days": "30 days"
+    "history30Days": "30 days",
+    "ortnetzSettings": "Local grid load",
+    "ortnetzHint": "Sends readings from the selected three-phase grid Shelly to ortsnetz-auslastung.de every 5 minutes. Simulation data is never uploaded.",
+    "enableOrtnetz": "Enable upload",
+    "ortnetzMeter": "Grid meter",
+    "ortnetzSelectMeter": "Select meter",
+    "ortnetzLatitude": "Latitude",
+    "ortnetzLongitude": "Longitude",
+    "ortnetzPlantCapacity": "PV system size (kWp, optional)",
+    "ortnetzPrivacyHint": "Note: The coordinates are transmitted to the external service with every reading. Unknown optional measurements are not estimated.",
+    "saveOrtnetz": "Save local grid settings",
+    "ortnetzSaved": "Local grid settings have been saved.",
+    "ortnetzStatus": "Last upload status",
+    "ortnetzLastSuccess": "Last successful upload"
   }
 }

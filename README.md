@@ -1863,6 +1863,10 @@ v0.9.49 shows the Weather Underground response timestamp directly in the air dat
 
 Image-based installations can update in place with `bash ./update.sh --tag v0.9.49` from `/opt/bpstracker`.
 
+### v0.9.58 Ortsnetz-Auslastung integration
+
+BPSTracker can optionally send coherent three-phase grid-meter measurements to `ortsnetz-auslastung.de` every five minutes. Configure the integration under **Setup → Interfaces** by selecting the grid Shelly and entering latitude/longitude; PV capacity is optional. Simulation data is never uploaded, unknown optional fields are omitted, and the latest HTTP response/error is shown in Setup.
+
 ### v0.9.57 Lower database load and responsive login
 
 v0.9.57 addresses the CPU saturation identified with `py-spy` in the daily-energy

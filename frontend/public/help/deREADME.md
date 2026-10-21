@@ -1119,6 +1119,10 @@ v0.9.49 zeigt Datum und Uhrzeit des Weather-Underground-Responses direkt in der 
 
 Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.49` aktualisiert werden.
 
+### v0.9.58 Ortsnetz-Auslastung-Integration
+
+BPSTracker kann optional alle fünf Minuten zusammengehörige Dreiphasen-Messwerte des Netz-Shellys an `ortsnetz-auslastung.de` senden. Die Integration wird unter **Setup → Schnittstellen** mit Netz-Shelly und Breiten-/Längengrad eingerichtet; die PV-Anlagengröße ist optional. Simulationsdaten werden niemals übertragen, unbekannte optionale Werte werden weggelassen und die letzte HTTP-Antwort bzw. ein Fehler wird im Setup angezeigt.
+
 ### v0.9.57 Geringere Datenbanklast und schnellere Anmeldung
 
 v0.9.57 behebt unnötige Rechenlast bei den Tagesenergie-Zusammenfassungen.

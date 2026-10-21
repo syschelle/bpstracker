@@ -356,6 +356,19 @@
     "years": "Jahre",
     "none": "—",
     "history7Days": "7 Tage",
-    "history30Days": "30 Tage"
+    "history30Days": "30 Tage",
+    "ortnetzSettings": "Ortsnetz-Auslastung",
+    "ortnetzHint": "Sendet die Messwerte des ausgewählten dreiphasigen Netz-Shellys alle 5 Minuten an ortsnetz-auslastung.de. Simulationen werden niemals übertragen.",
+    "enableOrtnetz": "Übertragung aktivieren",
+    "ortnetzMeter": "Netz-Messgerät",
+    "ortnetzSelectMeter": "Messgerät auswählen",
+    "ortnetzLatitude": "Breitengrad",
+    "ortnetzLongitude": "Längengrad",
+    "ortnetzPlantCapacity": "PV-Anlagengröße (kWp, optional)",
+    "ortnetzPrivacyHint": "Hinweis: Die Koordinaten werden mit jeder Messung an den externen Dienst übertragen. Unbekannte optionale Messwerte werden nicht geschätzt.",
+    "saveOrtnetz": "Ortsnetz-Einstellungen speichern",
+    "ortnetzSaved": "Ortsnetz-Einstellungen wurden gespeichert.",
+    "ortnetzStatus": "Letzter Übertragungsstatus",
+    "ortnetzLastSuccess": "Letzte erfolgreiche Übertragung"
   }
 }

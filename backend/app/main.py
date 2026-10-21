@@ -15,6 +15,7 @@ from .poller import Poller
 from .kindle_display import kindle_display_service
 from .routers import auth, backups, current_values, devices, install, kindle, maintenance, measurements, settings as settings_router, users
 from .security import delete_recovery_codes
+from .version import __version__
 
 poller = Poller()
 
@@ -252,7 +253,7 @@ async def lifespan(app: FastAPI):
 
 
 settings = get_settings()
-app = FastAPI(title=settings.app_name, version='0.9.52', lifespan=lifespan)
+app = FastAPI(title=settings.app_name, version=__version__, lifespan=lifespan)
 
 configured_origins = [origin.strip() for origin in settings.frontend_origin.split(',') if origin.strip()]
 loopback_hosts = {'localhost', '127.0.0.1', '::1', '0.0.0.0'}

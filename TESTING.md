@@ -1,10 +1,16 @@
-# Testing – BPSTracker v0.9.57
+# Testing – BPSTracker v0.9.58
 
 ## Automated tests
 
 - `cd backend && pytest -q`: full backend regression suite in an environment with `backend/requirements.txt` installed and a configured `DATABASE_URL`.
 - `cd backend && pytest -q tests/test_energy_retention_performance.py`: focused energy performance and immutability regression tests, with an SQLite file URL for imports (`DATABASE_URL=sqlite+pysqlite:////tmp/bpstracker-test.sqlite`).
 - `cd frontend && npm ci && npm run build`: type-check, i18n checks and a production Vite build.
+
+## New v0.9.58 coverage
+
+- Ortsnetz payload creation uses one coherent three-phase Shelly sample.
+- Simulation mode suppresses external Ortsnetz uploads.
+- Unknown optional Ortsnetz fields are omitted rather than estimated.
 
 ## New v0.9.57 coverage
 

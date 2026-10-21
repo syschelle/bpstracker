@@ -1,4 +1,4 @@
-import type { AirSensorCurrent, AirSensorSettings, BackupCreateResponse, BackupInfo, CurrentValuesApiSettings, Device, FinanceSettings, KindleDisplaySettings, Language, Measurement, HistorySeries, HistoryTotals, PublicDashboardSettings, RetentionSettings, ResetValuesResponse, SimulationSettings, Summary, UiSettings, User } from './types';
+import type { AirSensorCurrent, AirSensorSettings, BackupCreateResponse, BackupInfo, CurrentValuesApiSettings, Device, OrtnetzSettings, OrtnetzStatus, FinanceSettings, KindleDisplaySettings, Language, Measurement, HistorySeries, HistoryTotals, PublicDashboardSettings, RetentionSettings, ResetValuesResponse, SimulationSettings, Summary, UiSettings, User } from './types';
 
 type RuntimeConfig = {
   API_BASE_URL?: string;
@@ -129,6 +129,9 @@ export const api = {
   updatePublicDashboardSettings: (settings: PublicDashboardSettings) => request<PublicDashboardSettings>('/api/settings/public-dashboard', { method: 'PUT', body: JSON.stringify(settings) }),
   currentValuesApiSettings: () => request<CurrentValuesApiSettings>('/api/settings/current-values-api'),
   updateCurrentValuesApiSettings: (payload: CurrentValuesApiSettings) => request<CurrentValuesApiSettings>('/api/settings/current-values-api', { method: 'PUT', body: JSON.stringify(payload) }),
+  ortnetzSettings: () => request<OrtnetzSettings>('/api/settings/ortnetz'),
+  updateOrtnetzSettings: (payload: OrtnetzSettings) => request<OrtnetzSettings>('/api/settings/ortnetz', { method: 'PUT', body: JSON.stringify(payload) }),
+  ortnetzStatus: () => request<OrtnetzStatus>('/api/settings/ortnetz/status'),
   simulationSettings: () => request<SimulationSettings>('/api/settings/simulation'),
   updateSimulationSettings: (payload: SimulationSettings) => request<SimulationSettings>('/api/settings/simulation', { method: 'PUT', body: JSON.stringify(payload) }),
   airSensorSettings: () => request<AirSensorSettings>('/api/settings/air-sensor'),

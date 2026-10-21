@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from .config import get_settings
 from .database import SessionLocal
 from .models import Device, DeviceStatus, DeviceType, Measurement, utcnow
+from .ortnetz import send_ortnetz_measurement
 from .energy_retention import cleanup_old_raw_measurements, ensure_completed_daily_summaries
 from .routers.settings import (
     AIR_SENSOR_SUCCESS_POLL_SECONDS,
@@ -31,6 +32,8 @@ class Poller:
         self._last_poll: dict[int, datetime] = {}
         self._last_air_sensor_poll: datetime | None = None
         self._last_maintenance: datetime | None = None
+        self._last_ortnetz: datetime | None = None
+        self._ortnetz_task: asyncio.Task | None = None
 
     def start(self) -> None:
         if self._task is None or self._task.done():
@@ -40,6 +43,11 @@ class Poller:
         self._stop.set()
         if self._task:
             await self._task
+        if self._ortnetz_task:
+            try:
+                await self._ortnetz_task
+            except Exception:  # noqa: BLE001
+                pass
 
     async def _run(self) -> None:
         while not self._stop.is_set():
@@ -61,7 +69,16 @@ class Poller:
         if due:
             await asyncio.gather(*(self.poll_device_id(device_id) for device_id in due))
         await self.poll_air_sensor_if_due(now)
+        self.schedule_ortnetz_if_due(now)
         await self.run_maintenance_if_due()
+
+    def schedule_ortnetz_if_due(self, now: datetime) -> None:
+        if self._last_ortnetz is not None and now - self._last_ortnetz < timedelta(seconds=300):
+            return
+        if self._ortnetz_task is not None and not self._ortnetz_task.done():
+            return
+        self._last_ortnetz = now
+        self._ortnetz_task = asyncio.create_task(send_ortnetz_measurement())
 
     async def poll_air_sensor_if_due(self, now: datetime) -> None:
         if self._last_air_sensor_poll is not None and now - self._last_air_sensor_poll < timedelta(seconds=AIR_SENSOR_SUCCESS_POLL_SECONDS):

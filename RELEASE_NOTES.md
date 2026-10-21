@@ -1,3 +1,13 @@
+# BPSTracker v0.9.58
+
+- Added an optional native integration for `ortsnetz-auslastung.de`.
+- Added setup fields for enabling uploads, selecting the three-phase grid Shelly, coordinates and optional PV capacity.
+- Uploads use one coherent L1/L2/L3 sample and run every five minutes without blocking the normal Shelly poller.
+- Added voltage, phase current, signed grid power, detected smart-meter model and BPSTracker integration version where available.
+- Unknown optional values are omitted instead of estimated; simulation data is never uploaded.
+- Added upload status, HTTP response and error feedback to the setup UI.
+- Centralized the backend application version and aligned it with v0.9.58.
+
 # BPSTracker v0.9.57 – Performance-Optimierung
 
 ## Änderungen

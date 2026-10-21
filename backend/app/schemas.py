@@ -171,6 +171,22 @@ class PublicDashboardSettings(BaseModel):
     meter_number: str | None = Field(default=None, max_length=80)
 
 
+class OrtnetzSettings(BaseModel):
+    enabled: bool = False
+    device_id: int | None = Field(default=None, ge=1)
+    latitude: float | None = Field(default=None, ge=-90, le=90)
+    longitude: float | None = Field(default=None, ge=-180, le=180)
+    plant_capacity_kwp: float | None = Field(default=None, gt=0, le=1000)
+
+
+class OrtnetzStatus(BaseModel):
+    last_attempt_at: datetime | None = None
+    last_success_at: datetime | None = None
+    last_http_status: int | None = None
+    last_response: dict[str, Any] | None = None
+    last_error: str | None = None
+
+
 class SimulationSettings(BaseModel):
     enabled: bool = False
     pv_peak_w: float = Field(default=800.0, ge=100, le=5000)

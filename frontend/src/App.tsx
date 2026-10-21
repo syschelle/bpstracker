@@ -4,7 +4,7 @@ import { Activity, Euro, Gauge, Globe2, HelpCircle, History, LogOut, Menu, Moon,
 import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api, getRuntimeConfig, setToken } from './api';
 import packageJson from '../package.json';
-import type { AirSensorCurrent, AirSensorSettings, BackupInfo, CurrencyCode, CurrentValuesApiSettings, Device, DevicePurpose, DeviceType, FinanceSettings, KindleDisplaySettings, Measurement, HistoryTotals, PublicDashboardSettings, RetentionSettings, SimulationSettings, Summary, UiSettings, User } from './types';
+import type { AirSensorCurrent, AirSensorSettings, BackupInfo, CurrencyCode, CurrentValuesApiSettings, Device, DevicePurpose, OrtnetzSettings, OrtnetzStatus, DeviceType, FinanceSettings, KindleDisplaySettings, Measurement, HistoryTotals, PublicDashboardSettings, RetentionSettings, SimulationSettings, Summary, UiSettings, User } from './types';
 import { availableLanguages, DEFAULT_LANGUAGE, helpFileForLanguage, isSupportedLanguage, languageMeta, languageOptionLabel, localeForLanguage, nextLanguage, normalizeLanguage, translate } from './i18n';
 import type { Language, TranslationKey } from './i18n';
 
@@ -1721,6 +1721,7 @@ function SetupView({ currentUser, onCurrentUserChange }: { currentUser: User; on
         <div className="setup-category-head"><h2><Globe2 size={20} /> {t('interfaceSettings')}</h2></div>
         <div className="setup-category-grid setup-category-grid-two">
           <CurrentValuesApiSettingsPanel />
+          <OrtnetzSettingsPanel />
           <KindleDisplaySettingsPanel />
         </div>
       </section>
@@ -2276,6 +2277,77 @@ function CurrentValuesApiSettingsPanel() {
           {previewError ? <div className="error">{previewError}</div> : <pre>{JSON.stringify(preview, null, 2)}</pre>}
         </div>
       )}
+    </section>
+  );
+}
+
+function OrtnetzSettingsPanel() {
+  const { t } = useI18n();
+  const [settings, setSettings] = useState<OrtnetzSettings>({ enabled: false, device_id: null, latitude: null, longitude: null, plant_capacity_kwp: null });
+  const [status, setStatus] = useState<OrtnetzStatus>({});
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function load() {
+    const [loadedSettings, loadedStatus, loadedDevices] = await Promise.all([
+      api.ortnetzSettings(),
+      api.ortnetzStatus(),
+      api.devices(),
+    ]);
+    setSettings(loadedSettings);
+    setStatus(loadedStatus);
+    setDevices(loadedDevices.filter(device => device.is_active && ['auto', 'shelly_3em_gen1', 'shelly_pro_3em_gen2'].includes(device.device_type)));
+  }
+
+  useEffect(() => { void load(); }, []);
+
+  async function save() {
+    setMessage(null);
+    setError(null);
+    try {
+      const saved = await api.updateOrtnetzSettings(settings);
+      setSettings(saved);
+      setMessage(t('ortnetzSaved'));
+      setStatus(await api.ortnetzStatus());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  function numericValue(value: string): number | null {
+    if (!value.trim()) return null;
+    const parsed = Number(value.replace(',', '.'));
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  return (
+    <section className="panel">
+      <div className="panel-head"><h2><Activity size={20} /> {t('ortnetzSettings')}</h2></div>
+      <p className="hint">{t('ortnetzHint')}</p>
+      {message && <div className="info">{message}</div>}
+      {error && <div className="error">{error}</div>}
+      <div className="form-grid finance-form">
+        <label className="check"><input type="checkbox" checked={settings.enabled} onChange={e => setSettings({ ...settings, enabled: e.target.checked })} /> {t('enableOrtnetz')}</label>
+        <label>{t('ortnetzMeter')}
+          <select value={settings.device_id ?? ''} onChange={e => setSettings({ ...settings, device_id: e.target.value ? Number(e.target.value) : null })}>
+            <option value="">{t('ortnetzSelectMeter')}</option>
+            {devices.map(device => <option key={device.id} value={device.id}>{device.name}{device.status?.detected_model ? ` – ${device.status.detected_model}` : ''}</option>)}
+          </select>
+        </label>
+        <label>{t('ortnetzLatitude')}<input inputMode="decimal" value={settings.latitude ?? ''} onChange={e => setSettings({ ...settings, latitude: numericValue(e.target.value) })} placeholder="50.12345" /></label>
+        <label>{t('ortnetzLongitude')}<input inputMode="decimal" value={settings.longitude ?? ''} onChange={e => setSettings({ ...settings, longitude: numericValue(e.target.value) })} placeholder="12.12345" /></label>
+        <label>{t('ortnetzPlantCapacity')}<input inputMode="decimal" value={settings.plant_capacity_kwp ?? ''} onChange={e => setSettings({ ...settings, plant_capacity_kwp: numericValue(e.target.value) })} placeholder="0.8" /></label>
+      </div>
+      <p className="hint">{t('ortnetzPrivacyHint')}</p>
+      <button onClick={() => void save()}>{t('saveOrtnetz')}</button>
+      <div className="api-preview">
+        <p className="hint">{t('ortnetzStatus')}</p>
+        <div>{t('ortnetzLastSuccess')}: {status.last_success_at ? new Date(status.last_success_at).toLocaleString() : '–'}</div>
+        <div>HTTP: {status.last_http_status ?? '–'}</div>
+        {status.last_error && <div className="error">{status.last_error}</div>}
+        {status.last_response && <pre>{JSON.stringify(status.last_response, null, 2)}</pre>}
+      </div>
     </section>
   );
 }

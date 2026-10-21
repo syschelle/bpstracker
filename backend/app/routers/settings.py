@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from ..config import get_settings
 from ..database import get_db
 from ..models import AppSetting, AuditLog, User
-from ..schemas import AirSensorCurrent, AirSensorSettings, CurrentValuesApiSettings, PublicDashboardSettings, FinanceSettings, KindleDisplaySettings, RetentionSettings, SimulationSettings, UiSettings
+from ..schemas import AirSensorCurrent, AirSensorSettings, CurrentValuesApiSettings, OrtnetzSettings, OrtnetzStatus, PublicDashboardSettings, FinanceSettings, KindleDisplaySettings, RetentionSettings, SimulationSettings, UiSettings
 from ..network_security import OutboundHostError, lan_http_url, normalize_outbound_http_host, resolve_lan_http_target
 from ..security import decrypt_secret, encrypt_secret, get_current_user, require_admin
 from ..simulation import simulated_air_sensor_current
@@ -29,6 +29,8 @@ AIR_SENSOR_SETTINGS_KEY = 'air_sensor'
 KINDLE_DISPLAY_SETTINGS_KEY = 'kindle_display'
 CURRENT_VALUES_API_SETTINGS_KEY = 'current_values_api'
 PUBLIC_DASHBOARD_SETTINGS_KEY = 'public_dashboard'
+ORTSNETZ_SETTINGS_KEY = 'ortnetz'
+ORTSNETZ_STATUS_KEY = 'ortnetz_status'
 SIMULATION_SETTINGS_KEY = 'simulation'
 SIMULATION_CACHE_KEY = 'simulation_cache'
 AIR_SENSOR_CACHE_KEY = 'air_sensor_cache'
@@ -625,6 +627,28 @@ def get_public_dashboard_settings_from_db(db: Session) -> PublicDashboardSetting
     return _normalize_public_dashboard_value(row.value if row else None)
 
 
+def _normalize_ortnetz_value(value: dict | None) -> OrtnetzSettings:
+    value = value or {}
+    return OrtnetzSettings(
+        enabled=bool(value.get('enabled', False)),
+        device_id=value.get('device_id'),
+        latitude=value.get('latitude'),
+        longitude=value.get('longitude'),
+        plant_capacity_kwp=value.get('plant_capacity_kwp'),
+    )
+
+
+def get_ortnetz_settings_from_db(db: Session) -> OrtnetzSettings:
+    row = db.get(AppSetting, ORTSNETZ_SETTINGS_KEY)
+    return _normalize_ortnetz_value(row.value if row else None)
+
+
+def get_ortnetz_status_from_db(db: Session) -> OrtnetzStatus:
+    row = db.get(AppSetting, ORTSNETZ_STATUS_KEY)
+    value = row.value if row and isinstance(row.value, dict) else {}
+    return OrtnetzStatus(**value)
+
+
 def get_current_values_api_settings_from_db(db: Session) -> CurrentValuesApiSettings:
     row = db.get(AppSetting, CURRENT_VALUES_API_SETTINGS_KEY)
     return _normalize_current_values_api_value(row.value if row else None)
@@ -813,6 +837,38 @@ def update_current_values_api_settings(
     return _normalize_current_values_api_value(row.value)
 
 
+
+
+@router.get('/ortnetz', response_model=OrtnetzSettings)
+def get_ortnetz_settings(_: User = Depends(require_admin), db: Session = Depends(get_db)) -> OrtnetzSettings:
+    return get_ortnetz_settings_from_db(db)
+
+
+@router.put('/ortnetz', response_model=OrtnetzSettings)
+def update_ortnetz_settings(
+    payload: OrtnetzSettings,
+    actor: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> OrtnetzSettings:
+    normalized = _normalize_ortnetz_value(payload.model_dump())
+    if normalized.enabled and (normalized.device_id is None or normalized.latitude is None or normalized.longitude is None):
+        raise HTTPException(status_code=422, detail='Device, latitude and longitude are required when Ortsnetz upload is enabled')
+    row = db.get(AppSetting, ORTSNETZ_SETTINGS_KEY)
+    value = normalized.model_dump()
+    if row is None:
+        row = AppSetting(key=ORTSNETZ_SETTINGS_KEY, value=value)
+        db.add(row)
+    else:
+        row.value = value
+    db.add(AuditLog(actor_user_id=actor.id, action='settings.ortnetz.update', details=value))
+    db.commit()
+    db.refresh(row)
+    return _normalize_ortnetz_value(row.value)
+
+
+@router.get('/ortnetz/status', response_model=OrtnetzStatus)
+def get_ortnetz_status(_: User = Depends(require_admin), db: Session = Depends(get_db)) -> OrtnetzStatus:
+    return get_ortnetz_status_from_db(db)
 
 
 @router.get('/simulation', response_model=SimulationSettings)
