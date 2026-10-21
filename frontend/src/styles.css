@@ -2055,7 +2055,7 @@ html[data-theme='dark'] .setup-category-head {
 }
 
 
-/* v0.9.60 compact Ortsnetz API status in the dashboard header */
+/* v0.9.61 compact Ortsnetz API status aligned to the air-sensor header tile */
 .ortnetz-header-widget {
   display: grid;
   grid-template-columns: auto auto;
@@ -2070,6 +2070,8 @@ html[data-theme='dark'] .setup-category-head {
   box-shadow: 0 6px 24px rgba(23, 32, 51, 0.06);
   font-size: 0.76rem;
   line-height: 1.15;
+  align-self: stretch;
+  align-content: center;
 }
 .ortnetz-header-title { display: inline-flex; align-items: center; gap: 0.38rem; white-space: nowrap; }
 .ortnetz-header-meta { display: inline-flex; align-items: center; justify-content: flex-end; gap: 0.38rem; white-space: nowrap; font-weight: 800; }

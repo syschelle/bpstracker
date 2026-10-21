@@ -1,4 +1,4 @@
-# Testing – BPSTracker v0.9.60
+# Testing – BPSTracker v0.9.61
 
 ## Automated tests
 
@@ -6,12 +6,12 @@
 - `cd backend && pytest -q tests/test_energy_retention_performance.py`: focused energy performance and immutability regression tests, with an SQLite file URL for imports (`DATABASE_URL=sqlite+pysqlite:////tmp/bpstracker-test.sqlite`).
 - `cd frontend && npm ci && npm run build`: type-check, i18n checks and a production Vite build.
 
-## New v0.9.60 coverage
+## New v0.9.61 coverage
 
-- Ortsnetz transfer health is rendered as a compact dashboard-header status instead of a regular dashboard metric card.
-- The compact API status does not repeat grid frequency.
-- Device-status rows expose `frequency_hz` in a dedicated Frequency column whenever current measurements contain a real frequency value.
-- Existing v0.9.59 grid-frequency parsing, persistence and Ortsnetz payload behavior remain unchanged.
+- Ortsnetz header status tile stretches to the same cross-axis height as the air-data sensor tile while keeping its compact width and vertically centered content.
+- The device-status frequency column and existing Ortsnetz upload payload remain unchanged.
+- English and German README files now document the complete Ortsnetz integration, transfer-health states, privacy boundaries and measured-frequency behavior.
+- In-app English and German help copies are synchronized with the updated root README files.
 
 ## New v0.9.57 coverage
 

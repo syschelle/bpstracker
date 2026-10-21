@@ -23,6 +23,7 @@ Das Projekt ist für den lokalen Betrieb im Heimnetz gedacht. Backend und Datenb
 - [Kindle-Display](#kindle-display)
 - [Öffentliches Dashboard](#öffentliches-dashboard)
 - [JSON-API](#json-api)
+- [Ortsnetz-Auslastung-Integration](#ortsnetz-auslastung-integration)
 - [Luftdatensensor](#luftdatensensor)
 - [Amortisations-Achievements](#amortisations-achievements)
 - [Akku-Amortisationsberechnung](#akku-amortisationsberechnung)
@@ -71,6 +72,7 @@ Das Projekt ist für den lokalen Betrieb im Heimnetz gedacht. Backend und Datenb
 - optionale Luftdatenanzeige im Header
 - optionale Kindle-kompatible PNG-Anzeige
 - optionale JSON-API für aktuelle Werte
+- optionale Ortsnetz-Auslastung-Integration mit 5-Minuten-Übertragung
 - optionales öffentliches Dashboard ohne Login
 - verschlüsselte Admin-Backups
 - Reset-Funktion für Messwerte
@@ -209,6 +211,8 @@ Typische Geräte:
 
 Die Anwendung unterscheidet zwischen Netz-/Hausbezug und Solarerzeugung. Für die Solarproduktion wird typischerweise ein Shelly-Schalt-/Messkanal am Wechselrichter oder der PV-Einspeisung verwendet.
 
+Kompatible Shelly 3EM / Pro 3EM Geräte können zusätzlich eine echte Netzfrequenz liefern. BPSTracker speichert sie als `frequency_hz`, zeigt sie im **Gerätestatus** an und kann sie an die optionale Ortsnetz-Auslastung-Integration weitergeben. Fehlende Frequenzwerte werden nicht geschätzt.
+
 ---
 
 ## Installation mit Docker
@@ -296,6 +300,8 @@ Im Setup können unter anderem konfiguriert werden:
 - Kindle-Display
 - Simulation
 - JSON-API
+- Ortsnetz-Auslastung-Integration
+- Auswahl des Netz-Messgeräts sowie Standortdaten für Ortsnetz
 - Admin-Zugang und optionaler Viewer-Zugang
 - Finanzwerte
 - Akku-Amortisationsberechnung
@@ -338,8 +344,11 @@ Das Dashboard zeigt unter anderem:
 - Amortisation
 - Batterieamortisation, falls aktiviert
 - zusammengeführter Gerätestatus mit aktuellen Messwerten
+- Phasenleistung, Spannung und Strom, sofern vom Gerät geliefert
+- gemessene Netzfrequenz in Hz bei kompatiblen Shelly-Messgeräten
 - automatisch ausgeblendete optionale Messwertspalten, wenn sie nicht konfiguriert oder nicht vorhanden sind
 - Luftdaten im Header, falls aktiviert
+- kompakter Ortsnetz-API-Status im Header mit Übertragungszustand, HTTP-Status und letzter erfolgreicher Übertragung
 - Simulationshinweis, falls der Demo-Modus aktiv ist
 
 
@@ -534,6 +543,60 @@ Sie stellt aktuelle Werte bereit, zum Beispiel:
 - aktuelle Luftsensorwerte, wenn der Luftdatensensor aktiviert und eingerichtet ist
 
 Die API ist nützlich für externe Systeme, Smart-Home-Integrationen oder eigene Skripte. Der Luftsensor-Block enthält nur aktuelle Mess- und Statuswerte, aber keine Host- oder API-Key-Konfiguration.
+
+---
+
+## Ortsnetz-Auslastung-Integration
+
+BPSTracker kann optional Netzmesswerte an folgenden Dienst übertragen:
+
+```text
+https://www.ortsnetz-auslastung.de/v1/measurements
+```
+
+Die Integration wird unter **Setup → Schnittstellen** eingerichtet. Als Messquelle dient ein bereits konfigurierter dreiphasiger Shelly-Netzzähler. Der Ortsnetz-Reporter fragt den Shelly deshalb nicht ein zweites Mal ab.
+
+Konfigurierbar sind:
+
+- Aktivieren/Deaktivieren
+- Auswahl des dreiphasigen Netz-Shellys
+- Breitengrad
+- Längengrad
+- optional installierte PV-Leistung in kWp
+
+Ist die Integration aktiviert, sendet BPSTracker ungefähr alle fünf Minuten eine Messung. Die erforderlichen Spannungswerte von L1, L2 und L3 stammen immer aus demselben Shelly-Polling-Zyklus und gehören damit zu einer zusammenhängenden Messung.
+
+Je nachdem, welche Werte der ausgewählte Shelly tatsächlich liefert, können zusätzlich übertragen werden:
+
+- Phasenströme (`l1_a`, `l2_a`, `l3_a`)
+- vorzeichenbehaftete Gesamt-Netzleistung (`grid_power_w`)
+- gemessene Netzfrequenz (`grid_frequency_hz`)
+- Smartmeter-Modell
+- BPSTracker-Integrationsversion
+- konfigurierte PV-Anlagengröße
+
+Für die Netzleistung gilt die Ortsnetz-Konvention: positive Werte bedeuten Netzbezug, negative Werte Einspeisung.
+
+Die Netzfrequenz wird nur übertragen, wenn BPSTracker von einem kompatiblen Shelly einen echten Messwert im gültigen Bereich von 45 bis 55 Hz erhalten hat. Fehlende optionale Messwerte werden weggelassen; BPSTracker ersetzt unbekannte Werte nicht durch `0` und schätzt sie nicht. Ein Shelly 3EM Gen1 kann je nach Firmware beispielsweise keine Frequenz in `/status` liefern; dann bleibt die Anzeige bewusst bei `—`.
+
+Simulationsdaten werden niemals an die externe API übertragen.
+
+### Ortsnetz-Status
+
+Im Dashboard-Header befindet sich eine kompakte **Ortsnetz-API**-Statuskachel. Sie zeigt den aktuellen Übertragungszustand, den letzten HTTP-Status und den Zeitpunkt der letzten erfolgreichen Übertragung. Die Kachel hat dieselbe Höhe wie die Luftdaten-Kachel und bildet damit eine bündige Statuszeile im Header.
+
+Typische Zustände:
+
+- **grün** — die letzte Übertragung war erfolgreich, normalerweise mit HTTP `202`
+- **gelb** — die Integration ist aktiviert, aber es liegt noch keine aktuelle erfolgreiche Übertragung vor
+- **rot** — die letzte Übertragung ist fehlgeschlagen
+- **grau** — die Integration ist deaktiviert
+
+Die gemessene Frequenz wird bewusst im **Gerätestatus** angezeigt und nicht zusätzlich in der Ortsnetz-Kachel wiederholt.
+
+Administratoren können die vollständige Ortsnetz-Konfiguration im Setup sehen und bearbeiten. Viewer dürfen den unkritischen Übertragungsstatus sehen; Standortkoordinaten und Konfiguration bleiben ausschließlich Administratoren vorbehalten.
+
+Ein langsamer oder ausgefallener Ortsnetz-Dienst blockiert das normale Shelly-Polling nicht. Die externe API-Übertragung läuft unabhängig vom regulären Messzyklus.
 
 ---
 
@@ -1118,6 +1181,10 @@ Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./up
 v0.9.49 zeigt Datum und Uhrzeit des Weather-Underground-Responses direkt in der Luftdaten-Zeile im Header. Die Felder für Station, Key und Aufruf-Vorlage können im Setup jetzt auch bearbeitet werden, wenn die Upload-Checkbox deaktiviert ist.
 
 Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.49` aktualisiert werden.
+
+### v0.9.61 Gleiche Höhe der Header-Kacheln
+
+Die kompakte **Ortsnetz-API**-Kachel im Dashboard-Header wird jetzt automatisch auf dieselbe Höhe wie die Luftdaten-Kachel gestreckt. Der Inhalt bleibt vertikal zentriert, sodass beide Statuskacheln optisch bündig in einer Zeile stehen. Frequenzanzeige im **Gerätestatus** und Ortsnetz-Übertragung bleiben funktional unverändert.
 
 ### v0.9.60 Kompakter Ortsnetz-Status und Frequenz im Gerätestatus
 

@@ -27,6 +27,7 @@ https://github.com/syschelle/bpstracker
 - [Authentication and user roles](#authentication-and-user-roles)
 - [Kindle display](#kindle-display)
 - [JSON API](#json-api)
+- [Ortsnetz-Auslastung integration](#ortsnetz-auslastung-integration)
 - [Simulation mode](#simulation-mode)
 - [Air quality sensor](#air-quality-sensor)
 - [Data retention](#data-retention)
@@ -109,6 +110,14 @@ It includes:
 - **Device status**
   - online/offline state
   - last successful polling time
+  - phase power, voltage and current values where available
+  - measured grid frequency in Hz for compatible Shelly meters
+
+- **Ortsnetz API status**
+  - compact transfer-status tile in the dashboard header
+  - green/yellow/red/grey health state
+  - last HTTP status
+  - last successful transmission time
 
 - **Latest measurements**
   - current normalized measurement data
@@ -157,6 +166,8 @@ The setup area allows administrators to configure:
 - Kindle display preview
 - JSON API activation
 - JSON API preview
+- Ortsnetz-Auslastung integration
+- Ortsnetz grid-meter selection and location settings
 - user credentials
 - financial values
 - data retention
@@ -386,7 +397,7 @@ Each device can be configured in Setup with:
 - channel
 - active/inactive state
 
-The backend normalizes measurements and stores them in PostgreSQL.
+The backend normalizes measurements and stores them in PostgreSQL. Compatible Shelly 3EM / Pro 3EM devices can also provide measured grid frequency, which is stored as `frequency_hz`, shown in the dashboard device-status table and can be forwarded to the optional Ortsnetz-Auslastung integration. Unknown frequency values are not estimated.
 
 ---
 
@@ -648,6 +659,60 @@ The preview calls `/api/current-values` and displays the current JSON response d
 | `total_grid_import_kwh` | total grid import |
 | `total_grid_export_kwh` | total grid export |
 | `air_sensor` | current air sensor state and measured values when the air sensor is enabled/configured; no host or API key configuration is exposed |
+
+---
+
+## Ortsnetz-Auslastung integration
+
+BPSTracker can optionally contribute grid measurements to:
+
+```text
+https://www.ortsnetz-auslastung.de/v1/measurements
+```
+
+The integration is configured under **Setup → Interfaces**. It uses an already configured Shelly grid meter as the measurement source, so the Ortsnetz reporter does not poll the Shelly a second time.
+
+Configuration includes:
+
+- enable/disable switch
+- selection of the three-phase grid Shelly
+- latitude
+- longitude
+- optional installed PV capacity in kWp
+
+When enabled, BPSTracker sends a measurement approximately every five minutes. The required phase voltages are taken from the same Shelly polling cycle so L1, L2 and L3 belong to one coherent measurement.
+
+Depending on the values actually provided by the selected Shelly, the request can also contain:
+
+- phase currents (`l1_a`, `l2_a`, `l3_a`)
+- signed total grid power (`grid_power_w`)
+- measured grid frequency (`grid_frequency_hz`)
+- smart-meter model
+- BPSTracker integration version
+- configured PV capacity
+
+Grid power follows the Ortsnetz convention: positive values represent grid import and negative values represent grid export.
+
+Grid frequency is only transmitted when BPSTracker received a real value in the valid 45–55 Hz range from a compatible Shelly meter. A Shelly 3EM Gen1 may not expose frequency in its `/status` response (as with current v1.14.0 firmware); in that case BPSTracker deliberately shows `—` and omits `grid_frequency_hz`. Missing optional measurements are omitted; BPSTracker does not substitute unknown values with `0` and does not estimate them.
+
+Simulation data is never transmitted to the external API.
+
+### Ortsnetz status
+
+The dashboard header contains a compact **Ortsnetz API** status tile when the integration is available. It shows the current transfer health, the latest HTTP status and the time of the last successful upload. The tile automatically stretches to the same height as the air-data sensor tile so both status widgets align cleanly in the header.
+
+Typical states are:
+
+- **green** — the most recent upload succeeded, normally with HTTP `202`
+- **yellow** — integration is enabled but no current successful upload is available yet
+- **red** — the latest upload failed
+- **grey** — integration is disabled
+
+The measured frequency itself is intentionally shown in **Device status**, not repeated in the Ortsnetz tile.
+
+Administrators can see and edit the full integration configuration in Setup. Viewer users may see the non-sensitive transfer status, but location coordinates and Ortsnetz configuration remain administrator-only.
+
+A failed or slow Ortsnetz request does not block normal Shelly polling. External API transmission runs independently from the regular measurement cycle.
 
 ---
 
@@ -1007,8 +1072,9 @@ Setup allows enabling or disabling:
 
 - Kindle display generation
 - JSON API
+- Ortsnetz-Auslastung upload
 
-Both features include preview/test buttons.
+The Ortsnetz integration additionally lets an administrator select the grid Shelly, configure latitude/longitude and optionally store the installed PV capacity. Kindle and JSON API include preview/test controls; Ortsnetz exposes its latest transfer state and server response in Setup.
 
 ### Devices
 
@@ -1862,6 +1928,10 @@ Image-based installations can update in place with `bash ./update.sh --tag v0.9.
 v0.9.49 shows the Weather Underground response timestamp directly in the air data header line. The Weather Underground station, key and request template fields can now be edited in Setup even while the upload checkbox is disabled.
 
 Image-based installations can update in place with `bash ./update.sh --tag v0.9.49` from `/opt/bpstracker`.
+
+### v0.9.61 Matching header tile heights
+
+The compact **Ortsnetz API** tile in the dashboard header now stretches to the same height as the air-data sensor tile. The contents remain vertically centered, so both status widgets form one visually aligned header row without making the Ortsnetz tile wider or adding extra information. The existing frequency display in **Device status** and the Ortsnetz upload behavior remain unchanged.
 
 ### v0.9.60 Compact Ortsnetz status and device frequency
 
