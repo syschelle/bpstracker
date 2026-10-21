@@ -623,7 +623,7 @@ export default function App() {
                 </div>
               </div>
               <div className="header-actions">
-                {tab === 'dashboard' && <OrtnetzHeaderStatus />}
+                <OrtnetzHeaderStatus />
                 <AchievementHeader />
                 <AirSensorHeader />
                 <button

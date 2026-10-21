@@ -1,3 +1,13 @@
+# BPSTracker v0.9.65
+
+## Changed
+
+- The compact **Ortsnetz-API** status tile is now always visible in the application header.
+- The tile remains visible on Dashboard, History, Setup and Help instead of being limited to the Dashboard tab.
+- Status polling, three-line layout, colors, external link and timestamp formatting remain unchanged.
+
+---
+
 # BPSTracker v0.9.64
 
 ## Changed

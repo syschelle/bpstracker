@@ -1270,3 +1270,8 @@ Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./up
 v0.9.50 berechnet den Taupunkt aus Temperatur und Luftfeuchte des Luftdatensensors mit der Magnus-Formel, gerundet auf eine Nachkommastelle in Grad Celsius. Der Taupunkt wird in den Luftdaten der Webapp angezeigt und als `dewptf` zu Weather Underground hochgeladen.
 
 Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.50` aktualisiert werden.
+
+
+### v0.9.65 Ortsnetz-Statuskachel auf jeder Seite
+
+v0.9.65 zeigt die kompakte **Ortsnetz-API**-Statuskachel im Kopfbereich auf allen Hauptseiten (Dashboard, Verlauf, Setup und Hilfe) dauerhaft an. Dadurch bleibt der Übertragungsstatus auch beim Navigieren durch BPSTracker sichtbar. Das bestehende dreizeilige Layout, die Statusfarben und das Link-Verhalten bleiben unverändert.

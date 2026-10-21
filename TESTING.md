@@ -48,3 +48,9 @@
 4. Check daily rollover and retained total balances the following day.
 
 Avoid resetting or manually editing the production database during performance tests.
+
+
+## New v0.9.65 coverage
+
+- Verify the Ortsnetz API header tile remains rendered while switching between Dashboard, History, Setup and Help.
+- Verify status refresh, colors, HTTP code, timestamp and external link behavior are unchanged.
