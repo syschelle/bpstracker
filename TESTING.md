@@ -6,6 +6,14 @@
 - `cd backend && pytest -q tests/test_energy_retention_performance.py`: focused energy performance and immutability regression tests, with an SQLite file URL for imports (`DATABASE_URL=sqlite+pysqlite:////tmp/bpstracker-test.sqlite`).
 - `cd frontend && npm ci && npm run build`: type-check, i18n checks and a production Vite build.
 
+## New v0.9.64 coverage
+
+- The compact Ortsnetz header tile keeps the same three-line content and height while using increased vertical spacing.
+- Desktop padding and line rhythm more closely match the neighboring air-data sensor widget.
+- The <=1180 px layout keeps a slightly tighter but still increased spacing for responsive headers.
+- Typography, HTTP success/error colors, external links and last-success timestamp behavior remain unchanged.
+- English and German README/help copies document the spacing refinement.
+
 ## New v0.9.63 coverage
 
 - The linked **Ortsnetz-API** title uses the same desktop and <=1180 px font sizes and the same weight as the primary air-sensor values.

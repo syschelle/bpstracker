@@ -1929,6 +1929,10 @@ v0.9.49 shows the Weather Underground response timestamp directly in the air dat
 
 Image-based installations can update in place with `bash ./update.sh --tag v0.9.49` from `/opt/bpstracker`.
 
+### v0.9.64 Ortsnetz status vertical spacing
+
+v0.9.64 gives the compact three-line **Ortsnetz-API** header tile more vertical breathing room. Its line spacing and internal padding now follow the neighboring air-data sensor widget more closely, while the tile height, width, typography, HTTP status colors, links and displayed values remain unchanged.
+
 ### v0.9.63 Ortsnetz status typography and colors
 
 v0.9.63 visually aligns the compact Ortsnetz status tile with the neighboring air-data sensor widget. The linked **Ortsnetz-API** title now uses the same font size and weight as the primary air-sensor values. The `HTTP` status line uses the same typography as the Weather Underground status line and is colored green for successful `HTTP 202` responses or red for failed responses. The third line with the last successful upload date and time remains unchanged. Dark mode uses the corresponding light green and light red status colors.

@@ -1182,6 +1182,10 @@ v0.9.49 zeigt Datum und Uhrzeit des Weather-Underground-Responses direkt in der 
 
 Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.49` aktualisiert werden.
 
+### v0.9.64 Ortsnetz-Status: mehr vertikaler Zeilenabstand
+
+v0.9.64 gibt der dreizeiligen **Ortsnetz-API**-Kachel im Dashboard-Header mehr vertikalen Abstand. Zeilenrhythmus und Innenabstand orientieren sich jetzt stärker an der benachbarten Luftdaten-Kachel. Höhe, Breite, Schriftbild, HTTP-Statusfarben, Links und angezeigte Werte bleiben unverändert.
+
 ### v0.9.63 Ortsnetz-Status: Schriftbild und Statusfarben
 
 v0.9.63 gleicht die kompakte Ortsnetz-Statuskachel optisch an den benachbarten Luftdatensensor an. Der verlinkte Schriftzug **Ortsnetz-API** verwendet jetzt dieselbe Schriftgröße und Schriftstärke wie die primären Luftsensorwerte. Die `HTTP`-Statuszeile verwendet dieselbe Schriftgröße wie die Weather-Underground-Statuszeile und wird bei erfolgreichem `HTTP 202` grün, bei Fehlern rot dargestellt. Die dritte Zeile mit Datum und Uhrzeit der letzten erfolgreichen Übertragung bleibt unverändert. Im Dark Mode werden entsprechend helle Grün- und Rottöne verwendet.

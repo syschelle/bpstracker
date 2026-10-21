@@ -2055,21 +2055,21 @@ html[data-theme='dark'] .setup-category-head {
 }
 
 
-/* v0.9.63 Ortsnetz API typography mirrors the air-sensor header widget. */
+/* v0.9.64 Ortsnetz API vertical rhythm mirrors the air-sensor header widget. */
 .ortnetz-header-widget {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  gap: 0.12rem;
+  gap: 0.34rem;
   min-width: 150px;
-  padding: 0.42rem 0.62rem;
+  padding: 0.55rem 0.75rem;
   border: 1px solid #d5dbea;
   border-radius: 0.75rem;
   background: #ffffff;
   color: #34405a;
   box-shadow: 0 6px 24px rgba(23, 32, 51, 0.06);
-  line-height: 1.15;
+  line-height: 1.2;
   align-self: stretch;
   align-content: center;
 }
@@ -2080,6 +2080,7 @@ html[data-theme='dark'] .setup-category-head {
   white-space: nowrap;
   font-size: 0.9rem;
   font-weight: 800;
+  line-height: 1.2;
 }
 .ortnetz-header-title a { color: inherit; text-decoration: none; }
 .ortnetz-header-title a:hover, .ortnetz-header-title a:focus-visible { text-decoration: underline; }
@@ -2107,7 +2108,7 @@ html[data-theme='dark'] .ortnetz-header-widget {
 html[data-theme='dark'] .ortnetz-header-meta.ok { color: #4ade80; }
 html[data-theme='dark'] .ortnetz-header-meta.error { color: #f87171; }
 @media (max-width: 1180px) {
-  .ortnetz-header-widget { min-width: 135px; padding: 0.38rem 0.52rem; }
+  .ortnetz-header-widget { min-width: 135px; padding: 0.48rem 0.62rem; gap: 0.28rem; }
   .ortnetz-header-title { font-size: 0.82rem; }
 }
 @media (max-width: 720px) {
