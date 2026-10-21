@@ -120,6 +120,7 @@ class Measurement(Base):
     voltage_v: Mapped[float | None] = mapped_column(Float, nullable=True)
     current_a: Mapped[float | None] = mapped_column(Float, nullable=True)
     power_factor: Mapped[float | None] = mapped_column(Float, nullable=True)
+    frequency_hz: Mapped[float | None] = mapped_column(Float, nullable=True)
     energy_import_wh: Mapped[float | None] = mapped_column(Float, nullable=True)
     energy_export_wh: Mapped[float | None] = mapped_column(Float, nullable=True)
     total_power_w: Mapped[float | None] = mapped_column(Float, nullable=True)

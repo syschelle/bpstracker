@@ -1863,6 +1863,10 @@ v0.9.49 shows the Weather Underground response timestamp directly in the air dat
 
 Image-based installations can update in place with `bash ./update.sh --tag v0.9.49` from `/opt/bpstracker`.
 
+### v0.9.59 Grid frequency and dashboard API status
+
+BPSTracker now stores the grid frequency reported by compatible Shelly meters and includes `grid_frequency_hz` in Ortsnetz uploads when a real 45–55 Hz reading is available. The authenticated dashboard contains a dedicated API-health card showing upload state, HTTP status, the last transmitted frequency and the last successful transfer time. The card becomes green after a recent HTTP 202 response; disabled, waiting/stale and error states remain visually distinct. Coordinates and Ortsnetz configuration remain restricted to administrators.
+
 ### v0.9.58 Ortsnetz-Auslastung integration
 
 BPSTracker can optionally send coherent three-phase grid-meter measurements to `ortsnetz-auslastung.de` every five minutes. Configure the integration under **Setup → Interfaces** by selecting the grid Shelly and entering latitude/longitude; PV capacity is optional. Simulation data is never uploaded, unknown optional fields are omitted, and the latest HTTP response/error is shown in Setup.

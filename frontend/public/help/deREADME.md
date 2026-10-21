@@ -1119,6 +1119,10 @@ v0.9.49 zeigt Datum und Uhrzeit des Weather-Underground-Responses direkt in der 
 
 Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./update.sh --tag v0.9.49` aktualisiert werden.
 
+### v0.9.59 Netzfrequenz und API-Status im Dashboard
+
+BPSTracker speichert jetzt die von kompatiblen Shelly-Messgeräten gelieferte Netzfrequenz und sendet `grid_frequency_hz` an die Ortsnetz-API, sofern ein echter Messwert zwischen 45 und 55 Hz vorliegt. Im angemeldeten Dashboard zeigt eine eigene API-Statuskarte den Übertragungszustand, HTTP-Status, die zuletzt übertragene Frequenz und den Zeitpunkt der letzten erfolgreichen Übertragung. Nach einem aktuellen HTTP-202-Erfolg wird die Karte grün; deaktivierte, wartende/veraltete und fehlerhafte Zustände werden getrennt dargestellt. Koordinaten und Ortsnetz-Konfiguration bleiben ausschließlich für Administratoren sichtbar.
+
 ### v0.9.58 Ortsnetz-Auslastung-Integration
 
 BPSTracker kann optional alle fünf Minuten zusammengehörige Dreiphasen-Messwerte des Netz-Shellys an `ortsnetz-auslastung.de` senden. Die Integration wird unter **Setup → Schnittstellen** mit Netz-Shelly und Breiten-/Längengrad eingerichtet; die PV-Anlagengröße ist optional. Simulationsdaten werden niemals übertragen, unbekannte optionale Werte werden weggelassen und die letzte HTTP-Antwort bzw. ein Fehler wird im Setup angezeigt.

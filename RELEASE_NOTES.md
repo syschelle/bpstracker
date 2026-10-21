@@ -1,37 +1,11 @@
-# BPSTracker v0.9.58
+# BPSTracker v0.9.59
 
-- Added an optional native integration for `ortsnetz-auslastung.de`.
-- Added setup fields for enabling uploads, selecting the three-phase grid Shelly, coordinates and optional PV capacity.
-- Uploads use one coherent L1/L2/L3 sample and run every five minutes without blocking the normal Shelly poller.
-- Added voltage, phase current, signed grid power, detected smart-meter model and BPSTracker integration version where available.
-- Unknown optional values are omitted instead of estimated; simulation data is never uploaded.
-- Added upload status, HTTP response and error feedback to the setup UI.
-- Centralized the backend application version and aligned it with v0.9.58.
+## Changes
 
-# BPSTracker v0.9.57 – Performance-Optimierung
-
-## Änderungen
-
-- Bereits gespeicherte Tageszusammenfassungen werden nicht mehr automatisch neu berechnet. Nach einem Ausfall werden ausschließlich fehlende abgeschlossene Tage nachgetragen.
-- Auch beim Aufräumen alter Rohmessungen bleiben bestehende Tageszusammenfassungen unangetastet.
-- Dashboard, öffentliche JSON-API und Kindle verwenden für die aktuelle Tagesbilanz nur den ersten und letzten gültigen Zählerstand je Gerät, Kanal und Phase; Roh-JSON-Daten müssen dazu nicht mehr massenhaft geladen werden.
-- Die stündliche Datenbankwartung läuft außerhalb des Hauptthreads und wird zusätzlich beim UTC-Tageswechsel ausgeführt.
-- `/api/current-values` blockiert den Hauptthread nicht mehr mit synchronen Datenbankabfragen.
-- Die bisherigen Berechnungsformeln, die getrennte Netzeinspeisung, Shelly-Zuordnungen, History, Gesamtbilanz und Gesamtkostenbilanz bleiben unverändert.
-- Keine Datenbankmigration und kein Zurücksetzen vorhandener Messwerte erforderlich.
-
-## Tests
-
-- Neue Regressionstests für Ergebnisgleichheit mit den bisherigen Energiezählerberechnungen, unterschiedliche Kanäle/Phasen, Nullwerte, Zähler-Reset sowie unveränderliche abgeschlossene Tage.
-- Nach der Bereitstellung auf dem Raspberry Pi sollten CPU-Auslastung und Antwortzeit von `/health` und der Anmeldung überprüft werden.
-
-## Aktualisierung (Docker-Images)
-
-Sobald GitHub Actions die Images für dieses Tag veröffentlicht hat:
-
-```bash
-cd /opt/bpstracker
-bash ./update.sh --tag v0.9.57
-```
-
-Vor produktiven Updates wird ein reguläres Datenbank-Backup empfohlen.
+- Added grid-frequency acquisition for Shelly Pro 3EM measurements, including common flattened `a_freq`/`b_freq`/`c_freq`, nested and array-shaped RPC responses.
+- Added nullable `frequency_hz` storage to measurements with automatic startup migration for existing PostgreSQL installations.
+- Ortsnetz uploads now include `grid_frequency_hz` when a valid 45–55 Hz measurement is available; no fallback or estimated frequency is generated.
+- Added an Ortsnetz API health card to the authenticated dashboard. It shows whether uploads are working, the latest HTTP status, the last transmitted grid frequency and the last successful upload time.
+- Dashboard API health is green only after a recent successful HTTP 202 response; stale/pending, failed and disabled states are visually distinct.
+- Allowed authenticated viewer accounts to read the non-sensitive Ortsnetz transfer status while keeping coordinates and integration configuration admin-only.
+- Added parser and payload tests for Pro 3EM grid-frequency handling.

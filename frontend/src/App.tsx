@@ -1127,6 +1127,7 @@ function Dashboard() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [latest, setLatest] = useState<Measurement[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
+  const [ortnetzStatus, setOrtnetzStatus] = useState<OrtnetzStatus>({});
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
@@ -1135,6 +1136,7 @@ function Dashboard() {
       api.summary().then(setSummary),
       api.latest().then(setLatest),
       api.devices().then(setDevices),
+      api.ortnetzStatus().then(setOrtnetzStatus),
     ];
     const results = await Promise.allSettled(tasks);
     const rejected = results.find((result): result is PromiseRejectedResult => result.status === 'rejected');
@@ -1159,6 +1161,7 @@ function Dashboard() {
         <AmortizationMetric summary={summary} />
         <CostBalanceMetric summary={summary} mode="daily" />
         <CostBalanceMetric summary={summary} mode="total" />
+        <OrtnetzStatusMetric status={ortnetzStatus} />
       </div>
       <DashboardDeviceMeasurements devices={devices} latest={latest} onRefresh={load} />
     </div>
@@ -1273,6 +1276,44 @@ function DashboardDeviceMeasurements({ devices, latest, onRefresh }: { devices: 
   );
 }
 
+
+function OrtnetzStatusMetric({ status }: { status: OrtnetzStatus }) {
+  const { language, t } = useI18n();
+  const lastSuccess = status.last_success_at ? new Date(status.last_success_at) : null;
+  const ageMs = lastSuccess ? Date.now() - lastSuccess.getTime() : Number.POSITIVE_INFINITY;
+  const healthy = Boolean(status.enabled && status.last_http_status === 202 && !status.last_error && ageMs <= 10 * 60 * 1000);
+  const failed = Boolean(status.enabled && (status.last_error || (status.last_http_status != null && status.last_http_status !== 202)));
+  const stateClass = !status.enabled ? 'disabled' : healthy ? 'healthy' : failed ? 'failed' : 'pending';
+  const stateText = !status.enabled
+    ? t('ortnetzDashboardDisabled')
+    : healthy
+      ? t('ortnetzDashboardConnected')
+      : failed
+        ? t('ortnetzDashboardError')
+        : t('ortnetzDashboardWaiting');
+  const frequency = status.last_frequency_hz == null
+    ? '–'
+    : `${status.last_frequency_hz.toLocaleString(localeFor(language), { minimumFractionDigits: 2, maximumFractionDigits: 3 })} Hz`;
+
+  return (
+    <div className={`metric ortnetz-status-metric ${stateClass}`}>
+      <p>{t('ortnetzDashboardTitle')}</p>
+      <div className="ortnetz-status-line">
+        <span className="ortnetz-status-dot" aria-hidden="true" />
+        <strong>{stateText}</strong>
+      </div>
+      <div className="ortnetz-status-details">
+        <span>HTTP {status.last_http_status ?? '–'}</span>
+        <span>{t('ortnetzDashboardFrequency')}: {frequency}</span>
+      </div>
+      <small>
+        {lastSuccess
+          ? `${t('ortnetzDashboardLastSuccess')}: ${lastSuccess.toLocaleString(localeFor(language))}`
+          : t('ortnetzDashboardNoSuccess')}
+      </small>
+    </div>
+  );
+}
 
 function GridPowerMetric({ summary }: { summary: Summary | null }) {
   const { language, t } = useI18n();

@@ -22,15 +22,15 @@ def test_build_payload_uses_same_three_phase_sample_without_estimating_optional_
     db.add(DeviceStatus(device_id=device.id, online=True, detected_model='Shelly Pro 3EM'))
     db.add(AppSetting(key='ortnetz', value={'enabled': True, 'device_id': device.id, 'latitude': 50.1, 'longitude': 12.2, 'plant_capacity_kwp': 0.8}))
     ts = datetime(2026, 10, 21, 9, 0, tzinfo=timezone.utc)
-    for phase, voltage, current in [('L1',230.1,1.1),('L2',229.9,1.2),('L3',230.4,1.3)]:
-        db.add(Measurement(timestamp=ts, device_id=device.id, source_type='shelly_rpc_em', channel=0, phase=phase, voltage_v=voltage, current_a=current, total_power_w=-350.0))
+    for phase, voltage, current, frequency in [('L1',230.1,1.1,50.01),('L2',229.9,1.2,50.02),('L3',230.4,1.3,50.00)]:
+        db.add(Measurement(timestamp=ts, device_id=device.id, source_type='shelly_rpc_em', channel=0, phase=phase, voltage_v=voltage, current_a=current, frequency_hz=frequency, total_power_w=-350.0))
     db.commit()
     payload = build_ortnetz_payload(db, datetime(2026, 10, 21, 9, 5, tzinfo=timezone.utc))
     assert payload['l1_v'] == 230.1 and payload['l2_v'] == 229.9 and payload['l3_v'] == 230.4
     assert payload['grid_power_w'] == -350.0
     assert payload['smartmeter_model'] == 'Shelly Pro 3EM'
     assert payload['plant_capacity_kwp'] == 0.8
-    assert 'grid_frequency_hz' not in payload
+    assert payload['grid_frequency_hz'] == 50.01
     assert 'power_factor' not in payload
 
 

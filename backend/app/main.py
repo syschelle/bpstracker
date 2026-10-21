@@ -153,6 +153,7 @@ def migrate_existing_schema() -> None:
             _add_column_if_missing(conn, 'measurements', cols, 'voltage_v', 'DOUBLE PRECISION')
             _add_column_if_missing(conn, 'measurements', cols, 'current_a', 'DOUBLE PRECISION')
             _add_column_if_missing(conn, 'measurements', cols, 'power_factor', 'DOUBLE PRECISION')
+            _add_column_if_missing(conn, 'measurements', cols, 'frequency_hz', 'DOUBLE PRECISION')
             _add_column_if_missing(conn, 'measurements', cols, 'energy_import_wh', 'DOUBLE PRECISION')
             _add_column_if_missing(conn, 'measurements', cols, 'energy_export_wh', 'DOUBLE PRECISION')
             _add_column_if_missing(conn, 'measurements', cols, 'total_power_w', 'DOUBLE PRECISION')

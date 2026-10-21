@@ -49,6 +49,7 @@ export interface Measurement {
   voltage_v?: number | null;
   current_a?: number | null;
   power_factor?: number | null;
+  frequency_hz?: number | null;
   energy_import_wh?: number | null;
   energy_export_wh?: number | null;
   total_power_w?: number | null;
@@ -107,9 +108,11 @@ export interface OrtnetzSettings {
 }
 
 export interface OrtnetzStatus {
+  enabled?: boolean;
   last_attempt_at?: string | null;
   last_success_at?: string | null;
   last_http_status?: number | null;
+  last_frequency_hz?: number | null;
   last_response?: Record<string, unknown> | null;
   last_error?: string | null;
 }

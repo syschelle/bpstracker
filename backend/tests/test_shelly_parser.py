@@ -42,6 +42,26 @@ def test_parse_em_status_phase_objects():
     assert measurements[-1].total_power_w == 6
 
 
+def test_parse_em_status_flattened_pro_3em_frequency():
+    now = datetime.now(timezone.utc)
+    measurements = parse_em_status(
+        {
+            'a_voltage': 230.1, 'a_current': 1.1, 'a_act_power': 120.0, 'a_pf': 0.95, 'a_freq': 50.01,
+            'b_voltage': 229.9, 'b_current': 1.2, 'b_act_power': 130.0, 'b_pf': 0.96, 'b_freq': 50.02,
+            'c_voltage': 230.4, 'c_current': 1.3, 'c_act_power': 140.0, 'c_pf': 0.97, 'c_freq': 50.00,
+            'total_act_power': 390.0,
+        },
+        now,
+        channel=0,
+    )
+    phases = {m.phase: m for m in measurements if m.phase in {'L1', 'L2', 'L3'}}
+    assert phases['L1'].frequency_hz == 50.01
+    assert phases['L2'].frequency_hz == 50.02
+    assert phases['L3'].frequency_hz == 50.00
+    assert phases['L1'].voltage_v == 230.1
+
+
+
 class FakeGen1ShellyClient(ShellyClient):
     async def _get_json(self, host, path, credentials):  # noqa: ANN001
         return {

@@ -88,6 +88,10 @@ def build_ortnetz_payload(db: Session, now: datetime | None = None) -> dict[str,
         if value is not None and value >= 0:
             payload[f'l{idx}_a'] = float(value)
 
+    frequencies = [float(phases[p].frequency_hz) for p in ('L1', 'L2', 'L3') if phases[p].frequency_hz is not None and 45 <= float(phases[p].frequency_hz) <= 55]
+    if frequencies:
+        payload['grid_frequency_hz'] = round(sum(frequencies) / len(frequencies), 3)
+
     total_power = next((phases[p].total_power_w for p in ('L1', 'L2', 'L3') if phases[p].total_power_w is not None), None)
     if total_power is not None:
         payload['grid_power_w'] = float(total_power)
@@ -117,7 +121,12 @@ async def send_ortnetz_measurement() -> None:
             payload = build_ortnetz_payload(db, attempted_at)
             if payload is None:
                 return
-            _save_status(db, last_attempt_at=_iso_utc(attempted_at), last_error=None)
+            _save_status(
+                db,
+                last_attempt_at=_iso_utc(attempted_at),
+                last_frequency_hz=payload.get('grid_frequency_hz'),
+                last_error=None,
+            )
         except Exception as exc:  # noqa: BLE001
             db.rollback()
             _save_status(db, last_attempt_at=_iso_utc(attempted_at), last_error=str(exc))

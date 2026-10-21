@@ -34,6 +34,7 @@ class NormalizedMeasurement:
     voltage_v: float | None = None
     current_a: float | None = None
     power_factor: float | None = None
+    frequency_hz: float | None = None
     energy_import_wh: float | None = None
     energy_export_wh: float | None = None
     total_power_w: float | None = None
@@ -176,6 +177,7 @@ class ShellyClient:
                     voltage_v=_number(em.get('voltage')),
                     current_a=_number(em.get('current')),
                     power_factor=_number(em.get('pf')),
+                    frequency_hz=_number(em.get('freq') or em.get('frequency')),
                     energy_import_wh=_number(em.get('total')),
                     energy_export_wh=_number(em.get('total_returned')),
                     total_power_w=total_power,
@@ -325,6 +327,7 @@ def parse_switch_status(value: dict[str, Any], now: datetime, channel: int) -> l
             voltage_v=_number(value.get('voltage')),
             current_a=_number(value.get('current')),
             power_factor=_number(value.get('pf')),
+            frequency_hz=_number(value.get('freq') or value.get('frequency')),
             energy_import_wh=_nested_number(value, 'aenergy', 'total') or _number(value.get('total')),
             energy_export_wh=_nested_number(value, 'ret_aenergy', 'total'),
             total_power_w=_number(value.get('apower') or value.get('power')),
@@ -336,10 +339,13 @@ def parse_switch_status(value: dict[str, Any], now: datetime, channel: int) -> l
 def parse_em_status(value: dict[str, Any], now: datetime, channel: int) -> list[NormalizedMeasurement]:
     measurements: list[NormalizedMeasurement] = []
     total_power = _number(value.get('total_act_power') or value.get('total_active_power') or value.get('total_power'))
-    # Known Shelly-NG EM shapes include either a/b/c phase objects or current/voltage arrays depending on device.
     phase_keys = [('a', 'L1'), ('b', 'L2'), ('c', 'L3')]
-    for key, label in phase_keys:
-        phase_obj = value.get(key)
+
+    # Shelly RPC EM.GetStatus commonly exposes flattened per-phase keys such as
+    # a_voltage/a_current/a_act_power/a_pf/a_freq. Keep support for the older
+    # nested and array-shaped responses as well.
+    for prefix, label in phase_keys:
+        phase_obj = value.get(prefix)
         if isinstance(phase_obj, dict):
             measurements.append(
                 NormalizedMeasurement(
@@ -347,21 +353,49 @@ def parse_em_status(value: dict[str, Any], now: datetime, channel: int) -> list[
                     source_type='shelly_rpc_em',
                     channel=channel,
                     phase=label,
-                    power_w=_number(phase_obj.get('active_power') or phase_obj.get('act_power')),
+                    power_w=_number(phase_obj.get('active_power') or phase_obj.get('act_power') or phase_obj.get('apower')),
                     voltage_v=_number(phase_obj.get('voltage')),
                     current_a=_number(phase_obj.get('current')),
                     power_factor=_number(phase_obj.get('pf')),
+                    frequency_hz=_number(phase_obj.get('freq') or phase_obj.get('frequency')),
                     total_power_w=total_power,
                     raw_json=phase_obj,
                 )
             )
+            continue
 
-    for idx in range(3):
-        current = value.get('current')
-        voltage = value.get('voltage')
-        active_power = value.get('act_power') or value.get('active_power')
-        pf = value.get('pf')
-        if isinstance(active_power, list) or isinstance(current, list) or isinstance(voltage, list):
+        flattened_values = {
+            'power': value.get(f'{prefix}_act_power') or value.get(f'{prefix}_active_power') or value.get(f'{prefix}_apower'),
+            'voltage': value.get(f'{prefix}_voltage'),
+            'current': value.get(f'{prefix}_current'),
+            'pf': value.get(f'{prefix}_pf'),
+            'freq': value.get(f'{prefix}_freq') or value.get(f'{prefix}_frequency'),
+        }
+        if any(item is not None for item in flattened_values.values()):
+            measurements.append(
+                NormalizedMeasurement(
+                    timestamp=now,
+                    source_type='shelly_rpc_em',
+                    channel=channel,
+                    phase=label,
+                    power_w=_number(flattened_values['power']),
+                    voltage_v=_number(flattened_values['voltage']),
+                    current_a=_number(flattened_values['current']),
+                    power_factor=_number(flattened_values['pf']),
+                    frequency_hz=_number(flattened_values['freq']),
+                    total_power_w=total_power,
+                    raw_json=value,
+                )
+            )
+
+    # Some RPC variants expose arrays instead of named phase fields.
+    active_power = value.get('act_power') or value.get('active_power')
+    current = value.get('current')
+    voltage = value.get('voltage')
+    pf = value.get('pf')
+    frequency = value.get('freq') or value.get('frequency')
+    if any(isinstance(item, list) for item in (active_power, current, voltage, pf, frequency)):
+        for idx in range(3):
             measurements.append(
                 NormalizedMeasurement(
                     timestamp=now,
@@ -372,6 +406,7 @@ def parse_em_status(value: dict[str, Any], now: datetime, channel: int) -> list[
                     voltage_v=_number(voltage[idx]) if isinstance(voltage, list) and idx < len(voltage) else None,
                     current_a=_number(current[idx]) if isinstance(current, list) and idx < len(current) else None,
                     power_factor=_number(pf[idx]) if isinstance(pf, list) and idx < len(pf) else None,
+                    frequency_hz=_number(frequency[idx]) if isinstance(frequency, list) and idx < len(frequency) else None,
                     total_power_w=total_power,
                     raw_json=value,
                 )

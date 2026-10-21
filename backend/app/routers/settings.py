@@ -645,7 +645,8 @@ def get_ortnetz_settings_from_db(db: Session) -> OrtnetzSettings:
 
 def get_ortnetz_status_from_db(db: Session) -> OrtnetzStatus:
     row = db.get(AppSetting, ORTSNETZ_STATUS_KEY)
-    value = row.value if row and isinstance(row.value, dict) else {}
+    value = dict(row.value) if row and isinstance(row.value, dict) else {}
+    value['enabled'] = get_ortnetz_settings_from_db(db).enabled
     return OrtnetzStatus(**value)
 
 
@@ -867,7 +868,7 @@ def update_ortnetz_settings(
 
 
 @router.get('/ortnetz/status', response_model=OrtnetzStatus)
-def get_ortnetz_status(_: User = Depends(require_admin), db: Session = Depends(get_db)) -> OrtnetzStatus:
+def get_ortnetz_status(_: User = Depends(get_current_user), db: Session = Depends(get_db)) -> OrtnetzStatus:
     return get_ortnetz_status_from_db(db)
 
 

@@ -1,4 +1,4 @@
-# Testing – BPSTracker v0.9.58
+# Testing – BPSTracker v0.9.59
 
 ## Automated tests
 
@@ -6,7 +6,11 @@
 - `cd backend && pytest -q tests/test_energy_retention_performance.py`: focused energy performance and immutability regression tests, with an SQLite file URL for imports (`DATABASE_URL=sqlite+pysqlite:////tmp/bpstracker-test.sqlite`).
 - `cd frontend && npm ci && npm run build`: type-check, i18n checks and a production Vite build.
 
-## New v0.9.58 coverage
+## New v0.9.59 coverage
+
+- Shelly Pro 3EM flattened RPC frequency parsing (`a_freq`, `b_freq`, `c_freq`).
+- Ortsnetz payload includes measured `grid_frequency_hz` and does not fabricate missing values.
+- Dashboard transfer-health status is derived from the stored HTTP result and last success timestamp.
 
 - Ortsnetz payload creation uses one coherent three-phase Shelly sample.
 - Simulation mode suppresses external Ortsnetz uploads.

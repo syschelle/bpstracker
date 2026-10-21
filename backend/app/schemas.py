@@ -130,6 +130,7 @@ class MeasurementRead(BaseModel):
     voltage_v: float | None = None
     current_a: float | None = None
     power_factor: float | None = None
+    frequency_hz: float | None = None
     energy_import_wh: float | None = None
     energy_export_wh: float | None = None
     total_power_w: float | None = None
@@ -180,9 +181,11 @@ class OrtnetzSettings(BaseModel):
 
 
 class OrtnetzStatus(BaseModel):
+    enabled: bool = False
     last_attempt_at: datetime | None = None
     last_success_at: datetime | None = None
     last_http_status: int | None = None
+    last_frequency_hz: float | None = None
     last_response: dict[str, Any] | None = None
     last_error: str | None = None
 

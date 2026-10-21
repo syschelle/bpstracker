@@ -154,6 +154,7 @@ async def poll_and_store_device(db: Session, device: Device, client: ShellyClien
                     voltage_v=measurement.voltage_v,
                     current_a=measurement.current_a,
                     power_factor=measurement.power_factor,
+                    frequency_hz=measurement.frequency_hz,
                     energy_import_wh=measurement.energy_import_wh,
                     energy_export_wh=measurement.energy_export_wh,
                     total_power_w=_round_power_w(measurement.total_power_w),

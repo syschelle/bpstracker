@@ -369,6 +369,14 @@
     "saveOrtnetz": "Ortsnetz-Einstellungen speichern",
     "ortnetzSaved": "Ortsnetz-Einstellungen wurden gespeichert.",
     "ortnetzStatus": "Letzter Übertragungsstatus",
-    "ortnetzLastSuccess": "Letzte erfolgreiche Übertragung"
+    "ortnetzLastSuccess": "Letzte erfolgreiche Übertragung",
+    "ortnetzDashboardTitle": "Ortsnetz-API",
+    "ortnetzDashboardConnected": "Übertragung funktioniert",
+    "ortnetzDashboardError": "Übertragungsfehler",
+    "ortnetzDashboardWaiting": "Warte auf erfolgreiche Übertragung",
+    "ortnetzDashboardDisabled": "Übertragung deaktiviert",
+    "ortnetzDashboardFrequency": "Netzfrequenz",
+    "ortnetzDashboardLastSuccess": "Letzte erfolgreiche Übertragung",
+    "ortnetzDashboardNoSuccess": "Noch keine erfolgreiche Übertragung"
   }
 }

@@ -2053,3 +2053,14 @@ html[data-theme='dark'] .setup-category-head {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* v0.9.59 Ortsnetz API health card */
+.ortnetz-status-metric { border-left: 4px solid var(--border, #cbd5e1); }
+.ortnetz-status-line { display: flex; align-items: center; gap: 0.55rem; margin: 0.45rem 0; }
+.ortnetz-status-dot { width: 0.72rem; height: 0.72rem; border-radius: 999px; background: #94a3b8; flex: 0 0 auto; }
+.ortnetz-status-metric.healthy .ortnetz-status-dot { background: #22c55e; box-shadow: 0 0 0 3px rgb(34 197 94 / 15%); }
+.ortnetz-status-metric.failed .ortnetz-status-dot { background: #ef4444; box-shadow: 0 0 0 3px rgb(239 68 68 / 15%); }
+.ortnetz-status-metric.pending .ortnetz-status-dot { background: #eab308; box-shadow: 0 0 0 3px rgb(234 179 8 / 15%); }
+.ortnetz-status-details { display: flex; flex-wrap: wrap; gap: 0.4rem 0.9rem; font-size: 0.88rem; margin-bottom: 0.35rem; }
+.ortnetz-status-metric small { opacity: 0.78; }
