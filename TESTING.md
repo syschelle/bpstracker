@@ -1,10 +1,17 @@
-# Testing – BPSTracker v0.9.63
+# Testing – BPSTracker v0.9.66
 
 ## Automated tests
 
 - `cd backend && pytest -q`: full backend regression suite in an environment with `backend/requirements.txt` installed and a configured `DATABASE_URL`.
 - `cd backend && pytest -q tests/test_energy_retention_performance.py`: focused energy performance and immutability regression tests, with an SQLite file URL for imports (`DATABASE_URL=sqlite+pysqlite:////tmp/bpstracker-test.sqlite`).
 - `cd frontend && npm ci && npm run build`: type-check, i18n checks and a production Vite build.
+
+## New v0.9.66 coverage
+
+- Inject a one-time unexpected exception into the poller loop and verify a later polling cycle still executes.
+- Verify the recovered exception is emitted as an error log with traceback context.
+- Verify task cancellation is not swallowed by the resilience guard.
+
 
 ## New v0.9.64 coverage
 

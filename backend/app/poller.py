@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session
@@ -19,6 +20,9 @@ from .routers.settings import (
 )
 from .security import decrypt_secret
 from .shelly import ShellyClient, ShellyCredentials, ShellyDeviceConfig, ShellyClientError, detected_device_type
+
+
+logger = logging.getLogger(__name__)
 
 
 class Poller:
@@ -51,7 +55,12 @@ class Poller:
 
     async def _run(self) -> None:
         while not self._stop.is_set():
-            await self.tick()
+            try:
+                await self.tick()
+            except asyncio.CancelledError:
+                raise
+            except Exception:  # noqa: BLE001 - keep the long-running poller alive
+                logger.exception('Unhandled error in polling loop; continuing with next cycle')
             try:
                 await asyncio.wait_for(self._stop.wait(), timeout=self.loop_seconds)
             except asyncio.TimeoutError:

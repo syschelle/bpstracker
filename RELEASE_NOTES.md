@@ -1,3 +1,14 @@
+# BPSTracker v0.9.66
+
+## Fixed
+
+- Hardened the long-running measurement poller so an unexpected exception in a polling cycle no longer stops all future data collection while the API container itself remains healthy.
+- The poller now logs the full exception and automatically continues with the next configured polling cycle.
+- `asyncio.CancelledError` is still propagated normally so application shutdown remains clean.
+- Added a regression test that injects a one-time polling failure and verifies that the following cycle still runs.
+
+---
+
 # BPSTracker v0.9.65
 
 ## Changed

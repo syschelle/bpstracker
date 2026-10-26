@@ -2021,6 +2021,11 @@ v0.9.50 calculates dew point from air sensor temperature and humidity using the 
 Image-based installations can update in place with `bash ./update.sh --tag v0.9.50` from `/opt/bpstracker`.
 
 
+
+### v0.9.66 Self-healing measurement poller
+
+v0.9.66 hardens BPSTracker's long-running measurement poller. An unexpected exception outside the per-device error handling (for example a temporary database/session failure while preparing a poll cycle) is logged with its traceback and no longer terminates the background poller task. BPSTracker waits for the normal polling interval and automatically continues with the next cycle, while normal task cancellation during shutdown is still propagated.
+
 ### v0.9.65 Ortsnetz status tile on every page
 
 v0.9.65 keeps the compact **Ortsnetz-API** status tile visible in the application header on every main page (Dashboard, History, Setup and Help), so upload health remains visible while navigating through BPSTracker. The existing three-line layout, status colors and link behavior remain unchanged.
