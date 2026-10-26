@@ -1,3 +1,12 @@
+# BPSTracker v0.9.71
+
+## Fixed
+
+- Fixed direct backup creation failing with `No space left on device` when the PostgreSQL dump exceeded the backend container's 64 MiB `/tmp` tmpfs.
+- Backup creation and restore now use `/app/data/.backup-work` as a temporary disk-backed workspace instead of RAM-backed `/tmp`.
+- Temporary backup work files are still deleted after download/restore and are excluded from backup contents and restore copying.
+- The Compose init service now creates and owns the temporary backup workspace for backend UID/GID `10001:10001`.
+
 # BPSTracker v0.9.70
 
 ## Changed

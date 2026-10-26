@@ -32,8 +32,11 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix='/api/backups', tags=['backups'])
 
 # Kept only for backwards compatibility with backups created by older releases.
-# New backups are created in /tmp and deleted immediately after the HTTP download.
+# New backups use a temporary workspace on the persistent data filesystem and are
+# deleted after download/restore. This avoids the small /tmp tmpfs limit without
+# retaining backup archives on the host.
 BACKUP_DIR = Path('/app/data/backups')
+BACKUP_WORK_DIR = Path('/app/data/.backup-work')
 BACKUP_MAGIC = b'BPSTrackerBackupV1\n'
 PBKDF2_ITERATIONS = 390_000
 BACKUP_FILENAME_RE = re.compile(r'^bpstracker-backup-\d{8}-\d{6}\.tar\.gz\.bpsenc$')
@@ -77,7 +80,7 @@ def _copy_if_exists(source: Path, target: Path) -> None:
         shutil.copytree(
             source,
             target,
-            ignore=shutil.ignore_patterns('backups', '*.tar.gz', '*.bpsenc'),
+            ignore=shutil.ignore_patterns('backups', '.backup-work', '*.tar.gz', '*.bpsenc'),
             dirs_exist_ok=True,
         )
     else:
@@ -182,8 +185,17 @@ def _create_database_dump(output_file: Path) -> None:
         raise HTTPException(status_code=500, detail=f'Backup failed while exporting PostgreSQL: {detail}')
 
 
+def _backup_work_dir() -> Path:
+    try:
+        BACKUP_WORK_DIR.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        logger.exception('Could not prepare temporary backup workspace %s', BACKUP_WORK_DIR)
+        raise HTTPException(status_code=500, detail='Backup workspace is not writable') from exc
+    return BACKUP_WORK_DIR
+
+
 def _create_encrypted_backup(output_path: Path, password: str) -> None:
-    with tempfile.TemporaryDirectory(prefix='bpstracker-backup-') as tmp_name:
+    with tempfile.TemporaryDirectory(prefix='bpstracker-backup-', dir=_backup_work_dir()) as tmp_name:
         tmp = Path(tmp_name)
         content = tmp / 'backup'
         content.mkdir()
@@ -286,7 +298,7 @@ def _restore_backend_data(source: Path) -> None:
     shutil.copytree(
         source,
         target,
-        ignore=shutil.ignore_patterns('backups', '*.tar.gz', '*.bpsenc'),
+        ignore=shutil.ignore_patterns('backups', '.backup-work', '*.tar.gz', '*.bpsenc'),
         dirs_exist_ok=True,
     )
 
@@ -324,7 +336,7 @@ def create_and_download_backup(
     _validate_passwords(payload)
     timestamp = datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')
     filename = f'bpstracker-backup-{timestamp}.tar.gz.bpsenc'
-    fd, temp_name = tempfile.mkstemp(prefix='bpstracker-download-', suffix='.bpsenc', dir='/tmp')
+    fd, temp_name = tempfile.mkstemp(prefix='bpstracker-download-', suffix='.bpsenc', dir=_backup_work_dir())
     os.close(fd)
     output_path = Path(temp_name)
     try:
@@ -356,7 +368,7 @@ async def restore_backup(
     if file.filename and not file.filename.lower().endswith('.bpsenc'):
         raise HTTPException(status_code=400, detail='Please select a BPSTracker .bpsenc backup file')
 
-    with tempfile.TemporaryDirectory(prefix='bpstracker-restore-') as tmp_name:
+    with tempfile.TemporaryDirectory(prefix='bpstracker-restore-', dir=_backup_work_dir()) as tmp_name:
         tmp = Path(tmp_name)
         encrypted_path = tmp / 'upload.bpsenc'
         size = 0

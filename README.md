@@ -2023,9 +2023,9 @@ Image-based installations can update in place with `bash ./update.sh --tag v0.9.
 
 
 
-### v0.9.70 Direct-download backup restore and Compose-aware updates
+### v0.9.71 Direct-download backup restore and Compose-aware updates
 
-v0.9.70 changes encrypted backups to a client-owned workflow. New backups are created only in temporary backend storage, downloaded directly by the browser, and automatically removed after the response completes, so backup archives no longer consume permanent space on the BPSTracker host. Setup now also supports restoring a downloaded `.bpsenc` backup by uploading the file and entering its backup password. Restore validates the encrypted header, manifest and archive paths before touching the database, rejects unsafe archive members, and imports PostgreSQL in a single transaction so a failed restore rolls back instead of leaving a partially restored database. Persisted backend data from the archive is restored as well; legacy server-side backups from 0.9.68 and earlier remain accessible through the compatibility API but are no longer created by current releases. The host `.env` and `SECRET_KEY` are intentionally not overwritten during restore; moving a backup to another host therefore requires transferring the original `SECRET_KEY` separately.
+v0.9.71 changes encrypted backups to a client-owned workflow. New backups are created only in temporary backend storage, downloaded directly by the browser, and automatically removed after the response completes, so backup archives no longer consume permanent space on the BPSTracker host. Setup now also supports restoring a downloaded `.bpsenc` backup by uploading the file and entering its backup password. Restore validates the encrypted header, manifest and archive paths before touching the database, rejects unsafe archive members, and imports PostgreSQL in a single transaction so a failed restore rolls back instead of leaving a partially restored database. Persisted backend data from the archive is restored as well; legacy server-side backups from 0.9.68 and earlier remain accessible through the compatibility API but are no longer created by current releases. The host `.env` and `SECRET_KEY` are intentionally not overwritten during restore; moving a backup to another host therefore requires transferring the original `SECRET_KEY` separately.
 
 The image-installation updater is also Compose-aware now. `update.sh` downloads the matching `docker-compose.images.yml` before pulling images, validates it with Docker Compose, saves the previous Compose file as a timestamped backup, and only then recreates the services. Tagged updates use the same Git tag as the requested image version; `--latest` uses `main`. This prevents future service, dependency or volume changes from being missed on `/opt/bpstracker` installations that are not Git checkouts.
 
@@ -2044,3 +2044,8 @@ v0.9.66 hardens BPSTracker's long-running measurement poller. An unexpected exce
 ### v0.9.65 Ortsnetz status tile on every page
 
 v0.9.65 keeps the compact **Ortsnetz-API** status tile visible in the application header on every main page (Dashboard, History, Setup and Help), so upload health remains visible while navigating through BPSTracker. The existing three-line layout, status colors and link behavior remain unchanged.
+
+### v0.9.71 Disk-backed temporary backup workspace
+
+v0.9.71 fixes large backup creation on hardened deployments where `/tmp` is intentionally limited to 64 MiB. Backup creation and restore now use `/app/data/.backup-work` as temporary disk-backed working storage. The workspace is cleaned after each operation and excluded from backup contents, so downloaded backups still do not remain permanently on the host.
+
