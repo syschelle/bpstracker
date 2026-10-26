@@ -22,6 +22,27 @@ services:
       timeout: 5s
       retries: 30
 
+  backend-data-init:
+    build:
+      context: ./backend
+    image: bpstracker/backend:local
+    container_name: bpstracker-backend-data-init
+    user: "0:0"
+    restart: "no"
+    read_only: true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+    security_opt:
+      - no-new-privileges:true
+    network_mode: "none"
+    command: ["sh", "-c", "mkdir -p /app/data/backups && chown -R 10001:10001 /app/data"]
+    volumes:
+      - /opt/bpstracker/data/backend:/app/data
+
   backend:
     build:
       context: ./backend
@@ -43,6 +64,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      backend-data-init:
+        condition: service_completed_successfully
     expose:
       - "8000"
     volumes:

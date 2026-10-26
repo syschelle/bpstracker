@@ -1,3 +1,14 @@
+# BPSTracker v0.9.67
+
+## Fixed
+
+- Fixed `PermissionError: [Errno 13] Permission denied: '/app/data/backups'` on hardened non-root installations using the persistent backend bind mount.
+- Added a short-lived `backend-data-init` Compose service that creates `/app/data/backups` and restores ownership of `/app/data` to backend UID/GID `10001:10001` before the application backend starts.
+- The runtime backend remains non-root with its existing read-only filesystem and dropped capabilities.
+- Applied the initialization guard consistently to the standard, GHCR image and Raspberry Pi Zero 2 W Compose variants.
+
+---
+
 # BPSTracker v0.9.66
 
 ## Fixed

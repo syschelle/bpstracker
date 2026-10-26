@@ -1273,6 +1273,10 @@ Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./up
 
 
 
+### v0.9.67 Automatische Reparatur der Backend-Datenrechte
+
+v0.9.67 behebt Backup-Fehler wie `PermissionError: [Errno 13] Permission denied: '/app/data/backups'`, wenn der persistente Host-Bind-Mount `/opt/bpstracker/data/backend` falsche Besitzrechte hat. Alle Compose-Varianten starten nun vor dem eigentlichen Backend einen kurzlebigen Dienst `backend-data-init`. Dieser legt bei Bedarf das Backup-Verzeichnis an und setzt die Besitzrechte von `/app/data` auf UID/GID `10001:10001`. Das normale BPSTracker-Backend läuft weiterhin als unprivilegierter Benutzer `bpstracker` mit schreibgeschütztem Root-Dateisystem und entfernten Capabilities. Dadurch reparieren auch normale Updates mit `docker compose pull` / `docker compose up -d` den Backend-Datenordner automatisch, ohne dass vorher manuell `chown` ausgeführt werden muss.
+
 ### v0.9.66 Selbstheilender Messwert-Poller
 
 v0.9.66 macht den dauerhaft laufenden Messwert-Poller robuster. Eine unerwartete Exception außerhalb der gerätespezifischen Fehlerbehandlung (zum Beispiel ein vorübergehender Datenbank-/Sessionfehler beim Vorbereiten eines Poll-Zyklus) wird mit Stacktrace protokolliert und beendet die Hintergrund-Task nicht mehr. BPSTracker wartet das normale Poll-Intervall ab und fährt automatisch mit dem nächsten Zyklus fort; ein reguläres Abbrechen der Task beim Herunterfahren wird weiterhin korrekt weitergegeben.

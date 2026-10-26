@@ -1,10 +1,18 @@
-# Testing – BPSTracker v0.9.66
+# Testing – BPSTracker v0.9.67
 
 ## Automated tests
 
 - `cd backend && pytest -q`: full backend regression suite in an environment with `backend/requirements.txt` installed and a configured `DATABASE_URL`.
 - `cd backend && pytest -q tests/test_energy_retention_performance.py`: focused energy performance and immutability regression tests, with an SQLite file URL for imports (`DATABASE_URL=sqlite+pysqlite:////tmp/bpstracker-test.sqlite`).
 - `cd frontend && npm ci && npm run build`: type-check, i18n checks and a production Vite build.
+
+## New v0.9.67 coverage
+
+- Validate all three Compose variants define `backend-data-init` and mount `/opt/bpstracker/data/backend` at `/app/data`.
+- Verify the init service runs as root only for initialization, creates `/app/data/backups`, and restores UID/GID `10001:10001`.
+- Verify the backend waits for `backend-data-init` with `service_completed_successfully` before starting.
+- Verify the normal backend service remains read-only and non-root.
+
 
 ## New v0.9.66 coverage
 

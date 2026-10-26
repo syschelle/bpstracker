@@ -2022,6 +2022,10 @@ Image-based installations can update in place with `bash ./update.sh --tag v0.9.
 
 
 
+### v0.9.67 Automatic backend data permission repair
+
+v0.9.67 fixes backup failures such as `PermissionError: [Errno 13] Permission denied: '/app/data/backups'` on installations where the persistent host bind mount `/opt/bpstracker/data/backend` has incorrect ownership. All Compose variants now run a short-lived `backend-data-init` service before the application backend. It creates the backup directory when needed and restores `/app/data` ownership to UID/GID `10001:10001`. The normal BPSTracker backend continues to run as the unprivileged `bpstracker` user with a read-only root filesystem and dropped capabilities. This also makes normal `docker compose pull` / `docker compose up -d` updates self-repair the backend data directory without requiring a separate manual `chown`.
+
 ### v0.9.66 Self-healing measurement poller
 
 v0.9.66 hardens BPSTracker's long-running measurement poller. An unexpected exception outside the per-device error handling (for example a temporary database/session failure while preparing a poll cycle) is logged with its traceback and no longer terminates the background poller task. BPSTracker waits for the normal polling interval and automatically continues with the next cycle, while normal task cancellation during shutdown is still propagated.

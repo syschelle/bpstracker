@@ -9,7 +9,7 @@ source "$SCRIPT_DIR/scripts/env-setup.sh"
 
 PROFILE="${BPSTRACKER_INSTALL_PROFILE:-}"
 IMAGE_TAG=""
-DEFAULT_IMAGE_TAG="v0.9.66"
+DEFAULT_IMAGE_TAG="v0.9.67"
 LANGUAGE_OPTION=""
 
 while [ $# -gt 0 ]; do
