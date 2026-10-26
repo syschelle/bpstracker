@@ -2022,6 +2022,11 @@ Image-based installations can update in place with `bash ./update.sh --tag v0.9.
 
 
 
+
+### v0.9.68 Reliable encrypted backups with PostgreSQL 16
+
+v0.9.68 fixes encrypted backup creation against the PostgreSQL 16 database used by BPSTracker. The backend image now installs the matching `postgresql-client-16` package from the official PostgreSQL repository instead of the Debian Bookworm default client (PostgreSQL 15), which cannot dump a PostgreSQL 16 server. Backup errors from `pg_dump` are now logged and returned with a clear API message, including missing-client and timeout cases. The backup UI also shows an explicit progress message while creation is running and exposes errors through an alert region.
+
 ### v0.9.67 Automatic backend data permission repair
 
 v0.9.67 fixes backup failures such as `PermissionError: [Errno 13] Permission denied: '/app/data/backups'` on installations where the persistent host bind mount `/opt/bpstracker/data/backend` has incorrect ownership. All Compose variants now run a short-lived `backend-data-init` service before the application backend. It creates the backup directory when needed and restores `/app/data` ownership to UID/GID `10001:10001`. The normal BPSTracker backend continues to run as the unprivileged `bpstracker` user with a read-only root filesystem and dropped capabilities. This also makes normal `docker compose pull` / `docker compose up -d` updates self-repair the backend data directory without requiring a separate manual `chown`.

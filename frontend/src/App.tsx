@@ -2065,8 +2065,9 @@ function BackupSettingsPanel() {
       <div className="panel-head"><h2><ShieldCheck size={20} /> {t('backupSettings')}</h2></div>
       <p className="hint">{t('backupHint')}</p>
       <p className="hint strong-hint">{t('backupPasswordWarning')}</p>
-      {message && <div className="info">{message}</div>}
-      {error && <div className="error">{error}</div>}
+      {message && <div className="info" role="status" aria-live="polite">{message}</div>}
+      {busy && !message && <div className="info" role="status" aria-live="polite">{t('wait')}</div>}
+      {error && <div className="error" role="alert">{error}</div>}
       <div className="form-grid finance-form">
         <label>{t('backupPassword')}<input type="password" value={password} onChange={e => setPassword(e.target.value)} autoComplete="new-password" /></label>
         <label>{t('backupConfirmPassword')}<input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} autoComplete="new-password" /></label>

@@ -1,4 +1,4 @@
-# Testing – BPSTracker v0.9.67
+# Testing – BPSTracker v0.9.68
 
 ## Automated tests
 
@@ -6,7 +6,7 @@
 - `cd backend && pytest -q tests/test_energy_retention_performance.py`: focused energy performance and immutability regression tests, with an SQLite file URL for imports (`DATABASE_URL=sqlite+pysqlite:////tmp/bpstracker-test.sqlite`).
 - `cd frontend && npm ci && npm run build`: type-check, i18n checks and a production Vite build.
 
-## New v0.9.67 coverage
+## New v0.9.68 coverage
 
 - Validate all three Compose variants define `backend-data-init` and mount `/opt/bpstracker/data/backend` at `/app/data`.
 - Verify the init service runs as root only for initialization, creates `/app/data/backups`, and restores UID/GID `10001:10001`.
@@ -69,3 +69,11 @@ Avoid resetting or manually editing the production database during performance t
 
 - Verify the Ortsnetz API header tile remains rendered while switching between Dashboard, History, Setup and Help.
 - Verify status refresh, colors, HTTP code, timestamp and external link behavior are unchanged.
+
+## New v0.9.68 coverage
+
+- Build the backend image and verify `pg_dump --version` reports PostgreSQL 16.x.
+- Create an encrypted backup with matching passwords of at least 12 characters and verify the `.bpsenc` file is listed and automatically downloaded.
+- Verify the UI displays a progress notice while backup creation is running.
+- Force a `pg_dump` failure and verify the API returns a descriptive error and the frontend displays it.
+

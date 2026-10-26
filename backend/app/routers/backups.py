@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 import shutil
@@ -23,6 +24,8 @@ from ..database import get_db
 from ..models import AuditLog, User
 from ..schemas import BackupCreateRequest, BackupCreateResponse, BackupInfo
 from ..security import require_admin
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix='/api/backups', tags=['backups'])
 
@@ -144,9 +147,18 @@ def _encrypt_file(input_path: Path, output_path: Path, password: str) -> None:
 
 def _create_database_dump(output_file: Path) -> None:
     command = ['pg_dump', '--no-owner', '--no-privileges', '--format=plain', '--file', str(output_file), _database_url()]
-    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=180)
+    try:
+        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=180)
+    except FileNotFoundError as exc:
+        logger.exception('Backup creation failed because pg_dump is not installed')
+        raise HTTPException(status_code=500, detail='Backup failed: PostgreSQL pg_dump is not installed in the backend container') from exc
+    except subprocess.TimeoutExpired as exc:
+        logger.exception('Backup creation timed out while running pg_dump')
+        raise HTTPException(status_code=500, detail='Backup failed: database dump timed out after 180 seconds') from exc
     if result.returncode != 0:
-        raise HTTPException(status_code=500, detail=f'pg_dump failed: {result.stderr.strip() or result.stdout.strip()}')
+        detail = result.stderr.strip() or result.stdout.strip() or f'pg_dump exited with status {result.returncode}'
+        logger.error('Backup database dump failed: %s', detail)
+        raise HTTPException(status_code=500, detail=f'Backup failed while exporting PostgreSQL: {detail}')
 
 
 @router.get('', response_model=list[BackupInfo])

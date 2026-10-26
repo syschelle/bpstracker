@@ -1273,6 +1273,11 @@ Image-basierte Installationen können in `/opt/bpstracker` direkt mit `bash ./up
 
 
 
+
+### v0.9.68 Zuverlässige verschlüsselte Backups mit PostgreSQL 16
+
+v0.9.68 behebt die Erstellung verschlüsselter Backups gegen die von BPSTracker verwendete PostgreSQL-16-Datenbank. Das Backend-Image installiert jetzt gezielt `postgresql-client-16` aus dem offiziellen PostgreSQL-Repository statt des Debian-Bookworm-Standardclients (PostgreSQL 15), der keinen PostgreSQL-16-Server sichern kann. Fehler von `pg_dump` werden nun protokolliert und mit einer verständlichen API-Fehlermeldung zurückgegeben, einschließlich fehlendem Client und Timeout. Die Backup-Oberfläche zeigt während der Erstellung außerdem eine eindeutige Fortschrittsmeldung und meldet Fehler über einen Alert-Bereich.
+
 ### v0.9.67 Automatische Reparatur der Backend-Datenrechte
 
 v0.9.67 behebt Backup-Fehler wie `PermissionError: [Errno 13] Permission denied: '/app/data/backups'`, wenn der persistente Host-Bind-Mount `/opt/bpstracker/data/backend` falsche Besitzrechte hat. Alle Compose-Varianten starten nun vor dem eigentlichen Backend einen kurzlebigen Dienst `backend-data-init`. Dieser legt bei Bedarf das Backup-Verzeichnis an und setzt die Besitzrechte von `/app/data` auf UID/GID `10001:10001`. Das normale BPSTracker-Backend läuft weiterhin als unprivilegierter Benutzer `bpstracker` mit schreibgeschütztem Root-Dateisystem und entfernten Capabilities. Dadurch reparieren auch normale Updates mit `docker compose pull` / `docker compose up -d` den Backend-Datenordner automatisch, ohne dass vorher manuell `chown` ausgeführt werden muss.
