@@ -1302,6 +1302,10 @@ v0.9.71 behebt die Erstellung größerer Backups bei gehärteten Installationen,
 
 
 
+### v0.9.73 Pushover-Geräteauswahl
+
+v0.9.73 ergänzt in den Benachrichtigungseinstellungen ein optionales Feld **Pushover Device**. Wird dort der Name eines registrierten Pushover-Geräts eingetragen, werden BPSTracker-Warnungen und Tagesberichte gezielt nur an dieses Gerät gesendet. Bleibt das Feld leer, sendet Pushover wie bisher an alle aktiven Geräte des konfigurierten Benutzers.
+
 ### v0.9.72 Benachrichtigungen und Systemüberwachung
 
 v0.9.72 ergänzt optionale Benachrichtigungen über Pushover oder Gotify. Die Backend-Überwachung erkennt ausbleibende Messwerte, sendet pro Störung nur eine Warnung und kann nach Wiederaufnahme der Messung eine Entwarnung schicken. Optional wird zu einer frei einstellbaren Uhrzeit ein Tagesbericht mit PV-Erzeugung, Netzbezug, Einspeisung und berechnetem PV-Eigenverbrauch versendet; verwendet wird die in BPSTracker eingestellte Zeitzone. Zugangsdaten werden verschlüsselt gespeichert. Ein vollständiger Host- oder Container-Ausfall benötigt weiterhin eine externe Erreichbarkeitsüberwachung, da ein ausgeschaltetes System selbst keine Nachricht senden kann.

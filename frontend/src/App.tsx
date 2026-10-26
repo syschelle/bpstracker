@@ -2012,6 +2012,7 @@ function NotificationSettingsPanel() {
     daily_report_time: '23:55',
     pushover_user_key: '',
     pushover_api_token: '',
+    pushover_device: '',
     gotify_url: '',
     gotify_token: '',
   });
@@ -2087,6 +2088,7 @@ function NotificationSettingsPanel() {
         <div className="form-grid finance-form">
           <label>{t('pushoverUserKey')}<input type="password" value={settings.pushover_user_key || ''} onChange={e => setSettings({ ...settings, pushover_user_key: e.target.value })} placeholder={settings.pushover_user_key_set ? t('secretStored') : ''} autoComplete="off" /></label>
           <label>{t('pushoverApiToken')}<input type="password" value={settings.pushover_api_token || ''} onChange={e => setSettings({ ...settings, pushover_api_token: e.target.value })} placeholder={settings.pushover_api_token_set ? t('secretStored') : ''} autoComplete="off" /></label>
+          <label>{t('pushoverDevice')}<input type="text" maxLength={25} pattern="[A-Za-z0-9_-]*" value={settings.pushover_device || ''} onChange={e => setSettings({ ...settings, pushover_device: e.target.value })} placeholder={t('pushoverDevicePlaceholder')} autoComplete="off" /></label>
         </div>
       ) : (
         <div className="form-grid finance-form">

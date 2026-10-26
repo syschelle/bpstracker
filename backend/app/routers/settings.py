@@ -770,6 +770,9 @@ def update_notification_settings(
         elif existing.get(cipher_key):
             value[cipher_key] = existing[cipher_key]
 
+    device = str(value.get('pushover_device') or '').strip()
+    value['pushover_device'] = device or None
+
     if value.get('provider') == 'gotify':
         url = str(value.get('gotify_url') or '').strip().rstrip('/')
         if value.get('enabled') and (not url.startswith(('http://', 'https://')) or '://' not in url):
@@ -789,6 +792,7 @@ def update_notification_settings(
         'recovery_notifications': value.get('recovery_notifications'),
         'daily_report_enabled': value.get('daily_report_enabled'),
         'daily_report_time': value.get('daily_report_time'),
+        'pushover_device': value.get('pushover_device'),
         'gotify_url': value.get('gotify_url'),
     }))
     db.commit()

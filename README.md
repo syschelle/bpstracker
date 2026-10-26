@@ -2051,6 +2051,10 @@ v0.9.71 fixes large backup creation on hardened deployments where `/tmp` is inte
 
 
 
+### v0.9.73 Pushover device targeting
+
+v0.9.73 adds an optional **Pushover Device** field to notification settings. Set a registered Pushover device name to deliver BPSTracker alerts and daily reports only to that device. Leave the field empty to keep Pushover's default behavior and deliver to all active devices for the configured user.
+
 ### v0.9.72 Notifications and monitoring
 
 v0.9.72 adds optional Pushover or Gotify notifications. The backend watchdog detects stale measurement collection, sends one alert per outage and can send a recovery message when measurements resume. An optional daily report summarizes PV generation, grid import, grid export and calculated PV self-consumption at a configurable time using the configured UI timezone. Notification secrets are encrypted at rest. A complete host or container outage still requires an external uptime monitor because an offline system cannot send its own alert.

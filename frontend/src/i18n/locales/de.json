@@ -404,6 +404,8 @@
     "notificationDailyReportTime": "Uhrzeit des Tagesberichts",
     "pushoverUserKey": "Pushover User Key",
     "pushoverApiToken": "Pushover Application API Token",
+    "pushoverDevice": "Pushover Device",
+    "pushoverDevicePlaceholder": "z. B. IphoneSylvio",
     "gotifyUrl": "Gotify-Server-URL",
     "gotifyToken": "Gotify Application Token",
     "secretStored": "Gespeichert – leer lassen zum Beibehalten",

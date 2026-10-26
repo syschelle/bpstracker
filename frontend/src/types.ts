@@ -101,6 +101,7 @@ export interface NotificationSettings {
   daily_report_time: string;
   pushover_user_key?: string | null;
   pushover_api_token?: string | null;
+  pushover_device?: string | null;
   pushover_user_key_set?: boolean;
   pushover_api_token_set?: boolean;
   gotify_url?: string | null;

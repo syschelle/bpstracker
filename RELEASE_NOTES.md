@@ -1,3 +1,11 @@
+# BPSTracker v0.9.73
+
+## Added
+
+- Added an optional Pushover `device` setting to target notifications to a specific registered device.
+- Leaving the device field empty keeps the existing behavior and sends notifications to all active devices for the configured Pushover user.
+- Device names are validated to the Pushover-compatible character set and maximum length.
+
 # BPSTracker v0.9.72
 
 ## Added

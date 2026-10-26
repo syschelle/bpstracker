@@ -44,6 +44,7 @@ def normalize_notification_settings(value: dict | None) -> NotificationSettings:
         daily_report_time=report_time,
         pushover_user_key_set=bool(value.get('pushover_user_key_ciphertext')),
         pushover_api_token_set=bool(value.get('pushover_api_token_ciphertext')),
+        pushover_device=str(value.get('pushover_device') or '').strip() or None,
         gotify_url=str(value.get('gotify_url') or '').strip() or None,
         gotify_token_set=bool(value.get('gotify_token_ciphertext')),
     )
@@ -81,9 +82,12 @@ async def send_notification(db: Session, title: str, message: str, *, priority: 
             api_token = decrypt_secret(raw.get('pushover_api_token_ciphertext'))
             if not user_key or not api_token:
                 raise RuntimeError('Pushover user key and API token are required')
+            data = {'token': api_token, 'user': user_key, 'title': title[:250], 'message': message[:1024], 'priority': priority}
+            if settings.pushover_device:
+                data['device'] = settings.pushover_device
             response = await client.post(
                 'https://api.pushover.net/1/messages.json',
-                data={'token': api_token, 'user': user_key, 'title': title[:250], 'message': message[:1024], 'priority': priority},
+                data=data,
             )
             response.raise_for_status()
             payload = response.json()

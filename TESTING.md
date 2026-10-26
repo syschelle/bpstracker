@@ -1,5 +1,12 @@
 # Testing – BPSTracker v0.9.71
 
+## v0.9.73 Pushover device targeting
+
+- Save notification settings with a valid Pushover device name and verify test notifications include the configured `device` parameter.
+- Leave the device field empty and verify notifications are sent without a `device` parameter.
+- Verify device names longer than 25 characters or containing characters outside `[A-Za-z0-9_-]` are rejected.
+
+
 ## New v0.9.71 coverage
 
 - Verify `POST /api/backups/create-download` returns an encrypted `.bpsenc` attachment and removes the temporary file after the response completes.

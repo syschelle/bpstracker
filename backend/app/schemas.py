@@ -169,6 +169,7 @@ class NotificationSettings(BaseModel):
     daily_report_time: str = Field(default='23:55', pattern=r'^(?:[01]\d|2[0-3]):[0-5]\d$')
     pushover_user_key: str | None = Field(default=None, max_length=128)
     pushover_api_token: str | None = Field(default=None, max_length=128)
+    pushover_device: str | None = Field(default=None, max_length=25, pattern=r'^[A-Za-z0-9_-]{0,25}$')
     pushover_user_key_set: bool = False
     pushover_api_token_set: bool = False
     gotify_url: str | None = Field(default=None, max_length=2000)
