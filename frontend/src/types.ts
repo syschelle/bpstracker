@@ -207,13 +207,6 @@ export interface BackupInfo {
   created_at: string;
 }
 
-export interface BackupCreateResponse {
-  filename: string;
-  size_bytes: number;
-  download_url: string;
-}
-
-
 export interface ResetValuesResponse {
   ok: boolean;
   deleted_measurements: number;

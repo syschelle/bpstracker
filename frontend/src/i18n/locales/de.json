@@ -379,5 +379,21 @@
     "ortnetzDashboardFrequency": "Netzfrequenz",
     "ortnetzDashboardLastSuccess": "Letzte erfolgreiche Übertragung",
     "ortnetzDashboardNoSuccess": "Noch keine erfolgreiche Übertragung"
-  }
+  },
+  "backupHint": "Erstellt ein verschlüsseltes Backup und lädt es direkt auf deinen Rechner herunter. Die Sicherungsdatei wird danach automatisch vom BPSTracker-Host gelöscht und belegt dort keinen dauerhaften Speicherplatz.",
+  "createEncryptedBackup": "Backup erstellen & herunterladen",
+  "backupCreated": "Backup wurde erstellt.",
+  "backupDownloaded": "Backup wurde erstellt und heruntergeladen.",
+  "backupCreateTitle": "Backup erstellen",
+  "backupCreatingDownload": "Backup wird erstellt und heruntergeladen …",
+  "backupRestoreTitle": "Backup wiederherstellen",
+  "backupRestoreHint": "Wähle eine zuvor heruntergeladene verschlüsselte BPSTracker-.bpsenc-Datei aus. Datei und entschlüsselte Inhalte werden nur temporär verarbeitet und danach gelöscht.",
+  "backupRestoreFile": "Backup-Datei",
+  "backupRestoreFileRequired": "Bitte eine .bpsenc-Backup-Datei auswählen.",
+  "backupRestoreConfirm": "Das Backup ersetzt die aktuelle BPSTracker-Datenbank und gespeicherte Backend-Daten. Wirklich wiederherstellen?",
+  "backupRestoreButton": "Backup wiederherstellen",
+  "backupRestoring": "Backup wird wiederhergestellt …",
+  "backupRestoreDone": "Backup wurde erfolgreich wiederhergestellt.",
+  "backupRestoreDoneRestart": "Backup wurde erfolgreich wiederhergestellt. Ein Neustart des BPSTracker-Backends wird empfohlen.",
+  "backupRestoreEnvHint": "Die Host-Datei .env und der SECRET_KEY werden beim Restore nicht geändert. Für eine Wiederherstellung auf einem anderen Host muss derselbe SECRET_KEY separat übernommen werden."
 }

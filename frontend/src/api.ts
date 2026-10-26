@@ -1,4 +1,4 @@
-import type { AirSensorCurrent, AirSensorSettings, BackupCreateResponse, BackupInfo, CurrentValuesApiSettings, Device, OrtnetzSettings, OrtnetzStatus, FinanceSettings, KindleDisplaySettings, Language, Measurement, HistorySeries, HistoryTotals, PublicDashboardSettings, RetentionSettings, ResetValuesResponse, SimulationSettings, Summary, UiSettings, User } from './types';
+import type { AirSensorCurrent, AirSensorSettings, CurrentValuesApiSettings, Device, OrtnetzSettings, OrtnetzStatus, FinanceSettings, KindleDisplaySettings, Language, Measurement, HistorySeries, HistoryTotals, PublicDashboardSettings, RetentionSettings, ResetValuesResponse, SimulationSettings, Summary, UiSettings, User } from './types';
 
 type RuntimeConfig = {
   API_BASE_URL?: string;
@@ -99,6 +99,43 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+
+async function downloadRequest(path: string, options: RequestInit = {}): Promise<{ blob: Blob; filename?: string }> {
+  const headers = new Headers(options.headers || {});
+  if (!headers.has('Content-Type') && options.body && !(options.body instanceof FormData)) headers.set('Content-Type', 'application/json');
+  const response = await fetch(`${API_BASE}${path}`, { ...options, headers, credentials: 'include' });
+  if (!response.ok) {
+    let message = response.statusText;
+    try {
+      const data = await response.json();
+      message = data.detail || message;
+    } catch {
+      // ignore
+    }
+    throw new ApiError(response.status, message);
+  }
+  const disposition = response.headers.get('Content-Disposition') || '';
+  const match = disposition.match(/filename="?([^";]+)"?/i);
+  return { blob: await response.blob(), filename: match?.[1] };
+}
+
+async function uploadBackup(file: File, password: string): Promise<{ ok: boolean; message: string; restart_recommended?: boolean }> {
+  const form = new FormData();
+  form.append('file', file);
+  form.append('password', password);
+  const response = await fetch(`${API_BASE}/api/backups/restore`, { method: 'POST', body: form, credentials: 'include' });
+  if (!response.ok) {
+    let message = response.statusText;
+    try {
+      const data = await response.json();
+      message = data.detail || message;
+    } catch {
+      // ignore
+    }
+    throw new ApiError(response.status, message);
+  }
+  return response.json();
+}
 async function download(path: string): Promise<Blob> {
   const response = await fetch(`${API_BASE}${path}`, { credentials: 'include' });
   if (!response.ok) throw new ApiError(response.status, response.statusText);
@@ -152,10 +189,8 @@ export const api = {
   historyTotals: (hours: number) => request<HistoryTotals>(`/api/measurements/history/totals?${historyQuery(hours)}`),
   historySeries: (hours: number) => request<HistorySeries>(`/api/measurements/history/series?${historyQuery(hours)}`),
   exportCsv: () => download('/api/measurements/export.csv'),
-  backups: () => request<BackupInfo[]>('/api/backups'),
-  createBackup: (password: string, confirm_password: string) => request<BackupCreateResponse>('/api/backups/create', { method: 'POST', body: JSON.stringify({ password, confirm_password }) }),
-  downloadBackup: (filename: string) => download(`/api/backups/download/${encodeURIComponent(filename)}`),
-  deleteBackup: (filename: string) => request<{ ok: boolean }>(`/api/backups/${encodeURIComponent(filename)}`, { method: 'DELETE' }),
+  createBackupDownload: (password: string, confirm_password: string) => downloadRequest('/api/backups/create-download', { method: 'POST', body: JSON.stringify({ password, confirm_password }) }),
+  restoreBackup: (file: File, password: string) => uploadBackup(file, password),
   resetValues: (confirmation: string) => request<ResetValuesResponse>('/api/maintenance/reset-values', { method: 'POST', body: JSON.stringify({ confirmation }) }),
   kindlePreviewUrl: () => `${API_BASE}/api/kindle/display.png`
 };

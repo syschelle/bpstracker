@@ -1,4 +1,16 @@
-# Testing – BPSTracker v0.9.68
+# Testing – BPSTracker v0.9.69
+
+## New v0.9.69 coverage
+
+- Verify `POST /api/backups/create-download` returns an encrypted `.bpsenc` attachment and removes the temporary file after the response completes.
+- Verify creating a new backup does not require `/app/data/backups` to exist or be writable.
+- Verify restore accepts only `.bpsenc` uploads with a valid password and BPSTracker encryption header/manifest.
+- Verify restore rejects path traversal, symlinks, hard links, device/FIFO entries, oversized uploads and oversized extracted archives.
+- Verify PostgreSQL restore uses `ON_ERROR_STOP` and `--single-transaction` so failed imports roll back atomically.
+- Verify uploaded/encrypted/decrypted restore files live only in temporary storage and are removed after the request.
+- Verify backend data restore ignores legacy backup archives.
+- Verify the Setup UI downloads a newly created backup directly and provides file upload + password controls for restore.
+- Verify `update.sh` downloads the Compose file matching the requested tag (or `main` for `--latest`), validates it before replacement, and keeps a timestamped backup of the previous file.
 
 ## Automated tests
 

@@ -379,5 +379,21 @@
     "ortnetzDashboardFrequency": "Grid frequency",
     "ortnetzDashboardLastSuccess": "Last successful upload",
     "ortnetzDashboardNoSuccess": "No successful upload yet"
-  }
+  },
+  "backupHint": "Creates an encrypted backup and downloads it directly to your computer. The temporary backup file is automatically removed from the BPSTracker host afterwards and does not consume permanent host storage.",
+  "createEncryptedBackup": "Create & download backup",
+  "backupCreated": "Backup has been created.",
+  "backupDownloaded": "Backup has been created and downloaded.",
+  "backupCreateTitle": "Create backup",
+  "backupCreatingDownload": "Creating and downloading backup …",
+  "backupRestoreTitle": "Restore backup",
+  "backupRestoreHint": "Select a previously downloaded encrypted BPSTracker .bpsenc file. The upload and decrypted contents are processed only temporarily and removed afterwards.",
+  "backupRestoreFile": "Backup file",
+  "backupRestoreFileRequired": "Please select a .bpsenc backup file.",
+  "backupRestoreConfirm": "The backup will replace the current BPSTracker database and persisted backend data. Really restore it?",
+  "backupRestoreButton": "Restore backup",
+  "backupRestoring": "Restoring backup …",
+  "backupRestoreDone": "Backup restored successfully.",
+  "backupRestoreDoneRestart": "Backup restored successfully. Restarting the BPSTracker backend is recommended.",
+  "backupRestoreEnvHint": "The host .env file and SECRET_KEY are not changed by restore. When restoring on another host, the same SECRET_KEY must be transferred separately."
 }

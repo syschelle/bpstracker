@@ -4,7 +4,7 @@ import { Activity, Euro, Gauge, Globe2, HelpCircle, History, LogOut, Menu, Moon,
 import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api, getRuntimeConfig, setToken } from './api';
 import packageJson from '../package.json';
-import type { AirSensorCurrent, AirSensorSettings, BackupInfo, CurrencyCode, CurrentValuesApiSettings, Device, DevicePurpose, OrtnetzSettings, OrtnetzStatus, DeviceType, FinanceSettings, KindleDisplaySettings, Measurement, HistoryTotals, PublicDashboardSettings, RetentionSettings, SimulationSettings, Summary, UiSettings, User } from './types';
+import type { AirSensorCurrent, AirSensorSettings, CurrencyCode, CurrentValuesApiSettings, Device, DevicePurpose, OrtnetzSettings, OrtnetzStatus, DeviceType, FinanceSettings, KindleDisplaySettings, Measurement, HistoryTotals, PublicDashboardSettings, RetentionSettings, SimulationSettings, Summary, UiSettings, User } from './types';
 import { availableLanguages, DEFAULT_LANGUAGE, helpFileForLanguage, isSupportedLanguage, languageMeta, languageOptionLabel, localeForLanguage, nextLanguage, normalizeLanguage, translate } from './i18n';
 import type { Language, TranslationKey } from './i18n';
 
@@ -2000,19 +2000,15 @@ function FinanceSettingsPanel() {
 
 
 function BackupSettingsPanel() {
-  const { language, t } = useI18n();
-  const [backups, setBackups] = useState<BackupInfo[]>([]);
+  const { t } = useI18n();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [restorePassword, setRestorePassword] = useState('');
+  const [restoreFile, setRestoreFile] = useState<File | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-
-  async function load() {
-    setBackups(await api.backups());
-  }
-
-  useEffect(() => { void load(); }, []);
+  const [restoreBusy, setRestoreBusy] = useState(false);
 
   async function createBackup() {
     setMessage(null);
@@ -2027,12 +2023,19 @@ function BackupSettingsPanel() {
     }
     setBusy(true);
     try {
-      const created = await api.createBackup(password, confirmPassword);
+      const result = await api.createBackupDownload(password, confirmPassword);
+      const filename = result.filename || `bpstracker-backup-${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}.tar.gz.bpsenc`;
+      const url = URL.createObjectURL(result.blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
       setPassword('');
       setConfirmPassword('');
-      setMessage(t('backupCreated'));
-      await load();
-      await downloadBackup(created.filename);
+      setMessage(t('backupDownloaded'));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -2040,24 +2043,31 @@ function BackupSettingsPanel() {
     }
   }
 
-  async function downloadBackup(filename: string) {
-    const blob = await api.downloadBackup(filename);
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-  }
-
-  async function deleteBackup(filename: string) {
-    if (!window.confirm(t('backupDeleteConfirm'))) return;
-    setError(null);
+  async function restoreBackup() {
     setMessage(null);
-    await api.deleteBackup(filename);
-    await load();
+    setError(null);
+    if (!restoreFile) {
+      setError(t('backupRestoreFileRequired'));
+      return;
+    }
+    if (restorePassword.length < 12) {
+      setError(t('backupPasswordTooShort'));
+      return;
+    }
+    if (!window.confirm(t('backupRestoreConfirm'))) return;
+    setRestoreBusy(true);
+    try {
+      const result = await api.restoreBackup(restoreFile, restorePassword);
+      setRestoreFile(null);
+      setRestorePassword('');
+      const input = document.getElementById('backup-restore-file') as HTMLInputElement | null;
+      if (input) input.value = '';
+      setMessage(result.restart_recommended ? t('backupRestoreDoneRestart') : t('backupRestoreDone'));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setRestoreBusy(false);
+    }
   }
 
   return (
@@ -2066,36 +2076,25 @@ function BackupSettingsPanel() {
       <p className="hint">{t('backupHint')}</p>
       <p className="hint strong-hint">{t('backupPasswordWarning')}</p>
       {message && <div className="info" role="status" aria-live="polite">{message}</div>}
-      {busy && !message && <div className="info" role="status" aria-live="polite">{t('wait')}</div>}
       {error && <div className="error" role="alert">{error}</div>}
+
+      <h3>{t('backupCreateTitle')}</h3>
       <div className="form-grid finance-form">
         <label>{t('backupPassword')}<input type="password" value={password} onChange={e => setPassword(e.target.value)} autoComplete="new-password" /></label>
         <label>{t('backupConfirmPassword')}<input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} autoComplete="new-password" /></label>
       </div>
-      <button disabled={busy} onClick={() => void createBackup()}>{busy ? t('wait') : t('createEncryptedBackup')}</button>
+      <button disabled={busy || restoreBusy} onClick={() => void createBackup()}>{busy ? t('backupCreatingDownload') : t('createEncryptedBackup')}</button>
 
-      <h3>{t('existingBackups')}</h3>
-      {backups.length === 0 ? <p className="hint">{t('noBackups')}</p> : (
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr><th>{t('created')}</th><th>{t('backupSize')}</th><th>{t('actions')}</th></tr>
-            </thead>
-            <tbody>
-              {backups.map(backup => (
-                <tr key={backup.filename}>
-                  <td><code>{backup.filename}</code><br /><span className="muted">{fmtDate(backup.created_at, language)}</span></td>
-                  <td>{fmtBytes(backup.size_bytes, language)}</td>
-                  <td className="actions-cell">
-                    <button type="button" className="secondary" onClick={() => void downloadBackup(backup.filename)}>{t('download')}</button>
-                    <button type="button" className="danger" onClick={() => void deleteBackup(backup.filename)}>{t('deleteBackup')}</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <h3>{t('backupRestoreTitle')}</h3>
+      <p className="hint">{t('backupRestoreHint')}</p>
+      <p className="hint strong-hint">{t('backupRestoreEnvHint')}</p>
+      <div className="form-grid finance-form">
+        <label>{t('backupRestoreFile')}
+          <input id="backup-restore-file" type="file" accept=".bpsenc,application/octet-stream" onChange={e => setRestoreFile(e.target.files?.[0] || null)} />
+        </label>
+        <label>{t('backupPassword')}<input type="password" value={restorePassword} onChange={e => setRestorePassword(e.target.value)} autoComplete="current-password" /></label>
+      </div>
+      <button className="danger" disabled={restoreBusy || busy || !restoreFile} onClick={() => void restoreBackup()}>{restoreBusy ? t('backupRestoring') : t('backupRestoreButton')}</button>
     </section>
   );
 }

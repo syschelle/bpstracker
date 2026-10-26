@@ -315,9 +315,3 @@ class BackupInfo(BaseModel):
     filename: str
     size_bytes: int
     created_at: datetime
-
-
-class BackupCreateResponse(BaseModel):
-    filename: str
-    size_bytes: int
-    download_url: str

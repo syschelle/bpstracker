@@ -42,3 +42,45 @@ def test_safe_backup_path_rejects_symlinks(tmp_path, monkeypatch) -> None:
         backups._safe_backup_path(link.name)
 
     assert exc.value.status_code == 404
+
+
+def test_safe_archive_members_rejects_path_traversal(tmp_path) -> None:
+    import io
+    import tarfile
+
+    archive_path = tmp_path / 'unsafe.tar.gz'
+    with tarfile.open(archive_path, 'w:gz') as archive:
+        info = tarfile.TarInfo('../escape.txt')
+        payload = b'nope'
+        info.size = len(payload)
+        archive.addfile(info, io.BytesIO(payload))
+
+    with tarfile.open(archive_path, 'r:gz') as archive:
+        with pytest.raises(HTTPException) as exc:
+            backups._safe_archive_members(archive)
+    assert exc.value.status_code == 400
+
+
+def test_encrypt_decrypt_backup_round_trip(tmp_path) -> None:
+    source = tmp_path / 'backup.tar.gz'
+    encrypted = tmp_path / 'backup.bpsenc'
+    restored = tmp_path / 'restored.tar.gz'
+    source.write_bytes(b'example encrypted backup payload')
+
+    backups._encrypt_file(source, encrypted, 'correct-horse-battery-staple')
+    backups._decrypt_file(encrypted, restored, 'correct-horse-battery-staple')
+
+    assert restored.read_bytes() == source.read_bytes()
+
+
+def test_decrypt_rejects_wrong_password(tmp_path) -> None:
+    source = tmp_path / 'backup.tar.gz'
+    encrypted = tmp_path / 'backup.bpsenc'
+    restored = tmp_path / 'restored.tar.gz'
+    source.write_bytes(b'example encrypted backup payload')
+
+    backups._encrypt_file(source, encrypted, 'correct-horse-battery-staple')
+    with pytest.raises(HTTPException) as exc:
+        backups._decrypt_file(encrypted, restored, 'wrong-password-123')
+
+    assert exc.value.status_code == 400
