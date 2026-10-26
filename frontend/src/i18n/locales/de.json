@@ -391,6 +391,26 @@
     "backupRestoring": "Backup wird wiederhergestellt …",
     "backupRestoreDone": "Backup wurde erfolgreich wiederhergestellt.",
     "backupRestoreDoneRestart": "Backup wurde erfolgreich wiederhergestellt. Ein Neustart des BPSTracker-Backends wird empfohlen.",
-    "backupRestoreEnvHint": "Die Host-Datei .env und der SECRET_KEY werden beim Restore nicht geändert. Für eine Wiederherstellung auf einem anderen Host muss derselbe SECRET_KEY separat übernommen werden."
+    "backupRestoreEnvHint": "Die Host-Datei .env und der SECRET_KEY werden beim Restore nicht geändert. Für eine Wiederherstellung auf einem anderen Host muss derselbe SECRET_KEY separat übernommen werden.",
+    "notificationSettings": "Benachrichtigungen & Überwachung",
+    "notificationHint": "Über Pushover oder Gotify warnen, wenn keine aktuellen Messwerte mehr eintreffen, und optional einen täglichen Energiebericht senden.",
+    "notificationFullOutageHint": "Die interne Überwachung erkennt eine stehende Messwerterfassung, solange das Backend selbst noch läuft. Für einen vollständigen Host-/Container-Ausfall ist eine externe Erreichbarkeitsüberwachung erforderlich.",
+    "notificationEnable": "Benachrichtigungen aktivieren",
+    "notificationProvider": "Anbieter",
+    "notificationSystemAlerts": "Warnen, wenn die Messwerterfassung steht",
+    "notificationStaleMinutes": "Warnen nach ausbleibenden Messwerten (Minuten)",
+    "notificationRecovery": "Entwarnung senden",
+    "notificationDailyReport": "Täglichen Energiebericht senden",
+    "notificationDailyReportTime": "Uhrzeit des Tagesberichts",
+    "pushoverUserKey": "Pushover User Key",
+    "pushoverApiToken": "Pushover Application API Token",
+    "gotifyUrl": "Gotify-Server-URL",
+    "gotifyToken": "Gotify Application Token",
+    "secretStored": "Gespeichert – leer lassen zum Beibehalten",
+    "notificationReportHint": "Der Tagesbericht enthält Erzeugung, Netzbezug, Einspeisung und den berechneten PV-Eigenverbrauch bis zum eingestellten Versandzeitpunkt. Es gilt die in BPSTracker eingestellte Zeitzone.",
+    "saveNotificationSettings": "Benachrichtigungseinstellungen speichern",
+    "sendTestNotification": "Testbenachrichtigung senden",
+    "notificationSaved": "Benachrichtigungseinstellungen gespeichert.",
+    "notificationTestSent": "Testbenachrichtigung wurde gesendet."
   }
 }

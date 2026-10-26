@@ -391,6 +391,26 @@
     "backupRestoring": "Restoring backup …",
     "backupRestoreDone": "Backup restored successfully.",
     "backupRestoreDoneRestart": "Backup restored successfully. Restarting the BPSTracker backend is recommended.",
-    "backupRestoreEnvHint": "The host .env file and SECRET_KEY are not changed by restore. When restoring on another host, the same SECRET_KEY must be transferred separately."
+    "backupRestoreEnvHint": "The host .env file and SECRET_KEY are not changed by restore. When restoring on another host, the same SECRET_KEY must be transferred separately.",
+    "notificationSettings": "Notifications & monitoring",
+    "notificationHint": "Send alerts through Pushover or Gotify when measurement collection becomes stale, and optionally send a daily energy report.",
+    "notificationFullOutageHint": "The internal watchdog can detect stalled measurement collection while the backend is running. A complete host/container outage requires an external uptime monitor.",
+    "notificationEnable": "Enable notifications",
+    "notificationProvider": "Provider",
+    "notificationSystemAlerts": "Alert when measurement collection stalls",
+    "notificationStaleMinutes": "Alert after no fresh measurements (minutes)",
+    "notificationRecovery": "Send recovery notification",
+    "notificationDailyReport": "Send daily energy report",
+    "notificationDailyReportTime": "Daily report time",
+    "pushoverUserKey": "Pushover User Key",
+    "pushoverApiToken": "Pushover Application API Token",
+    "gotifyUrl": "Gotify server URL",
+    "gotifyToken": "Gotify application token",
+    "secretStored": "Stored — leave empty to keep",
+    "notificationReportHint": "The daily report contains generation, grid import, grid export and calculated PV self-consumption up to the configured send time. The UI timezone is used.",
+    "saveNotificationSettings": "Save notification settings",
+    "sendTestNotification": "Send test notification",
+    "notificationSaved": "Notification settings saved.",
+    "notificationTestSent": "Test notification sent."
   }
 }

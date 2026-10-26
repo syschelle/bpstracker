@@ -1300,3 +1300,8 @@ v0.9.65 zeigt die kompakte **Ortsnetz-API**-Statuskachel im Kopfbereich auf alle
 
 v0.9.71 behebt die Erstellung größerer Backups bei gehärteten Installationen, in denen `/tmp` absichtlich auf 64 MiB begrenzt ist. Backup-Erstellung und Wiederherstellung verwenden nun `/app/data/.backup-work` als temporären Arbeitsbereich auf dem Datenträger. Der Arbeitsbereich wird nach jedem Vorgang bereinigt und vom Backup-Inhalt ausgeschlossen; heruntergeladene Backups bleiben daher weiterhin nicht dauerhaft auf dem Host liegen.
 
+
+
+### v0.9.72 Benachrichtigungen und Systemüberwachung
+
+v0.9.72 ergänzt optionale Benachrichtigungen über Pushover oder Gotify. Die Backend-Überwachung erkennt ausbleibende Messwerte, sendet pro Störung nur eine Warnung und kann nach Wiederaufnahme der Messung eine Entwarnung schicken. Optional wird zu einer frei einstellbaren Uhrzeit ein Tagesbericht mit PV-Erzeugung, Netzbezug, Einspeisung und berechnetem PV-Eigenverbrauch versendet; verwendet wird die in BPSTracker eingestellte Zeitzone. Zugangsdaten werden verschlüsselt gespeichert. Ein vollständiger Host- oder Container-Ausfall benötigt weiterhin eine externe Erreichbarkeitsüberwachung, da ein ausgeschaltetes System selbst keine Nachricht senden kann.

@@ -2049,3 +2049,8 @@ v0.9.65 keeps the compact **Ortsnetz-API** status tile visible in the applicatio
 
 v0.9.71 fixes large backup creation on hardened deployments where `/tmp` is intentionally limited to 64 MiB. Backup creation and restore now use `/app/data/.backup-work` as temporary disk-backed working storage. The workspace is cleaned after each operation and excluded from backup contents, so downloaded backups still do not remain permanently on the host.
 
+
+
+### v0.9.72 Notifications and monitoring
+
+v0.9.72 adds optional Pushover or Gotify notifications. The backend watchdog detects stale measurement collection, sends one alert per outage and can send a recovery message when measurements resume. An optional daily report summarizes PV generation, grid import, grid export and calculated PV self-consumption at a configurable time using the configured UI timezone. Notification secrets are encrypted at rest. A complete host or container outage still requires an external uptime monitor because an offline system cannot send its own alert.

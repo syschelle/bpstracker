@@ -89,3 +89,10 @@ Avoid resetting or manually editing the production database during performance t
 - Verify the UI displays a progress notice while backup creation is running.
 - Force a `pg_dump` failure and verify the API returns a descriptive error and the frontend displays it.
 
+
+## v0.9.72 notifications and monitoring
+- Save Pushover settings, send a test notification and verify secrets are not returned by the API.
+- Save Gotify URL/application token, send a test notification and verify delivery.
+- Enable stale-measurement monitoring, stop fresh measurements beyond the threshold and verify one alert is sent; resume measurements and verify one recovery message.
+- Enable the daily report and verify generation, grid import, grid export and PV self-consumption are sent once per local calendar day at/after the configured time.
+- Verify the monitoring task survives transient notification delivery errors without terminating the backend.

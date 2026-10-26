@@ -91,6 +91,23 @@ export interface RetentionSettings {
   pi_zero_2w_mode?: boolean;
 }
 
+export interface NotificationSettings {
+  enabled: boolean;
+  provider: 'pushover' | 'gotify';
+  system_alerts_enabled: boolean;
+  stale_minutes: number;
+  recovery_notifications: boolean;
+  daily_report_enabled: boolean;
+  daily_report_time: string;
+  pushover_user_key?: string | null;
+  pushover_api_token?: string | null;
+  pushover_user_key_set?: boolean;
+  pushover_api_token_set?: boolean;
+  gotify_url?: string | null;
+  gotify_token?: string | null;
+  gotify_token_set?: boolean;
+}
+
 export interface KindleDisplaySettings {
   enabled: boolean;
 }

@@ -14,9 +14,10 @@ from sqlalchemy.orm import Session
 from ..config import get_settings
 from ..database import get_db
 from ..models import AppSetting, AuditLog, User
-from ..schemas import AirSensorCurrent, AirSensorSettings, CurrentValuesApiSettings, OrtnetzSettings, OrtnetzStatus, PublicDashboardSettings, FinanceSettings, KindleDisplaySettings, RetentionSettings, SimulationSettings, UiSettings
+from ..schemas import AirSensorCurrent, AirSensorSettings, CurrentValuesApiSettings, OrtnetzSettings, OrtnetzStatus, PublicDashboardSettings, FinanceSettings, KindleDisplaySettings, NotificationSettings, NotificationTestResponse, RetentionSettings, SimulationSettings, UiSettings
 from ..network_security import OutboundHostError, lan_http_url, normalize_outbound_http_host, resolve_lan_http_target
 from ..security import decrypt_secret, encrypt_secret, get_current_user, require_admin
+from ..notification_service import NOTIFICATION_SETTINGS_KEY, get_notification_settings_from_db, normalize_notification_settings, send_notification
 from ..simulation import simulated_air_sensor_current
 
 router = APIRouter(prefix='/api/settings', tags=['settings'])
@@ -734,6 +735,78 @@ def update_finance_settings(
     db.commit()
     db.refresh(row)
     return _normalize_finance_value(row.value)
+
+
+@router.get('/notifications', response_model=NotificationSettings)
+def get_notification_settings(_: User = Depends(require_admin), db: Session = Depends(get_db)) -> NotificationSettings:
+    return get_notification_settings_from_db(db)
+
+
+@router.put('/notifications', response_model=NotificationSettings)
+def update_notification_settings(
+    payload: NotificationSettings,
+    actor: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> NotificationSettings:
+    raw = payload.model_dump()
+    row = db.get(AppSetting, NOTIFICATION_SETTINGS_KEY)
+    existing = dict(row.value) if row and isinstance(row.value, dict) else {}
+    value = normalize_notification_settings(raw).model_dump()
+    value.pop('pushover_user_key', None)
+    value.pop('pushover_api_token', None)
+    value.pop('gotify_token', None)
+    value.pop('pushover_user_key_set', None)
+    value.pop('pushover_api_token_set', None)
+    value.pop('gotify_token_set', None)
+
+    for plain_key, cipher_key in (
+        ('pushover_user_key', 'pushover_user_key_ciphertext'),
+        ('pushover_api_token', 'pushover_api_token_ciphertext'),
+        ('gotify_token', 'gotify_token_ciphertext'),
+    ):
+        supplied = str(raw.get(plain_key) or '').strip()
+        if supplied:
+            value[cipher_key] = encrypt_secret(supplied)
+        elif existing.get(cipher_key):
+            value[cipher_key] = existing[cipher_key]
+
+    if value.get('provider') == 'gotify':
+        url = str(value.get('gotify_url') or '').strip().rstrip('/')
+        if value.get('enabled') and (not url.startswith(('http://', 'https://')) or '://' not in url):
+            raise HTTPException(status_code=422, detail='A valid Gotify http(s) URL is required')
+        value['gotify_url'] = url or None
+
+    if row is None:
+        row = AppSetting(key=NOTIFICATION_SETTINGS_KEY, value=value)
+        db.add(row)
+    else:
+        row.value = value
+    db.add(AuditLog(actor_user_id=actor.id, action='settings.notifications.update', details={
+        'enabled': value.get('enabled'),
+        'provider': value.get('provider'),
+        'system_alerts_enabled': value.get('system_alerts_enabled'),
+        'stale_minutes': value.get('stale_minutes'),
+        'recovery_notifications': value.get('recovery_notifications'),
+        'daily_report_enabled': value.get('daily_report_enabled'),
+        'daily_report_time': value.get('daily_report_time'),
+        'gotify_url': value.get('gotify_url'),
+    }))
+    db.commit()
+    db.refresh(row)
+    return get_notification_settings_from_db(db)
+
+
+@router.post('/notifications/test', response_model=NotificationTestResponse)
+async def test_notification(
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> NotificationTestResponse:
+    try:
+        await send_notification(db, 'BPSTracker Test', 'Die BPSTracker-Benachrichtigung funktioniert.')
+    except Exception as exc:  # noqa: BLE001
+        logger.warning('Notification test failed: %s', exc)
+        raise HTTPException(status_code=502, detail=f'Notification failed: {exc}') from exc
+    return NotificationTestResponse()
 
 
 @router.get('/retention', response_model=RetentionSettings)

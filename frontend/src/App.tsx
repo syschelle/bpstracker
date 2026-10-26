@@ -4,7 +4,7 @@ import { Activity, Euro, Gauge, Globe2, HelpCircle, History, LogOut, Menu, Moon,
 import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api, getRuntimeConfig, setToken } from './api';
 import packageJson from '../package.json';
-import type { AirSensorCurrent, AirSensorSettings, CurrencyCode, CurrentValuesApiSettings, Device, DevicePurpose, OrtnetzSettings, OrtnetzStatus, DeviceType, FinanceSettings, KindleDisplaySettings, Measurement, HistoryTotals, PublicDashboardSettings, RetentionSettings, SimulationSettings, Summary, UiSettings, User } from './types';
+import type { AirSensorCurrent, AirSensorSettings, CurrencyCode, CurrentValuesApiSettings, Device, DevicePurpose, OrtnetzSettings, OrtnetzStatus, DeviceType, FinanceSettings, KindleDisplaySettings, Measurement, HistoryTotals, NotificationSettings, PublicDashboardSettings, RetentionSettings, SimulationSettings, Summary, UiSettings, User } from './types';
 import { availableLanguages, DEFAULT_LANGUAGE, helpFileForLanguage, isSupportedLanguage, languageMeta, languageOptionLabel, localeForLanguage, nextLanguage, normalizeLanguage, translate } from './i18n';
 import type { Language, TranslationKey } from './i18n';
 
@@ -1784,6 +1784,7 @@ function SetupView({ currentUser, onCurrentUserChange }: { currentUser: User; on
       <FinanceSettingsPanel />
       <SimulationSettingsPanel />
       <AirSensorSettingsPanel />
+      <NotificationSettingsPanel />
       <PublicDashboardSettingsPanel />
       <UserCredentialsPanel currentUser={currentUser} onCurrentUserChange={onCurrentUserChange} />
       <BackupSettingsPanel />
@@ -1994,6 +1995,110 @@ function FinanceSettingsPanel() {
       <p className="hint">{t('batteryEfficiencyHint')}</p>
       <p className="hint">{t('currencyHint')}</p>
       <button onClick={() => void save()}>{t('saveFinance')}</button>
+    </section>
+  );
+}
+
+
+function NotificationSettingsPanel() {
+  const { t } = useI18n();
+  const [settings, setSettings] = useState<NotificationSettings>({
+    enabled: false,
+    provider: 'pushover',
+    system_alerts_enabled: true,
+    stale_minutes: 10,
+    recovery_notifications: true,
+    daily_report_enabled: false,
+    daily_report_time: '23:55',
+    pushover_user_key: '',
+    pushover_api_token: '',
+    gotify_url: '',
+    gotify_token: '',
+  });
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function load() {
+    try {
+      setSettings(await api.notificationSettings());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  useEffect(() => { void load(); }, []);
+
+  async function save() {
+    setMessage(null);
+    setError(null);
+    setBusy(true);
+    try {
+      const saved = await api.updateNotificationSettings({
+        ...settings,
+        stale_minutes: Math.max(2, Math.min(1440, Number(settings.stale_minutes) || 10)),
+        daily_report_time: settings.daily_report_time || '23:55',
+      });
+      setSettings(saved);
+      setMessage(t('notificationSaved'));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function test() {
+    setMessage(null);
+    setError(null);
+    setBusy(true);
+    try {
+      await api.testNotification();
+      setMessage(t('notificationTestSent'));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="panel">
+      <div className="panel-head"><h2><Activity size={20} /> {t('notificationSettings')}</h2></div>
+      <p className="hint">{t('notificationHint')}</p>
+      <p className="hint strong-hint">{t('notificationFullOutageHint')}</p>
+      {message && <div className="info" role="status">{message}</div>}
+      {error && <div className="error" role="alert">{error}</div>}
+      <div className="form-grid finance-form">
+        <label className="check"><input type="checkbox" checked={settings.enabled} onChange={e => setSettings({ ...settings, enabled: e.target.checked })} /> {t('notificationEnable')}</label>
+        <label>{t('notificationProvider')}
+          <select value={settings.provider} onChange={e => setSettings({ ...settings, provider: e.target.value as 'pushover' | 'gotify' })}>
+            <option value="pushover">Pushover</option>
+            <option value="gotify">Gotify</option>
+          </select>
+        </label>
+        <label className="check"><input type="checkbox" checked={settings.system_alerts_enabled} onChange={e => setSettings({ ...settings, system_alerts_enabled: e.target.checked })} /> {t('notificationSystemAlerts')}</label>
+        <label>{t('notificationStaleMinutes')}<input type="number" min={2} max={1440} step={1} value={settings.stale_minutes} onChange={e => setSettings({ ...settings, stale_minutes: Number(e.target.value) })} /></label>
+        <label className="check"><input type="checkbox" checked={settings.recovery_notifications} onChange={e => setSettings({ ...settings, recovery_notifications: e.target.checked })} /> {t('notificationRecovery')}</label>
+        <label className="check"><input type="checkbox" checked={settings.daily_report_enabled} onChange={e => setSettings({ ...settings, daily_report_enabled: e.target.checked })} /> {t('notificationDailyReport')}</label>
+        <label>{t('notificationDailyReportTime')}<input type="time" value={settings.daily_report_time} onChange={e => setSettings({ ...settings, daily_report_time: e.target.value })} /></label>
+      </div>
+      {settings.provider === 'pushover' ? (
+        <div className="form-grid finance-form">
+          <label>{t('pushoverUserKey')}<input type="password" value={settings.pushover_user_key || ''} onChange={e => setSettings({ ...settings, pushover_user_key: e.target.value })} placeholder={settings.pushover_user_key_set ? t('secretStored') : ''} autoComplete="off" /></label>
+          <label>{t('pushoverApiToken')}<input type="password" value={settings.pushover_api_token || ''} onChange={e => setSettings({ ...settings, pushover_api_token: e.target.value })} placeholder={settings.pushover_api_token_set ? t('secretStored') : ''} autoComplete="off" /></label>
+        </div>
+      ) : (
+        <div className="form-grid finance-form">
+          <label>{t('gotifyUrl')}<input type="url" value={settings.gotify_url || ''} onChange={e => setSettings({ ...settings, gotify_url: e.target.value })} placeholder="https://gotify.example.com" /></label>
+          <label>{t('gotifyToken')}<input type="password" value={settings.gotify_token || ''} onChange={e => setSettings({ ...settings, gotify_token: e.target.value })} placeholder={settings.gotify_token_set ? t('secretStored') : ''} autoComplete="off" /></label>
+        </div>
+      )}
+      <p className="hint">{t('notificationReportHint')}</p>
+      <div className="button-row">
+        <button onClick={() => void save()} disabled={busy}>{t('saveNotificationSettings')}</button>
+        <button className="secondary" onClick={() => void test()} disabled={busy || !settings.enabled}>{t('sendTestNotification')}</button>
+      </div>
     </section>
   );
 }

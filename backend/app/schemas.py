@@ -159,6 +159,28 @@ class RetentionSettings(BaseModel):
     pi_zero_2w_mode: bool = False
 
 
+class NotificationSettings(BaseModel):
+    enabled: bool = False
+    provider: str = Field(default='pushover', pattern=r'^(pushover|gotify)$')
+    system_alerts_enabled: bool = True
+    stale_minutes: int = Field(default=10, ge=2, le=1440)
+    recovery_notifications: bool = True
+    daily_report_enabled: bool = False
+    daily_report_time: str = Field(default='23:55', pattern=r'^(?:[01]\d|2[0-3]):[0-5]\d$')
+    pushover_user_key: str | None = Field(default=None, max_length=128)
+    pushover_api_token: str | None = Field(default=None, max_length=128)
+    pushover_user_key_set: bool = False
+    pushover_api_token_set: bool = False
+    gotify_url: str | None = Field(default=None, max_length=2000)
+    gotify_token: str | None = Field(default=None, max_length=512)
+    gotify_token_set: bool = False
+
+
+class NotificationTestResponse(BaseModel):
+    ok: bool = True
+    message: str = 'Test notification sent'
+
+
 class KindleDisplaySettings(BaseModel):
     enabled: bool = True
 

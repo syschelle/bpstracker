@@ -1,3 +1,19 @@
+# BPSTracker v0.9.72
+
+## Added
+
+- Added integrated system monitoring with selectable Pushover or Gotify delivery.
+- Added a stale-measurement watchdog that alerts once when active-device measurements stop updating for the configured number of minutes.
+- Added optional recovery notifications when fresh measurements resume.
+- Added optional daily energy reports at a configurable local time with PV generation, grid import, grid export and calculated PV self-consumption.
+- Added a notification test button in Setup.
+- Pushover user/application keys and Gotify application tokens are encrypted at rest with BPSTracker's existing secret encryption.
+
+## Notes
+
+- The internal watchdog detects a stalled poller or stale measurement flow while the BPSTracker backend remains alive.
+- A complete Docker host/container outage cannot send its own notification and therefore still requires an external uptime monitor.
+
 # BPSTracker v0.9.71
 
 ## Fixed

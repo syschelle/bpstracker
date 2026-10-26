@@ -13,6 +13,7 @@ from .database import Base, SessionLocal, engine
 from .models import User, UserRole
 from .poller import Poller
 from .kindle_display import kindle_display_service
+from .notification_service import notification_monitor
 from .routers import auth, backups, current_values, devices, install, kindle, maintenance, measurements, settings as settings_router, users
 from .security import delete_recovery_codes
 from .version import __version__
@@ -248,7 +249,9 @@ async def lifespan(app: FastAPI):
     bootstrap_database()
     poller.start()
     kindle_display_service.start()
+    notification_monitor.start()
     yield
+    await notification_monitor.stop()
     await kindle_display_service.stop()
     await poller.stop()
 
