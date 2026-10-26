@@ -1,6 +1,6 @@
-# Testing – BPSTracker v0.9.69
+# Testing – BPSTracker v0.9.70
 
-## New v0.9.69 coverage
+## New v0.9.70 coverage
 
 - Verify `POST /api/backups/create-download` returns an encrypted `.bpsenc` attachment and removes the temporary file after the response completes.
 - Verify creating a new backup does not require `/app/data/backups` to exist or be writable.
