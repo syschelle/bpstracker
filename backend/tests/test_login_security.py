@@ -1,6 +1,7 @@
 from starlette.requests import Request
 
-from app.login_security import LoginFailureGuard, resolve_client_ip
+from app.config import get_settings
+from app.login_security import LoginFailureGuard, normalize_login_security_settings, resolve_client_ip
 from app.schemas import LoginSecuritySettings
 
 
@@ -54,3 +55,17 @@ def test_login_failure_guard_blocks_and_clears() -> None:
     assert guard.blocked_for('203.0.113.9') is not None
     guard.clear('203.0.113.9')
     assert guard.blocked_for('203.0.113.9') is None
+
+
+def test_trusted_proxies_are_loaded_from_environment_not_database(monkeypatch) -> None:
+    monkeypatch.setenv('BPSTRACKER_TRUSTED_PROXIES', '192.168.178.247,10.10.0.0/24')
+    get_settings.cache_clear()
+    try:
+        settings = normalize_login_security_settings({
+            'enabled': True,
+            'trusted_proxies': ['203.0.113.77'],
+        })
+        assert settings.trusted_proxies == ['192.168.178.247/32', '10.10.0.0/24']
+        assert '203.0.113.77/32' not in settings.trusted_proxies
+    finally:
+        get_settings.cache_clear()

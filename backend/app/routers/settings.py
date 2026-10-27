@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from ..config import get_settings
 from ..database import get_db
 from ..models import AppSetting, AuditLog, User
-from ..schemas import AirSensorCurrent, AirSensorSettings, CurrentValuesApiSettings, OrtnetzSettings, OrtnetzStatus, PublicDashboardSettings, FinanceSettings, KindleDisplaySettings, NotificationSettings, NotificationTestResponse, LoginSecuritySettings, ClientIpDiagnostic, RetentionSettings, SimulationSettings, UiSettings
+from ..schemas import AirSensorCurrent, AirSensorSettings, CurrentValuesApiSettings, OrtnetzSettings, OrtnetzStatus, PublicDashboardSettings, FinanceSettings, KindleDisplaySettings, NotificationSettings, NotificationTestResponse, LoginSecuritySettings, LoginSecurityUpdate, ClientIpDiagnostic, RetentionSettings, SimulationSettings, UiSettings
 from ..network_security import OutboundHostError, lan_http_url, normalize_outbound_http_host, resolve_lan_http_target
 from ..security import decrypt_secret, encrypt_secret, get_current_user, require_admin
 from ..notification_service import NOTIFICATION_SETTINGS_KEY, get_notification_settings_from_db, normalize_notification_settings, send_notification
@@ -745,7 +745,7 @@ def get_login_security(_: User = Depends(require_admin), db: Session = Depends(g
 
 @router.put('/login-security', response_model=LoginSecuritySettings)
 def update_login_security(
-    payload: LoginSecuritySettings,
+    payload: LoginSecurityUpdate,
     actor: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ) -> LoginSecuritySettings:
@@ -758,7 +758,7 @@ def update_login_security(
         'max_failed_attempts': normalized.max_failed_attempts,
         'block_minutes': normalized.block_minutes,
         'notify_on_block': normalized.notify_on_block,
-        'trusted_proxies': normalized.trusted_proxies,
+        'trusted_proxy_source': '.env',
     }))
     db.commit()
     # Settings changes should take effect immediately and must not leave stale in-memory blocks behind.

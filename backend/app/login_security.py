@@ -8,8 +8,9 @@ import time
 from fastapi import Request
 from sqlalchemy.orm import Session
 
+from .config import get_settings
 from .models import AppSetting
-from .schemas import LoginSecuritySettings
+from .schemas import LoginSecuritySettings, LoginSecurityUpdate
 
 LOGIN_SECURITY_SETTINGS_KEY = 'login_security'
 
@@ -34,6 +35,12 @@ def _clean_trusted_proxies(values: list[str] | None) -> list[str]:
     return cleaned[:32]
 
 
+def _trusted_proxies_from_env() -> list[str]:
+    raw = get_settings().bpstracker_trusted_proxies
+    values = [part.strip() for part in raw.replace(';', ',').split(',') if part.strip()]
+    return _clean_trusted_proxies(values)
+
+
 def normalize_login_security_settings(value: dict | None) -> LoginSecuritySettings:
     value = value or {}
     try:
@@ -44,7 +51,7 @@ def normalize_login_security_settings(value: dict | None) -> LoginSecuritySettin
         block_minutes = int(value.get('block_minutes') or 15)
     except (TypeError, ValueError):
         block_minutes = 15
-    trusted = _clean_trusted_proxies(value.get('trusted_proxies') if isinstance(value.get('trusted_proxies'), list) else [])
+    trusted = _trusted_proxies_from_env()
     return LoginSecuritySettings(
         enabled=bool(value.get('enabled', False)),
         max_failed_attempts=max(3, min(20, max_attempts)),
@@ -59,10 +66,18 @@ def get_login_security_settings(db: Session) -> LoginSecuritySettings:
     return normalize_login_security_settings(row.value if row else None)
 
 
-def save_login_security_settings(db: Session, settings: LoginSecuritySettings) -> LoginSecuritySettings:
+def save_login_security_settings(db: Session, settings: LoginSecurityUpdate) -> LoginSecuritySettings:
     normalized = normalize_login_security_settings(settings.model_dump())
     row = db.get(AppSetting, LOGIN_SECURITY_SETTINGS_KEY)
-    value = normalized.model_dump()
+    # Trusted proxies are deliberately excluded from database/web-managed settings.
+    # They define which upstream may assert a client address and therefore belong
+    # exclusively to the protected deployment environment (.env).
+    value = {
+        'enabled': normalized.enabled,
+        'max_failed_attempts': normalized.max_failed_attempts,
+        'block_minutes': normalized.block_minutes,
+        'notify_on_block': normalized.notify_on_block,
+    }
     if row is None:
         row = AppSetting(key=LOGIN_SECURITY_SETTINGS_KEY, value=value)
         db.add(row)

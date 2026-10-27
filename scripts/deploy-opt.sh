@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+umask 077
 
 APP_DIR="/opt/bpstracker"
 PROJECT_NAME="bpstracker"

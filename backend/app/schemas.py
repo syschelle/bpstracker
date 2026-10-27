@@ -161,11 +161,17 @@ class RetentionSettings(BaseModel):
 
 
 
-class LoginSecuritySettings(BaseModel):
+class LoginSecurityUpdate(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
     enabled: bool = False
     max_failed_attempts: int = Field(default=5, ge=3, le=20)
     block_minutes: int = Field(default=15, ge=1, le=1440)
     notify_on_block: bool = False
+
+
+class LoginSecuritySettings(LoginSecurityUpdate):
+    # Read-only effective deployment value sourced from BPSTRACKER_TRUSTED_PROXIES.
     trusted_proxies: list[str] = Field(default_factory=list, max_length=32)
 
 

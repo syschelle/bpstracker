@@ -1,4 +1,11 @@
-# Testing – BPSTracker v0.9.75
+# Testing – BPSTracker v0.9.76
+
+## v0.9.76 env-only trusted proxy configuration
+
+- Verify `BPSTRACKER_TRUSTED_PROXIES` is read from `.env` and displayed read-only in the client-IP diagnostic.
+- Verify the login-security update API cannot change the effective trusted proxy list.
+- Verify install/update scripts preserve `.env` and apply mode `0600`.
+- Verify a backend recreate is required after changing `BPSTRACKER_TRUSTED_PROXIES`.
 
 ## v0.9.75 trusted-proxy login protection
 

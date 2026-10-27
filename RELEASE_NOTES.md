@@ -1,3 +1,14 @@
+# BPSTracker v0.9.76
+
+## Security
+
+- Moved trusted reverse-proxy configuration out of the web-managed database settings and into the protected `.env` deployment configuration.
+- Added `BPSTRACKER_TRUSTED_PROXIES` as a comma-separated IP/CIDR list.
+- Trusted proxy values are now read-only in the web diagnostic and cannot be changed through the API/UI.
+- Install scripts keep `.env` at mode `0600`; the image update script now re-applies `0600` before modifying the image tag.
+- Existing `.env` values are preserved across installs/updates.
+- Install/update scripts use a restrictive `umask 077`, and deployment scripts no longer print `SECRET_KEY` in plaintext to the console.
+
 # BPSTracker v0.9.75
 
 ## Added

@@ -1302,6 +1302,11 @@ v0.9.71 behebt die Erstellung größerer Backups bei gehärteten Installationen,
 
 
 
+
+### v0.9.76 Vertrauenswürdige Proxys nur noch über die Umgebung
+
+Vertrauenswürdige Reverse-Proxys sind jetzt eine Deployment-Sicherheitsgrenze und keine normale Web-Einstellung mehr. `BPSTRACKER_TRUSTED_PROXIES` wird ausschließlich in der geschützten `.env` als kommagetrennte Liste von Proxy-IPs/CIDRs gesetzt (zum Beispiel `BPSTRACKER_TRUSTED_PROXIES=192.168.178.247`). Im Setup wird die wirksame Liste in der Client-IP-Diagnose nur noch angezeigt. Nach einer Änderung muss der Backend-Container neu erstellt werden. Die Install-/Update-Skripte schützen `.env` mit Modus `0600`, verwenden `umask 077`, überschreiben vorhandene Werte nicht und geben `SECRET_KEY` nicht mehr im Klartext auf der Konsole aus.
+
 ### v0.9.75 Login-Schutz mit vertrauenswürdiger Proxy-Kette
 
 BPSTracker kann jetzt eine ermittelte Source-IP nach wiederholten fehlgeschlagenen Passwort-Logins vorübergehend sperren. Die Funktion ist nach dem Update standardmäßig deaktiviert, bis die neue Client-IP-Diagnose geprüft wurde. Als vertrauenswürdig soll nur der tatsächliche vorgeschaltete Reverse-Proxy eingetragen werden, zum Beispiel die Traefik-Host-IP oder ein möglichst enges CIDR. BPSTracker wertet `X-Forwarded-For` von rechts nach links aus und entfernt nur ausdrücklich konfigurierte Proxy-Hops, bevor die Client-IP bestimmt wird. Im Setup werden der direkte Backend-Peer, `X-Real-IP`, `X-Forwarded-For`, die Trusted-Proxy-Liste und die ermittelte Client-IP angezeigt. Fehlversuche und Sperrdauer sind konfigurierbar; ein erfolgreicher Login setzt den Fehlversuchszähler zurück. Optional kann eine neue Sperre über Pushover oder Gotify gemeldet werden. Die vorhandenen kurzfristigen Rate-Limits bleiben als zusätzliche Schutzschicht aktiv.

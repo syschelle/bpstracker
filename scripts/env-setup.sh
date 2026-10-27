@@ -241,6 +241,9 @@ AUTH_COOKIE_SECURE=false
 AUTH_COOKIE_SAMESITE=lax
 FRONTEND_ORIGIN=*
 
+# Trusted reverse proxies for X-Forwarded-For evaluation (comma-separated IPs/CIDRs).
+BPSTRACKER_TRUSTED_PROXIES=
+
 POLLING_LOOP_SECONDS=$polling
 SHELLY_TIMEOUT_SECONDS=$timeout
 SHELLY_MAX_CONCURRENCY=$concurrency
@@ -314,6 +317,8 @@ bpstracker_prepare_env() {
     [ -n "$(bpstracker_env_get "$env_file" AUTH_COOKIE_SECURE)" ] || bpstracker_env_set "$env_file" AUTH_COOKIE_SECURE "false"
     [ -n "$(bpstracker_env_get "$env_file" AUTH_COOKIE_SAMESITE)" ] || bpstracker_env_set "$env_file" AUTH_COOKIE_SAMESITE "lax"
     [ -n "$(bpstracker_env_get "$env_file" FRONTEND_ORIGIN)" ] || bpstracker_env_set "$env_file" FRONTEND_ORIGIN "*"
+    # Do not overwrite an existing trusted-proxy definition. Missing means no trusted upstreams.
+    if ! grep -q '^BPSTRACKER_TRUSTED_PROXIES=' "$env_file"; then bpstracker_env_set "$env_file" BPSTRACKER_TRUSTED_PROXIES ""; fi
     [ -n "$(bpstracker_env_get "$env_file" POLLING_LOOP_SECONDS)" ] || bpstracker_env_set "$env_file" POLLING_LOOP_SECONDS "5"
     [ -n "$(bpstracker_env_get "$env_file" SHELLY_TIMEOUT_SECONDS)" ] || bpstracker_env_set "$env_file" SHELLY_TIMEOUT_SECONDS "5"
     [ -n "$(bpstracker_env_get "$env_file" SHELLY_MAX_CONCURRENCY)" ] || bpstracker_env_set "$env_file" SHELLY_MAX_CONCURRENCY "4"

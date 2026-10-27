@@ -416,19 +416,19 @@
     "notificationTestSent": "Test notification sent.",
     "loginSecurityTitle": "Login protection",
     "loginSecurityHint": "Temporarily block a source IP after repeated failed password logins. The existing short-term rate limits remain active as an additional protection layer.",
-    "loginSecurityProxyHint": "Keep blocking disabled until the diagnostic shows the real client IP. Only add the actual reverse proxy (for example the Traefik host IP) as a trusted proxy; do not trust whole LAN ranges unless required.",
+    "loginSecurityProxyHint": "Keep blocking disabled until the diagnostic shows the real client IP. Trusted proxies are security-sensitive deployment settings and can only be configured in the protected .env file.",
     "loginSecurityEnable": "Enable source-IP blocking after failed logins",
     "loginSecurityAttempts": "Failed attempts before blocking",
     "loginSecurityBlockMinutes": "Block duration (minutes)",
     "loginSecurityNotify": "Send Pushover/Gotify notification when an IP is blocked",
     "loginSecurityTrustedProxies": "Trusted proxy IPs/CIDRs",
-    "loginSecurityTrustedProxiesHint": "One IP or CIDR per line. BPSTracker walks X-Forwarded-For from right to left and removes only explicitly trusted proxies.",
+    "loginSecurityTrustedProxiesHint": "Configure BPSTRACKER_TRUSTED_PROXIES in .env as a comma-separated list of trusted proxy IPs/CIDRs, then recreate the backend container. This value cannot be changed from the web UI.",
     "loginSecuritySave": "Save login protection",
     "loginSecurityRefresh": "Refresh IP diagnostic",
     "loginSecurityDiagnostic": "Client IP diagnostic",
     "loginSecurityDirectIp": "Direct backend peer",
     "loginSecurityResolvedIp": "Resolved client IP",
-    "loginSecurityTrustedActive": "Configured trusted proxies",
+    "loginSecurityTrustedActive": "Trusted proxies from .env",
     "loginSecuritySaved": "Login protection settings saved."
   }
 }

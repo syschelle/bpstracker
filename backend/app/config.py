@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     auth_cookie_samesite: str = 'lax'
     # Comma-separated list of allowed browser origins. Use explicit origins for cross-origin dev setups.
     frontend_origin: str = '*'
+    # Security boundary: comma-separated trusted reverse-proxy IPs/CIDRs.
+    # Configure only in .env/container environment, never from the web UI.
+    bpstracker_trusted_proxies: str = Field(default='', validation_alias='BPSTRACKER_TRUSTED_PROXIES')
     polling_loop_seconds: int = 5
     shelly_timeout_seconds: float = 5.0
     shelly_max_concurrency: int = 4

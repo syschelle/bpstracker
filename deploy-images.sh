@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+umask 077
 
 cd "$(dirname "$0")"
 
@@ -9,7 +10,7 @@ source "$SCRIPT_DIR/scripts/env-setup.sh"
 
 PROFILE="${BPSTRACKER_INSTALL_PROFILE:-}"
 IMAGE_TAG=""
-DEFAULT_IMAGE_TAG="v0.9.75"
+DEFAULT_IMAGE_TAG="v0.9.76"
 LANGUAGE_OPTION=""
 
 while [ $# -gt 0 ]; do
@@ -144,15 +145,11 @@ echo
 if bpstracker_is_english; then
   echo "Frontend: http://localhost:${FRONTEND_PORT_DISPLAY}"
   if [ -n "$SECRET_KEY_DISPLAY" ]; then
-    echo "SECRET_KEY in $SCRIPT_DIR/.env:"
-    echo "$SECRET_KEY_DISPLAY"
-    echo "Store it safely and do not change it after production start."
+    echo "SECRET_KEY is stored in the protected .env file (mode 0600) and is not printed to the console."
   fi
 else
   echo "Frontend: http://localhost:${FRONTEND_PORT_DISPLAY}"
   if [ -n "$SECRET_KEY_DISPLAY" ]; then
-    echo "SECRET_KEY in $SCRIPT_DIR/.env:"
-    echo "$SECRET_KEY_DISPLAY"
-    echo "Bitte sicher aufbewahren und nach Produktivstart nicht mehr ändern."
+    echo "SECRET_KEY ist in der geschützten .env-Datei (Modus 0600) gespeichert und wird nicht auf der Konsole ausgegeben."
   fi
 fi

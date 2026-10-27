@@ -416,19 +416,19 @@
     "notificationTestSent": "Testbenachrichtigung wurde gesendet.",
     "loginSecurityTitle": "Login-Schutz",
     "loginSecurityHint": "Sperrt eine Source-IP nach wiederholten fehlgeschlagenen Passwort-Logins vorübergehend. Die vorhandenen kurzfristigen Rate-Limits bleiben als zusätzliche Schutzschicht aktiv.",
-    "loginSecurityProxyHint": "Die Sperre erst aktivieren, wenn die Diagnose die echte Client-IP zeigt. Nur den tatsächlichen Reverse-Proxy (z. B. die Traefik-Host-IP) als vertrauenswürdig eintragen; nicht pauschal ganze LAN-Netze freigeben.",
+    "loginSecurityProxyHint": "Die Sperre erst aktivieren, wenn die Diagnose die echte Client-IP zeigt. Vertrauenswürdige Proxys sind sicherheitsrelevante Deployment-Einstellungen und können nur in der geschützten .env-Datei konfiguriert werden.",
     "loginSecurityEnable": "Source-IP nach fehlgeschlagenen Logins sperren",
     "loginSecurityAttempts": "Fehlversuche bis zur Sperre",
     "loginSecurityBlockMinutes": "Sperrdauer (Minuten)",
     "loginSecurityNotify": "Pushover/Gotify senden, wenn eine IP gesperrt wird",
     "loginSecurityTrustedProxies": "Vertrauenswürdige Proxy-IPs/CIDRs",
-    "loginSecurityTrustedProxiesHint": "Eine IP oder ein CIDR pro Zeile. BPSTracker wertet X-Forwarded-For von rechts nach links aus und entfernt nur ausdrücklich vertrauenswürdige Proxys.",
+    "loginSecurityTrustedProxiesHint": "BPSTRACKER_TRUSTED_PROXIES in .env als kommagetrennte Liste vertrauenswürdiger Proxy-IPs/CIDRs setzen und danach den Backend-Container neu erstellen. Dieser Wert kann nicht über die Weboberfläche geändert werden.",
     "loginSecuritySave": "Login-Schutz speichern",
     "loginSecurityRefresh": "IP-Diagnose aktualisieren",
     "loginSecurityDiagnostic": "Client-IP-Diagnose",
     "loginSecurityDirectIp": "Direkter Backend-Peer",
     "loginSecurityResolvedIp": "Ermittelte Client-IP",
-    "loginSecurityTrustedActive": "Konfigurierte vertrauenswürdige Proxys",
+    "loginSecurityTrustedActive": "Vertrauenswürdige Proxys aus .env",
     "loginSecuritySaved": "Login-Schutz wurde gespeichert."
   }
 }

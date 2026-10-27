@@ -2051,6 +2051,11 @@ v0.9.71 fixes large backup creation on hardened deployments where `/tmp` is inte
 
 
 
+
+### v0.9.76 Environment-only trusted proxy configuration
+
+Trusted reverse proxies are now a deployment security boundary instead of a normal web setting. Configure `BPSTRACKER_TRUSTED_PROXIES` only in the protected `.env` file as a comma-separated list of proxy IPs/CIDRs (for example `BPSTRACKER_TRUSTED_PROXIES=192.168.178.247`). The Setup page displays the effective list read-only in the client-IP diagnostic. After changing the value, recreate the backend container. BPSTracker install/update scripts protect `.env` with mode `0600`, use `umask 077`, do not replace existing values and no longer print `SECRET_KEY` in plaintext to the console.
+
 ### v0.9.75 Trusted-proxy login protection
 
 BPSTracker can now temporarily block a resolved source IP after repeated failed password logins. The protection is disabled by default until the administrator verifies the new client-IP diagnostic. Configure only the actual upstream reverse proxy (for example the Traefik host IP or a narrow CIDR) as trusted. BPSTracker evaluates `X-Forwarded-For` from right to left and removes only explicitly trusted proxy hops before selecting the client address. The Setup page shows the direct backend peer, `X-Real-IP`, `X-Forwarded-For`, trusted proxy list and resolved client IP. The failure threshold and block duration are configurable, successful authentication clears the failure state, and a new block can optionally trigger the configured Pushover/Gotify provider. Existing short-window rate limits remain active as an additional protection layer.

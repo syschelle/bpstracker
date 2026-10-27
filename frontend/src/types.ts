@@ -92,11 +92,14 @@ export interface RetentionSettings {
 }
 
 
-export interface LoginSecuritySettings {
+export interface LoginSecurityUpdate {
   enabled: boolean;
   max_failed_attempts: number;
   block_minutes: number;
   notify_on_block: boolean;
+}
+
+export interface LoginSecuritySettings extends LoginSecurityUpdate {
   trusted_proxies: string[];
 }
 

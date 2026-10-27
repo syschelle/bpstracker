@@ -2010,7 +2010,6 @@ function LoginSecuritySettingsPanel() {
     notify_on_block: false,
     trusted_proxies: [],
   });
-  const [trustedProxyText, setTrustedProxyText] = useState('');
   const [diagnostic, setDiagnostic] = useState<ClientIpDiagnostic | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -2021,7 +2020,6 @@ function LoginSecuritySettingsPanel() {
     try {
       const [saved, info] = await Promise.all([api.loginSecuritySettings(), api.loginSecurityClientInfo()]);
       setSettings(saved);
-      setTrustedProxyText((saved.trusted_proxies || []).join('\n'));
       setDiagnostic(info);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -2035,15 +2033,13 @@ function LoginSecuritySettingsPanel() {
     setError(null);
     setBusy(true);
     try {
-      const trusted_proxies = trustedProxyText.split(/[\n,]+/).map(value => value.trim()).filter(Boolean);
       const saved = await api.updateLoginSecuritySettings({
-        ...settings,
+        enabled: settings.enabled,
         max_failed_attempts: Math.max(3, Math.min(20, Number(settings.max_failed_attempts) || 5)),
         block_minutes: Math.max(1, Math.min(1440, Number(settings.block_minutes) || 15)),
-        trusted_proxies,
+        notify_on_block: settings.notify_on_block,
       });
       setSettings(saved);
-      setTrustedProxyText((saved.trusted_proxies || []).join('\n'));
       setDiagnostic(await api.loginSecurityClientInfo());
       setMessage(t('loginSecuritySaved'));
     } catch (err) {
@@ -2078,10 +2074,7 @@ function LoginSecuritySettingsPanel() {
         <label>{t('loginSecurityBlockMinutes')}<input type="number" min={1} max={1440} step={1} value={settings.block_minutes} onChange={e => setSettings({ ...settings, block_minutes: Number(e.target.value) })} /></label>
         <label className="check"><input type="checkbox" checked={settings.notify_on_block} onChange={e => setSettings({ ...settings, notify_on_block: e.target.checked })} /> {t('loginSecurityNotify')}</label>
       </div>
-      <label>{t('loginSecurityTrustedProxies')}
-        <textarea rows={3} value={trustedProxyText} onChange={e => setTrustedProxyText(e.target.value)} placeholder="192.168.178.247\n10.0.0.0/24" />
-      </label>
-      <p className="hint">{t('loginSecurityTrustedProxiesHint')}</p>
+      <p className="hint strong-hint">{t('loginSecurityTrustedProxiesHint')}</p>
       <div className="button-row">
         <button onClick={() => void save()} disabled={busy}>{t('loginSecuritySave')}</button>
         <button className="secondary" onClick={() => void refreshDiagnostic()} disabled={busy}>{t('loginSecurityRefresh')}</button>
