@@ -1303,6 +1303,14 @@ v0.9.71 behebt die Erstellung größerer Backups bei gehärteten Installationen,
 
 
 
+### v0.9.77 Geschützte SECRET_KEY-Rotation und sicherere Updates
+
+v0.9.77 ergänzt das separate Wartungsskript `rotate-secret-key.sh`. Vor jeder Schlüsseländerung erstellt und prüft es ein vollständiges lokales Recovery-Backup unter `security-backups/`. Enthalten sind ein PostgreSQL-Dump im Custom-Format, PostgreSQL-Globals, die Backend-Daten, die ursprüngliche `.env`, Deployment-Dateien, Docker-Inspect-Snapshots, ein Manifest und SHA-256-Prüfsummen. Mit `--backup-only` wird ausschließlich dieses Recovery-Backup erstellt.
+
+Für die eigentliche Rotation gibt der Administrator den neuen `SECRET_KEY` zweimal verdeckt ein. BPSTracker erzeugt oder zeigt den neuen Schlüssel nicht automatisch an; er muss mindestens 32 Zeichen lang sein. Vorhandene verschlüsselte TOTP-Secrets, Shelly-Passwörter, Weather-Underground-Zugangsdaten, Pushover-Zugangsdaten, Gotify-Tokens und weitere `_ciphertext`-Einstellungen werden transaktional neu verschlüsselt. Bei einem Fehler versucht das Skript sowohl die vorherigen verschlüsselten Werte als auch die ursprüngliche `.env` wiederherzustellen. Nach einer erfolgreichen Rotation sind bestehende Login-Sitzungen ungültig.
+
+Auch der Image-Updater wurde abgesichert: Fehlt `.env`, bricht `update.sh` jetzt ab, statt eine Ersatzdatei anzulegen. Vor dem Update wird eine geschützte `.env`-Sicherung erstellt, heruntergeladene Deployment-Dateien werden validiert, das aktuelle Rotationsskript wird installiert und `update.sh` selbst wird erst nach einem erfolgreichen Container-Update ersetzt. Recovery-Backups enthalten Secrets und müssen ausschließlich für root lesbar bleiben.
+
 ### v0.9.76 Vertrauenswürdige Proxys nur noch über die Umgebung
 
 Vertrauenswürdige Reverse-Proxys sind jetzt eine Deployment-Sicherheitsgrenze und keine normale Web-Einstellung mehr. `BPSTRACKER_TRUSTED_PROXIES` wird ausschließlich in der geschützten `.env` als kommagetrennte Liste von Proxy-IPs/CIDRs gesetzt (zum Beispiel `BPSTRACKER_TRUSTED_PROXIES=192.168.178.247`). Im Setup wird die wirksame Liste in der Client-IP-Diagnose nur noch angezeigt. Nach einer Änderung muss der Backend-Container neu erstellt werden. Die Install-/Update-Skripte schützen `.env` mit Modus `0600`, verwenden `umask 077`, überschreiben vorhandene Werte nicht und geben `SECRET_KEY` nicht mehr im Klartext auf der Konsole aus.

@@ -1,3 +1,27 @@
+# BPSTracker v0.9.77
+
+## Added
+
+- Added a dedicated `rotate-secret-key.sh` maintenance script for controlled `SECRET_KEY` rotation.
+- The script always creates and verifies a complete local recovery backup before any key change. The backup contains a PostgreSQL custom-format dump, PostgreSQL globals, backend application data, the original `.env`, deployment files, Docker inspect snapshots, a manifest, and SHA-256 checksums.
+- Added `--backup-only` so administrators can create and verify the recovery package without changing configuration or encrypted data.
+- The new `SECRET_KEY` is entered interactively twice with terminal echo disabled. The script never generates or prints the key and requires at least 32 characters.
+- Stored TOTP secrets, Shelly passwords, Weather Underground credentials, Pushover credentials, Gotify tokens, and any future AppSetting values ending in `_ciphertext` are re-encrypted transactionally.
+- Added automatic rollback of `.env` and encrypted database values when a rotation step fails before successful verification.
+
+## Security
+
+- `update.sh` no longer creates a missing `.env`. It aborts instead of falling back to defaults.
+- Every image update now saves a protected pre-update `.env` copy under `security-backups/` before changing the persisted image tag.
+- `update.sh` validates downloaded deployment files before replacing the working copies, refreshes `rotate-secret-key.sh`, and refreshes itself after a successful container update.
+- `.env`, recovery backups, and maintenance files are kept root-owned with restrictive permissions.
+
+## Notes
+
+- A `SECRET_KEY` rotation invalidates existing login sessions; users must sign in again.
+- Recovery backups contain the previous `SECRET_KEY` and other sensitive deployment information. Keep the `security-backups` directory root-only and do not upload it to Git.
+- The script intentionally does not rotate the PostgreSQL password. Database credential rotation is a separate maintenance operation.
+
 # BPSTracker v0.9.76
 
 ## Security

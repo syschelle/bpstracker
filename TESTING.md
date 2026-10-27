@@ -1,4 +1,17 @@
-# Testing – BPSTracker v0.9.76
+# Testing – BPSTracker v0.9.77
+
+## v0.9.77 protected SECRET_KEY rotation and update safety
+
+- Run `sudo ./rotate-secret-key.sh --backup-only` and verify a new directory is created under `security-backups/` with mode `0700`.
+- Verify the backup contains the original `.env`, PostgreSQL custom dump, PostgreSQL globals, backend data archive, deployment files, Docker inspect snapshots, `MANIFEST.txt`, and `SHA256SUMS`.
+- Verify `sha256sum -c SHA256SUMS` succeeds and `pg_restore --list database.dump` succeeds through the backend container.
+- Run `sudo ./rotate-secret-key.sh` and verify the new `SECRET_KEY` is entered twice without echo. Entries shorter than 32 characters, mismatching entries, the current key, and unsafe `.env` characters must be rejected.
+- Verify the script validates all existing encrypted values before changing `.env`.
+- Verify stored user TOTP secrets, Shelly passwords, Weather Underground API key, Pushover credentials, and Gotify token remain usable after rotation.
+- Verify a failed transactional re-encryption restores the original `.env` and recreates the backend with the old key.
+- Verify successful rotation leaves `.env` at mode `0600`, invalidates previous login sessions, and allows a fresh login including 2FA.
+- Remove `.env` in a disposable test installation and verify `update.sh` aborts instead of creating a default `.env`.
+- Verify `update.sh` creates a protected pre-update `.env` backup, refreshes `rotate-secret-key.sh`, and refreshes itself only after a successful container update.
 
 ## v0.9.76 env-only trusted proxy configuration
 

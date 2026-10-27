@@ -2052,6 +2052,14 @@ v0.9.71 fixes large backup creation on hardened deployments where `/tmp` is inte
 
 
 
+### v0.9.77 Protected SECRET_KEY rotation and safer updates
+
+v0.9.77 adds the dedicated `rotate-secret-key.sh` maintenance script. Before a key change it creates and verifies a complete local recovery package under `security-backups/`, including a PostgreSQL custom dump, PostgreSQL globals, backend data, the original `.env`, deployment files, Docker inspect snapshots, a manifest, and SHA-256 checksums. `--backup-only` performs only this recovery backup.
+
+For a real rotation, the administrator enters the new `SECRET_KEY` twice with terminal echo disabled. BPSTracker never generates or prints the new key; it must be at least 32 characters long. Existing encrypted TOTP secrets, Shelly passwords, Weather Underground credentials, Pushover credentials, Gotify tokens, and other `_ciphertext` application settings are re-encrypted transactionally. Failed rotations attempt to restore both the previous encrypted values and the original `.env`. Existing login sessions become invalid after a successful key change.
+
+The image updater is hardened as well: it now refuses to continue if `.env` is missing instead of creating a replacement, creates a protected `.env` backup before updating, validates downloaded deployment files, installs the current secret-rotation maintenance script, and updates its own script only after a successful container update. Recovery backups contain secrets and must remain root-only.
+
 ### v0.9.76 Environment-only trusted proxy configuration
 
 Trusted reverse proxies are now a deployment security boundary instead of a normal web setting. Configure `BPSTRACKER_TRUSTED_PROXIES` only in the protected `.env` file as a comma-separated list of proxy IPs/CIDRs (for example `BPSTRACKER_TRUSTED_PROXIES=192.168.178.247`). The Setup page displays the effective list read-only in the client-IP diagnostic. After changing the value, recreate the backend container. BPSTracker install/update scripts protect `.env` with mode `0600`, use `umask 077`, do not replace existing values and no longer print `SECRET_KEY` in plaintext to the console.
