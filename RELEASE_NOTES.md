@@ -1,3 +1,11 @@
+# BPSTracker v0.9.74
+
+## Changed
+
+- Replaced `dashboard-overview.png` with the current dashboard screenshot.
+- Kept the German project name **Ortsnetz-API** in the English dashboard instead of translating it to `Grid API`.
+- Updated the bundled help copy of the dashboard screenshot.
+
 # BPSTracker v0.9.73
 
 ## Added

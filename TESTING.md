@@ -1,4 +1,10 @@
-# Testing – BPSTracker v0.9.71
+# Testing – BPSTracker v0.9.74
+
+## v0.9.74 dashboard screenshot and Ortsnetz naming
+
+- Verify the English dashboard header tile is labeled `Ortsnetz-API`, not `Grid API`.
+- Verify `docs/images/dashboard-overview.png` matches the current dashboard screenshot.
+- Verify the bundled help image `frontend/public/help/docs/images/dashboard-overview.png` is synchronized.
 
 ## v0.9.73 Pushover device targeting
 

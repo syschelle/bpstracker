@@ -1302,6 +1302,10 @@ v0.9.71 behebt die Erstellung größerer Backups bei gehärteten Installationen,
 
 
 
+### v0.9.74 Dashboard-Screenshot und Ortsnetz-Bezeichnung
+
+v0.9.74 ersetzt den Dashboard-Übersichtsscreenshot durch die aktuelle Oberfläche. Auch in der englischen Oberfläche bleibt der deutsche Projektname **Ortsnetz-API** erhalten und wird nicht mehr als „Grid API“ übersetzt.
+
 ### v0.9.73 Pushover-Geräteauswahl
 
 v0.9.73 ergänzt in den Benachrichtigungseinstellungen ein optionales Feld **Pushover Device**. Wird dort der Name eines registrierten Pushover-Geräts eingetragen, werden BPSTracker-Warnungen und Tagesberichte gezielt nur an dieses Gerät gesendet. Bleibt das Feld leer, sendet Pushover wie bisher an alle aktiven Geräte des konfigurierten Benutzers.

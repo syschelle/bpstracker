@@ -2051,6 +2051,10 @@ v0.9.71 fixes large backup creation on hardened deployments where `/tmp` is inte
 
 
 
+### v0.9.74 Dashboard screenshot and Ortsnetz naming
+
+v0.9.74 replaces the dashboard overview screenshot with the current UI. The English dashboard now also keeps the German project name **Ortsnetz-API** instead of translating it to “Grid API”.
+
 ### v0.9.73 Pushover device targeting
 
 v0.9.73 adds an optional **Pushover Device** field to notification settings. Set a registered Pushover device name to deliver BPSTracker alerts and daily reports only to that device. Leave the field empty to keep Pushover's default behavior and deliver to all active devices for the configured user.

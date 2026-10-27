@@ -371,7 +371,7 @@
     "ortnetzSaved": "Local grid settings have been saved.",
     "ortnetzStatus": "Last upload status",
     "ortnetzLastSuccess": "Last successful upload",
-    "ortnetzDashboardTitle": "Grid API",
+    "ortnetzDashboardTitle": "Ortsnetz-API",
     "ortnetzDashboardConnected": "Upload working",
     "ortnetzDashboardError": "Upload error",
     "ortnetzDashboardWaiting": "Waiting for successful upload",
