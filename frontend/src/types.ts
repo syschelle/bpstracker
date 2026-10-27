@@ -91,6 +91,25 @@ export interface RetentionSettings {
   pi_zero_2w_mode?: boolean;
 }
 
+
+export interface LoginSecuritySettings {
+  enabled: boolean;
+  max_failed_attempts: number;
+  block_minutes: number;
+  notify_on_block: boolean;
+  trusted_proxies: string[];
+}
+
+export interface ClientIpDiagnostic {
+  direct_ip: string;
+  x_real_ip?: string | null;
+  x_forwarded_for?: string | null;
+  forwarded_chain: string[];
+  resolved_client_ip: string;
+  trusted_proxies: string[];
+  immediate_proxy_accepted: boolean;
+}
+
 export interface NotificationSettings {
   enabled: boolean;
   provider: 'pushover' | 'gotify';

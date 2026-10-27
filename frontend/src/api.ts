@@ -1,4 +1,4 @@
-import type { AirSensorCurrent, AirSensorSettings, CurrentValuesApiSettings, Device, OrtnetzSettings, OrtnetzStatus, FinanceSettings, KindleDisplaySettings, Language, Measurement, NotificationSettings, HistorySeries, HistoryTotals, PublicDashboardSettings, RetentionSettings, ResetValuesResponse, SimulationSettings, Summary, UiSettings, User } from './types';
+import type { AirSensorCurrent, AirSensorSettings, CurrentValuesApiSettings, Device, OrtnetzSettings, OrtnetzStatus, FinanceSettings, KindleDisplaySettings, Language, LoginSecuritySettings, ClientIpDiagnostic, Measurement, NotificationSettings, HistorySeries, HistoryTotals, PublicDashboardSettings, RetentionSettings, ResetValuesResponse, SimulationSettings, Summary, UiSettings, User } from './types';
 
 type RuntimeConfig = {
   API_BASE_URL?: string;
@@ -157,6 +157,9 @@ export const api = {
   updateUiSettings: (payload: UiSettings) => request<UiSettings>('/api/settings/ui', { method: 'PUT', body: JSON.stringify(payload) }),
   financeSettings: () => request<FinanceSettings>('/api/settings/finance'),
   updateFinanceSettings: (payload: FinanceSettings) => request<FinanceSettings>('/api/settings/finance', { method: 'PUT', body: JSON.stringify(payload) }),
+  loginSecuritySettings: () => request<LoginSecuritySettings>('/api/settings/login-security'),
+  updateLoginSecuritySettings: (payload: LoginSecuritySettings) => request<LoginSecuritySettings>('/api/settings/login-security', { method: 'PUT', body: JSON.stringify(payload) }),
+  loginSecurityClientInfo: () => request<ClientIpDiagnostic>('/api/settings/login-security/client-info'),
   notificationSettings: () => request<NotificationSettings>('/api/settings/notifications'),
   updateNotificationSettings: (payload: NotificationSettings) => request<NotificationSettings>('/api/settings/notifications', { method: 'PUT', body: JSON.stringify(payload) }),
   testNotification: () => request<{ ok: boolean; message: string }>('/api/settings/notifications/test', { method: 'POST' }),

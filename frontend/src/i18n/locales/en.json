@@ -413,6 +413,22 @@
     "saveNotificationSettings": "Save notification settings",
     "sendTestNotification": "Send test notification",
     "notificationSaved": "Notification settings saved.",
-    "notificationTestSent": "Test notification sent."
+    "notificationTestSent": "Test notification sent.",
+    "loginSecurityTitle": "Login protection",
+    "loginSecurityHint": "Temporarily block a source IP after repeated failed password logins. The existing short-term rate limits remain active as an additional protection layer.",
+    "loginSecurityProxyHint": "Keep blocking disabled until the diagnostic shows the real client IP. Only add the actual reverse proxy (for example the Traefik host IP) as a trusted proxy; do not trust whole LAN ranges unless required.",
+    "loginSecurityEnable": "Enable source-IP blocking after failed logins",
+    "loginSecurityAttempts": "Failed attempts before blocking",
+    "loginSecurityBlockMinutes": "Block duration (minutes)",
+    "loginSecurityNotify": "Send Pushover/Gotify notification when an IP is blocked",
+    "loginSecurityTrustedProxies": "Trusted proxy IPs/CIDRs",
+    "loginSecurityTrustedProxiesHint": "One IP or CIDR per line. BPSTracker walks X-Forwarded-For from right to left and removes only explicitly trusted proxies.",
+    "loginSecuritySave": "Save login protection",
+    "loginSecurityRefresh": "Refresh IP diagnostic",
+    "loginSecurityDiagnostic": "Client IP diagnostic",
+    "loginSecurityDirectIp": "Direct backend peer",
+    "loginSecurityResolvedIp": "Resolved client IP",
+    "loginSecurityTrustedActive": "Configured trusted proxies",
+    "loginSecuritySaved": "Login protection settings saved."
   }
 }

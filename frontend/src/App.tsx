@@ -4,7 +4,7 @@ import { Activity, Euro, Gauge, Globe2, HelpCircle, History, LogOut, Menu, Moon,
 import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api, getRuntimeConfig, setToken } from './api';
 import packageJson from '../package.json';
-import type { AirSensorCurrent, AirSensorSettings, CurrencyCode, CurrentValuesApiSettings, Device, DevicePurpose, OrtnetzSettings, OrtnetzStatus, DeviceType, FinanceSettings, KindleDisplaySettings, Measurement, HistoryTotals, NotificationSettings, PublicDashboardSettings, RetentionSettings, SimulationSettings, Summary, UiSettings, User } from './types';
+import type { AirSensorCurrent, AirSensorSettings, CurrencyCode, CurrentValuesApiSettings, Device, DevicePurpose, OrtnetzSettings, OrtnetzStatus, DeviceType, FinanceSettings, KindleDisplaySettings, LoginSecuritySettings, ClientIpDiagnostic, Measurement, HistoryTotals, NotificationSettings, PublicDashboardSettings, RetentionSettings, SimulationSettings, Summary, UiSettings, User } from './types';
 import { availableLanguages, DEFAULT_LANGUAGE, helpFileForLanguage, isSupportedLanguage, languageMeta, languageOptionLabel, localeForLanguage, nextLanguage, normalizeLanguage, translate } from './i18n';
 import type { Language, TranslationKey } from './i18n';
 
@@ -1785,6 +1785,7 @@ function SetupView({ currentUser, onCurrentUserChange }: { currentUser: User; on
       <SimulationSettingsPanel />
       <AirSensorSettingsPanel />
       <NotificationSettingsPanel />
+      <LoginSecuritySettingsPanel />
       <PublicDashboardSettingsPanel />
       <UserCredentialsPanel currentUser={currentUser} onCurrentUserChange={onCurrentUserChange} />
       <BackupSettingsPanel />
@@ -1995,6 +1996,106 @@ function FinanceSettingsPanel() {
       <p className="hint">{t('batteryEfficiencyHint')}</p>
       <p className="hint">{t('currencyHint')}</p>
       <button onClick={() => void save()}>{t('saveFinance')}</button>
+    </section>
+  );
+}
+
+
+function LoginSecuritySettingsPanel() {
+  const { t } = useI18n();
+  const [settings, setSettings] = useState<LoginSecuritySettings>({
+    enabled: false,
+    max_failed_attempts: 5,
+    block_minutes: 15,
+    notify_on_block: false,
+    trusted_proxies: [],
+  });
+  const [trustedProxyText, setTrustedProxyText] = useState('');
+  const [diagnostic, setDiagnostic] = useState<ClientIpDiagnostic | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function load() {
+    setError(null);
+    try {
+      const [saved, info] = await Promise.all([api.loginSecuritySettings(), api.loginSecurityClientInfo()]);
+      setSettings(saved);
+      setTrustedProxyText((saved.trusted_proxies || []).join('\n'));
+      setDiagnostic(info);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  useEffect(() => { void load(); }, []);
+
+  async function save() {
+    setMessage(null);
+    setError(null);
+    setBusy(true);
+    try {
+      const trusted_proxies = trustedProxyText.split(/[\n,]+/).map(value => value.trim()).filter(Boolean);
+      const saved = await api.updateLoginSecuritySettings({
+        ...settings,
+        max_failed_attempts: Math.max(3, Math.min(20, Number(settings.max_failed_attempts) || 5)),
+        block_minutes: Math.max(1, Math.min(1440, Number(settings.block_minutes) || 15)),
+        trusted_proxies,
+      });
+      setSettings(saved);
+      setTrustedProxyText((saved.trusted_proxies || []).join('\n'));
+      setDiagnostic(await api.loginSecurityClientInfo());
+      setMessage(t('loginSecuritySaved'));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function refreshDiagnostic() {
+    setError(null);
+    setBusy(true);
+    try {
+      setDiagnostic(await api.loginSecurityClientInfo());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="panel">
+      <div className="panel-head"><h2><ShieldCheck size={20} /> {t('loginSecurityTitle')}</h2></div>
+      <p className="hint">{t('loginSecurityHint')}</p>
+      <p className="hint strong-hint">{t('loginSecurityProxyHint')}</p>
+      {message && <div className="info" role="status">{message}</div>}
+      {error && <div className="error" role="alert">{error}</div>}
+      <div className="form-grid finance-form">
+        <label className="check"><input type="checkbox" checked={settings.enabled} onChange={e => setSettings({ ...settings, enabled: e.target.checked })} /> {t('loginSecurityEnable')}</label>
+        <label>{t('loginSecurityAttempts')}<input type="number" min={3} max={20} step={1} value={settings.max_failed_attempts} onChange={e => setSettings({ ...settings, max_failed_attempts: Number(e.target.value) })} /></label>
+        <label>{t('loginSecurityBlockMinutes')}<input type="number" min={1} max={1440} step={1} value={settings.block_minutes} onChange={e => setSettings({ ...settings, block_minutes: Number(e.target.value) })} /></label>
+        <label className="check"><input type="checkbox" checked={settings.notify_on_block} onChange={e => setSettings({ ...settings, notify_on_block: e.target.checked })} /> {t('loginSecurityNotify')}</label>
+      </div>
+      <label>{t('loginSecurityTrustedProxies')}
+        <textarea rows={3} value={trustedProxyText} onChange={e => setTrustedProxyText(e.target.value)} placeholder="192.168.178.247\n10.0.0.0/24" />
+      </label>
+      <p className="hint">{t('loginSecurityTrustedProxiesHint')}</p>
+      <div className="button-row">
+        <button onClick={() => void save()} disabled={busy}>{t('loginSecuritySave')}</button>
+        <button className="secondary" onClick={() => void refreshDiagnostic()} disabled={busy}>{t('loginSecurityRefresh')}</button>
+      </div>
+      {diagnostic && (
+        <div className="info" style={{ marginTop: '1rem' }}>
+          <strong>{t('loginSecurityDiagnostic')}</strong>
+          <div><b>{t('loginSecurityDirectIp')}:</b> <code>{diagnostic.direct_ip}</code></div>
+          <div><b>X-Real-IP:</b> <code>{diagnostic.x_real_ip || '—'}</code></div>
+          <div><b>X-Forwarded-For:</b> <code>{diagnostic.x_forwarded_for || '—'}</code></div>
+          <div><b>{t('loginSecurityResolvedIp')}:</b> <code>{diagnostic.resolved_client_ip}</code></div>
+          <div><b>{t('loginSecurityTrustedActive')}:</b> <code>{diagnostic.trusted_proxies.length ? diagnostic.trusted_proxies.join(', ') : '—'}</code></div>
+        </div>
+      )}
     </section>
   );
 }

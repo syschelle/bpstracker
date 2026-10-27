@@ -1,14 +1,17 @@
 from __future__ import annotations
 
+import asyncio
 import hashlib
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from ..database import get_db
+from ..database import SessionLocal, get_db
 from ..models import AuditLog, User, UserRole
-from ..rate_limit import FixedWindowRateLimiter, client_rate_limit_key, raise_rate_limited
+from ..login_security import get_login_security_settings, login_failure_guard, resolve_client_ip
+from ..notification_service import send_notification
+from ..rate_limit import FixedWindowRateLimiter, raise_rate_limited
 from ..schemas import (
     LoginRequest,
     TokenResponse,
@@ -56,6 +59,25 @@ def _enforce_limiter(limiter: FixedWindowRateLimiter, key: str) -> None:
         raise_rate_limited(retry_after)
 
 
+
+
+async def _send_login_block_notification(source_ip: str, minutes: int) -> None:
+    db = SessionLocal()
+    try:
+        await send_notification(
+            db,
+            'BPSTracker Security',
+            f'Die Source-IP {source_ip} wurde nach fehlgeschlagenen Loginversuchen für {minutes} Minuten gesperrt.',
+            priority=1,
+        )
+    except Exception:
+        # Login protection must never fail because the optional notification provider
+        # is disabled or temporarily unavailable.
+        pass
+    finally:
+        db.close()
+
+
 def _user_payload(user: User, recovery_codes: list[str] | None = None) -> dict:
     payload = UserRead.model_validate(user).model_dump()
     if recovery_codes is not None:
@@ -64,13 +86,31 @@ def _user_payload(user: User, recovery_codes: list[str] | None = None) -> dict:
 
 
 @router.post('/login', response_model=TokenResponse)
-def login(payload: LoginRequest, request: Request, response: Response, db: Session = Depends(get_db)) -> TokenResponse:
+async def login(
+    payload: LoginRequest,
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db),
+) -> TokenResponse:
     # Usernames are stored readable, but login should be forgiving about leading/trailing
     # whitespace and letter case. This prevents lockouts after manual setup edits.
     username = payload.username.strip()
     password = payload.password.strip()
-    client_key = client_rate_limit_key(request)
+
+    security_settings = get_login_security_settings(db)
+    client_info = resolve_client_ip(request, security_settings.trusted_proxies)
+    client_key = client_info.resolved_client_ip
     account_key = f'{client_key}:{username.lower()}'
+
+    if security_settings.enabled:
+        retry_after = login_failure_guard.blocked_for(client_key)
+        if retry_after is not None:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail='Source IP is temporarily blocked after failed login attempts.',
+                headers={'Retry-After': str(retry_after)},
+            )
+
     _enforce_limiter(LOGIN_IP_LIMIT, client_key)
     _enforce_limiter(LOGIN_ACCOUNT_LIMIT, account_key)
     # Prefer the active account. Older upgraded databases may still contain inactive
@@ -89,8 +129,36 @@ def login(payload: LoginRequest, request: Request, response: Response, db: Sessi
             .first()
         )
     if not user or not verify_password(password, user.password_hash):
+        attempt = 1
+        newly_blocked = False
+        retry_after = None
+        if security_settings.enabled:
+            attempt, newly_blocked, retry_after = login_failure_guard.record_failure(client_key, security_settings)
+        db.add(AuditLog(actor_user_id=user.id if user else None, action='auth.login.failed', details={
+            'username': username,
+            'source_ip': client_key,
+            'direct_ip': client_info.direct_ip,
+            'attempt': attempt,
+            'max_failed_attempts': security_settings.max_failed_attempts if security_settings.enabled else None,
+        }))
+        if newly_blocked:
+            db.add(AuditLog(actor_user_id=user.id if user else None, action='auth.login.blocked', details={
+                'username': username,
+                'source_ip': client_key,
+                'block_minutes': security_settings.block_minutes,
+            }))
+        db.commit()
+        if newly_blocked:
+            if security_settings.notify_on_block:
+                asyncio.create_task(_send_login_block_notification(client_key, security_settings.block_minutes))
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail='Source IP is temporarily blocked after failed login attempts.',
+                headers={'Retry-After': str(retry_after or security_settings.block_minutes * 60)},
+            )
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid credentials')
 
+    login_failure_guard.clear(client_key)
     if password_needs_rehash(user.password_hash):
         user.password_hash = password_hash(password)
         db.add(AuditLog(actor_user_id=user.id, action='auth.password_hash.upgraded', details={'algorithm': 'argon2id'}))
@@ -108,7 +176,8 @@ def login(payload: LoginRequest, request: Request, response: Response, db: Sessi
 
 @router.post('/2fa/verify', response_model=TokenResponse)
 def verify_2fa(payload: TwoFaVerifyRequest, request: Request, response: Response, db: Session = Depends(get_db)) -> TokenResponse:
-    client_key = client_rate_limit_key(request)
+    security_settings = get_login_security_settings(db)
+    client_key = resolve_client_ip(request, security_settings.trusted_proxies).resolved_client_ip
     challenge_key = _hash_key(payload.challenge_token)
     _enforce_limiter(TWO_FA_IP_LIMIT, client_key)
     _enforce_limiter(TWO_FA_CHALLENGE_LIMIT, challenge_key)

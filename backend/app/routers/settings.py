@@ -8,16 +8,17 @@ import math
 import re
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from ..config import get_settings
 from ..database import get_db
 from ..models import AppSetting, AuditLog, User
-from ..schemas import AirSensorCurrent, AirSensorSettings, CurrentValuesApiSettings, OrtnetzSettings, OrtnetzStatus, PublicDashboardSettings, FinanceSettings, KindleDisplaySettings, NotificationSettings, NotificationTestResponse, RetentionSettings, SimulationSettings, UiSettings
+from ..schemas import AirSensorCurrent, AirSensorSettings, CurrentValuesApiSettings, OrtnetzSettings, OrtnetzStatus, PublicDashboardSettings, FinanceSettings, KindleDisplaySettings, NotificationSettings, NotificationTestResponse, LoginSecuritySettings, ClientIpDiagnostic, RetentionSettings, SimulationSettings, UiSettings
 from ..network_security import OutboundHostError, lan_http_url, normalize_outbound_http_host, resolve_lan_http_target
 from ..security import decrypt_secret, encrypt_secret, get_current_user, require_admin
 from ..notification_service import NOTIFICATION_SETTINGS_KEY, get_notification_settings_from_db, normalize_notification_settings, send_notification
+from ..login_security import get_login_security_settings, login_failure_guard, save_login_security_settings, resolve_client_ip
 from ..simulation import simulated_air_sensor_current
 
 router = APIRouter(prefix='/api/settings', tags=['settings'])
@@ -735,6 +736,44 @@ def update_finance_settings(
     db.commit()
     db.refresh(row)
     return _normalize_finance_value(row.value)
+
+
+@router.get('/login-security', response_model=LoginSecuritySettings)
+def get_login_security(_: User = Depends(require_admin), db: Session = Depends(get_db)) -> LoginSecuritySettings:
+    return get_login_security_settings(db)
+
+
+@router.put('/login-security', response_model=LoginSecuritySettings)
+def update_login_security(
+    payload: LoginSecuritySettings,
+    actor: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> LoginSecuritySettings:
+    try:
+        normalized = save_login_security_settings(db, payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    db.add(AuditLog(actor_user_id=actor.id, action='settings.login_security.update', details={
+        'enabled': normalized.enabled,
+        'max_failed_attempts': normalized.max_failed_attempts,
+        'block_minutes': normalized.block_minutes,
+        'notify_on_block': normalized.notify_on_block,
+        'trusted_proxies': normalized.trusted_proxies,
+    }))
+    db.commit()
+    # Settings changes should take effect immediately and must not leave stale in-memory blocks behind.
+    login_failure_guard.reset()
+    return normalized
+
+
+@router.get('/login-security/client-info', response_model=ClientIpDiagnostic)
+def login_security_client_info(
+    request: Request,
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> ClientIpDiagnostic:
+    settings = get_login_security_settings(db)
+    return ClientIpDiagnostic(**resolve_client_ip(request, settings.trusted_proxies).as_dict())
 
 
 @router.get('/notifications', response_model=NotificationSettings)

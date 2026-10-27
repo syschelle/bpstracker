@@ -1302,6 +1302,10 @@ v0.9.71 behebt die Erstellung größerer Backups bei gehärteten Installationen,
 
 
 
+### v0.9.75 Login-Schutz mit vertrauenswürdiger Proxy-Kette
+
+BPSTracker kann jetzt eine ermittelte Source-IP nach wiederholten fehlgeschlagenen Passwort-Logins vorübergehend sperren. Die Funktion ist nach dem Update standardmäßig deaktiviert, bis die neue Client-IP-Diagnose geprüft wurde. Als vertrauenswürdig soll nur der tatsächliche vorgeschaltete Reverse-Proxy eingetragen werden, zum Beispiel die Traefik-Host-IP oder ein möglichst enges CIDR. BPSTracker wertet `X-Forwarded-For` von rechts nach links aus und entfernt nur ausdrücklich konfigurierte Proxy-Hops, bevor die Client-IP bestimmt wird. Im Setup werden der direkte Backend-Peer, `X-Real-IP`, `X-Forwarded-For`, die Trusted-Proxy-Liste und die ermittelte Client-IP angezeigt. Fehlversuche und Sperrdauer sind konfigurierbar; ein erfolgreicher Login setzt den Fehlversuchszähler zurück. Optional kann eine neue Sperre über Pushover oder Gotify gemeldet werden. Die vorhandenen kurzfristigen Rate-Limits bleiben als zusätzliche Schutzschicht aktiv.
+
 ### v0.9.74 Dashboard-Screenshot und Ortsnetz-Bezeichnung
 
 v0.9.74 ersetzt den Dashboard-Übersichtsscreenshot durch die aktuelle Oberfläche. Auch in der englischen Oberfläche bleibt der deutsche Projektname **Ortsnetz-API** erhalten und wird nicht mehr als „Grid API“ übersetzt.

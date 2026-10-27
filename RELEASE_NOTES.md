@@ -1,3 +1,20 @@
+# BPSTracker v0.9.75
+
+## Added
+
+- Added configurable source-IP blocking after repeated failed password logins.
+- Added explicit trusted reverse-proxy IP/CIDR configuration for safe `X-Forwarded-For` evaluation.
+- Added an admin client-IP diagnostic showing the direct backend peer, `X-Real-IP`, `X-Forwarded-For`, configured trusted proxies and the resolved client IP.
+- Added optional Pushover/Gotify notification when a source IP is newly blocked.
+- Added audit entries for failed and blocked login attempts without storing passwords.
+
+## Security
+
+- Forwarded client addresses are resolved from right to left and only explicitly configured upstream proxies are removed from the chain.
+- The bundled frontend nginx is accepted as the immediate transport proxy because the backend port is only exposed inside the Compose network.
+- Existing short-term login and 2FA rate limits remain active and now use the resolved client IP.
+- Login blocking is disabled by default so administrators can verify the proxy diagnostic before enabling it.
+
 # BPSTracker v0.9.74
 
 ## Changed

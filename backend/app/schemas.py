@@ -159,6 +159,25 @@ class RetentionSettings(BaseModel):
     pi_zero_2w_mode: bool = False
 
 
+
+
+class LoginSecuritySettings(BaseModel):
+    enabled: bool = False
+    max_failed_attempts: int = Field(default=5, ge=3, le=20)
+    block_minutes: int = Field(default=15, ge=1, le=1440)
+    notify_on_block: bool = False
+    trusted_proxies: list[str] = Field(default_factory=list, max_length=32)
+
+
+class ClientIpDiagnostic(BaseModel):
+    direct_ip: str
+    x_real_ip: str | None = None
+    x_forwarded_for: str | None = None
+    forwarded_chain: list[str] = Field(default_factory=list)
+    resolved_client_ip: str
+    trusted_proxies: list[str] = Field(default_factory=list)
+    immediate_proxy_accepted: bool = False
+
 class NotificationSettings(BaseModel):
     enabled: bool = False
     provider: str = Field(default='pushover', pattern=r'^(pushover|gotify)$')

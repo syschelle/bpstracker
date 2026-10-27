@@ -1,4 +1,18 @@
-# Testing – BPSTracker v0.9.74
+# Testing – BPSTracker v0.9.75
+
+## v0.9.75 trusted-proxy login protection
+
+- Verify the login protection settings are disabled by default after upgrade.
+- Open the client-IP diagnostic through the public Traefik URL and verify direct backend peer, X-Real-IP, X-Forwarded-For and resolved client IP are shown.
+- With no trusted Traefik IP configured, verify the resolved address stops at the untrusted proxy.
+- Add the actual Traefik host IP/CIDR and verify the resolved address becomes the real browser/source IP.
+- Verify a spoofed leftmost X-Forwarded-For value is not selected when the next hop is not trusted.
+- Enable blocking, trigger the configured number of failed password logins and verify HTTP 429 plus Retry-After are returned until the block expires.
+- Verify a successful login clears the failure state for the resolved source IP.
+- Verify `auth.login.failed` and `auth.login.blocked` audit entries contain the resolved source IP but never a password.
+- If enabled, verify Pushover/Gotify sends one security notification when a new block is created.
+- Verify the existing short-window login and 2FA rate limits use the resolved source IP.
+
 
 ## v0.9.74 dashboard screenshot and Ortsnetz naming
 

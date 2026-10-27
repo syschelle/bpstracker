@@ -2051,6 +2051,10 @@ v0.9.71 fixes large backup creation on hardened deployments where `/tmp` is inte
 
 
 
+### v0.9.75 Trusted-proxy login protection
+
+BPSTracker can now temporarily block a resolved source IP after repeated failed password logins. The protection is disabled by default until the administrator verifies the new client-IP diagnostic. Configure only the actual upstream reverse proxy (for example the Traefik host IP or a narrow CIDR) as trusted. BPSTracker evaluates `X-Forwarded-For` from right to left and removes only explicitly trusted proxy hops before selecting the client address. The Setup page shows the direct backend peer, `X-Real-IP`, `X-Forwarded-For`, trusted proxy list and resolved client IP. The failure threshold and block duration are configurable, successful authentication clears the failure state, and a new block can optionally trigger the configured Pushover/Gotify provider. Existing short-window rate limits remain active as an additional protection layer.
+
 ### v0.9.74 Dashboard screenshot and Ortsnetz naming
 
 v0.9.74 replaces the dashboard overview screenshot with the current UI. The English dashboard now also keeps the German project name **Ortsnetz-API** instead of translating it to “Grid API”.
